@@ -39,6 +39,16 @@ const Navbar = () => {
               <span>Dashboard</span>
             </Link>
 
+            {user.role === 'ADMIN' && (
+              <Link 
+                to="/admin" 
+                className="flex items-center gap-2 text-slate-350 hover:text-red-400 transition text-sm font-semibold tracking-wide"
+              >
+                <ShieldCheck size={18} className="text-red-500" /> 
+                <span>Admin Panel</span>
+              </Link>
+            )}
+
             {hasCompletedAny && (
               <span className="animate-pulse flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-[10px] text-amber-450 font-bold uppercase tracking-wider">
                 ★ NEXUS Certified
@@ -53,8 +63,8 @@ const Navbar = () => {
                 <span className="text-slate-200 text-sm font-bold leading-tight">
                   {user.name}
                 </span>
-                <span className="text-slate-400 text-[10px] uppercase font-mono tracking-tighter">
-                  Student Portal
+                <span className="text-slate-450 text-[10px] uppercase font-mono tracking-tighter">
+                  {user.role === 'ADMIN' ? 'Admin Staff' : 'Student Portal'}
                 </span>
               </div>
               

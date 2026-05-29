@@ -5,6 +5,7 @@ import authRoutes from './routes/auth';
 import courseRoutes from './routes/course';
 import quizRoutes from './routes/quiz';
 import certificateRoutes from './routes/certificate';
+import paymentRoutes from './routes/payment';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/certificate', certificateRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/', (req, res) => {
   res.send('Summer Training Portal API is running');

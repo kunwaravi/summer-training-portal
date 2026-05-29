@@ -1,27 +1,40 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma';
-import { quizzes } from '../lib/curriculumData';
+import { authenticateToken } from './auth';
 
 const router = Router();
 
-// GET /api/quiz/questions/:courseId/:week - Fetch questions for a specific week's quiz without showing correct answers
+// Middleware to verify admin privileges
+const isAdmin = (req: any, res: any, next: any) => {
+  if (req.user && req.user.role === 'ADMIN') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Access denied: Admin permissions required' });
+  }
+};
+
+// GET /api/quiz/questions/:courseId/:week - Fetch questions for a specific week's quiz (omitting correct answers)
 router.get('/questions/:courseId/:week', async (req: any, res: any) => {
   try {
     const { courseId, week } = req.params;
     const weekNum = parseInt(week);
 
-    const courseQuizzes = quizzes[courseId];
-    if (!courseQuizzes) {
-      return res.status(404).json({ message: 'Course quizzes not found' });
-    }
+    const moduleRecord = await prisma.module.findFirst({
+      where: {
+        courseId,
+        week: weekNum
+      },
+      include: {
+        quizQuestions: true
+      }
+    });
 
-    const weekQuiz = courseQuizzes.find(q => q.week === weekNum);
-    if (!weekQuiz) {
+    if (!moduleRecord) {
       return res.status(404).json({ message: 'Quiz for this week not found' });
     }
 
-    // Map questions to omit the correctAnswer property
-    const safeQuestions = weekQuiz.questions.map(({ correctAnswer, ...q }) => q);
+    // Map questions to omit correct answers for safe transfer
+    const safeQuestions = moduleRecord.quizQuestions.map(({ correctAnswer, ...q }) => q);
 
     res.json({
       courseId,
@@ -34,27 +47,30 @@ router.get('/questions/:courseId/:week', async (req: any, res: any) => {
   }
 });
 
-// POST /api/quiz/submit - Grade quiz submissions in backend, update specific course progress, and save result
+// POST /api/quiz/submit - Grade quiz submissions and update course progress
 router.post('/submit', async (req: any, res: any) => {
   try {
     const { userId, courseId, week, answers } = req.body;
     const weekNum = parseInt(week);
     const userIdNum = parseInt(userId);
 
-    const courseQuizzes = quizzes[courseId];
-    if (!courseQuizzes) {
-      return res.status(404).json({ message: 'Course quizzes not found' });
-    }
+    const moduleRecord = await prisma.module.findFirst({
+      where: {
+        courseId,
+        week: weekNum
+      },
+      include: {
+        quizQuestions: true
+      }
+    });
 
-    const weekQuiz = courseQuizzes.find(q => q.week === weekNum);
-    if (!weekQuiz) {
+    if (!moduleRecord || moduleRecord.quizQuestions.length === 0) {
       return res.status(404).json({ message: 'Quiz for this week not found' });
     }
 
-    // Server-side grading logic
     let correctCount = 0;
-    const totalQuestions = weekQuiz.questions.length;
-    const breakdown = weekQuiz.questions.map(q => {
+    const totalQuestions = moduleRecord.quizQuestions.length;
+    const breakdown = moduleRecord.quizQuestions.map(q => {
       const userAnswer = answers[q.id];
       const isCorrect = userAnswer === q.correctAnswer;
       if (isCorrect) correctCount++;
@@ -81,7 +97,7 @@ router.post('/submit', async (req: any, res: any) => {
       }
     });
 
-    // Check if we need to update/upsert CourseProgress for this specific course track
+    // Update / upsert CourseProgress if passed
     if (passed) {
       const currentProgress = await prisma.courseProgress.findUnique({
         where: {
@@ -94,7 +110,6 @@ router.post('/submit', async (req: any, res: any) => {
 
       const currentWeekCompleted = currentProgress?.weekCompleted || 0;
       
-      // Only increment week progress if they passed a week that exceeds their previous max week
       if (weekNum > currentWeekCompleted) {
         await prisma.courseProgress.upsert({
           where: {
@@ -119,7 +134,7 @@ router.post('/submit', async (req: any, res: any) => {
       }
     }
 
-    // Fetch the updated user profile to return to the frontend
+    // Fetch fresh user profile
     const updatedUser = await prisma.user.findUnique({
       where: { id: userIdNum },
       include: {
@@ -136,7 +151,65 @@ router.post('/submit', async (req: any, res: any) => {
       updatedUser
     });
   } catch (error) {
-    console.error('Quiz submission grading error:', error);
+    console.error('Quiz grading error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ADMIN CRUD - POST /api/quiz/module/:moduleId/question (Add Quiz Question)
+router.post('/module/:moduleId/question', authenticateToken, isAdmin, async (req: any, res: any) => {
+  try {
+    const moduleId = parseInt(req.params.moduleId);
+    const { text, options, correctAnswer } = req.body;
+
+    if (!text || !options || !correctAnswer) {
+      return res.status(400).json({ message: 'Text, options, and correctAnswer are required.' });
+    }
+
+    const newQuestion = await prisma.quizQuestion.create({
+      data: {
+        moduleId,
+        text,
+        options,
+        correctAnswer
+      }
+    });
+    res.status(201).json(newQuestion);
+  } catch (error) {
+    console.error('Create quiz question error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ADMIN CRUD - PUT /api/quiz/question/:questionId (Update Quiz Question)
+router.put('/question/:questionId', authenticateToken, isAdmin, async (req: any, res: any) => {
+  try {
+    const questionId = parseInt(req.params.questionId);
+    const { text, options, correctAnswer } = req.body;
+
+    const updatedQuestion = await prisma.quizQuestion.update({
+      where: { id: questionId },
+      data: {
+        text,
+        options,
+        correctAnswer
+      }
+    });
+    res.json(updatedQuestion);
+  } catch (error) {
+    console.error('Update quiz question error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ADMIN CRUD - DELETE /api/quiz/question/:questionId (Delete Quiz Question)
+router.delete('/question/:questionId', authenticateToken, isAdmin, async (req: any, res: any) => {
+  try {
+    const questionId = parseInt(req.params.questionId);
+    await prisma.quizQuestion.delete({ where: { id: questionId } });
+    res.json({ message: 'Quiz question deleted successfully' });
+  } catch (error) {
+    console.error('Delete quiz question error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

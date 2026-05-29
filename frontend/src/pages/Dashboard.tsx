@@ -107,6 +107,22 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Staff Privileges Banner */}
+      {user?.role === 'ADMIN' && (
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-lg shadow-red-950/20">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">🛡</span>
+            <span>STAFF PRIVILEGES ACTIVE: You have complete administrative privileges over course contents, transactions, and quizzes.</span>
+          </div>
+          <button 
+            onClick={() => navigate('/admin')}
+            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-lg transition-all active:scale-[0.98] uppercase tracking-wider text-[10px]"
+          >
+            Open CMS Editor Panel
+          </button>
+        </div>
+      )}
+
       {/* Analytics Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="p-5 bg-slate-800 border border-slate-700 rounded-xl flex items-center gap-4 shadow-md">

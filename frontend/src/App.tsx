@@ -6,6 +6,7 @@ import CourseDetail from './pages/CourseDetail';
 import Quiz from './pages/Quiz';
 import Certificate from './pages/Certificate';
 import Verify from './pages/Verify';
+import AdminDashboard from './pages/AdminDashboard';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -13,6 +14,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   if (loading) return <div>Loading...</div>;
   if (!user) return <Navigate to="/" />;
+  return <>{children}</>;
+};
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="text-center py-20 text-slate-400">Verifying security clearances...</div>;
+  if (!user || user.role !== 'ADMIN') return <Navigate to="/dashboard" />;
   return <>{children}</>;
 };
 
@@ -28,6 +36,7 @@ function AppRoutes() {
           <Route path="/quiz/:courseId/:week" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
           <Route path="/certificate" element={<ProtectedRoute><Certificate /></ProtectedRoute>} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Routes>
       </div>
     </div>

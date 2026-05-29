@@ -34,6 +34,22 @@ router.get('/:userId/:courseId', async (req: any, res: any) => {
       return res.status(403).json({ message: `Training track '${courseId}' not completed yet. Complete all 4 weeks to unlock.` });
     }
 
+    // Secure Certificate Generation: Ensure successful payment record exists in DB (Issue #3)
+    const successPayment = await prisma.payment.findFirst({
+      where: {
+        userId,
+        courseId,
+        status: 'SUCCESS'
+      }
+    });
+
+    if (!successPayment) {
+      return res.status(402).json({ 
+        message: `Payment clearance required to generate certified credentials for '${courseId}'.`,
+        paymentRequired: true 
+      });
+    }
+
     // Calculate course-specific grade based on the highest passing scores for each of the 4 weeks
     const coursePassingResults = user.results.filter(r => r.courseId === courseId && r.passed);
     const highestWeekScores: Record<number, number> = {};

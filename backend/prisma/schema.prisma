@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -19,15 +19,17 @@ model User {
   progress      Int              @default(0) // legacy global progress
   weekCompleted Int              @default(0) // legacy global weekCompleted
   courseType    String           @default("Electronics")
+  role          String           @default("USER") // Role-based access control (USER, ADMIN)
   progresses    CourseProgress[]
   results       QuizResult[]
+  payments      Payment[]
   createdAt     DateTime         @default(now())
 }
 
 model CourseProgress {
   id            Int      @id @default(autoincrement())
   userId        Int
-  user          User     @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId      String   // "C", "C++", "IoT", "Embedded"
   weekCompleted Int      @default(0) // 0 to 4
   progress      Int      @default(0) // 0 to 100
@@ -35,15 +37,75 @@ model CourseProgress {
   updatedAt     DateTime @updatedAt
 
   @@unique([userId, courseId])
+  @@index([courseId])
 }
 
 model QuizResult {
   id        Int      @id @default(autoincrement())
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId  String   @default("C")
   week      Int
   score     Int
   passed    Boolean
   createdAt DateTime @default(now())
+
+  @@index([userId, courseId])
+}
+
+model Course {
+  id          String   @id // "C", "C++", "IoT", "Embedded"
+  title       String
+  description String
+  modules     Module[]
+}
+
+model Module {
+  id            Int            @id @default(autoincrement())
+  courseId      String
+  course        Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  week          Int
+  title         String
+  description   String
+  topics        Topic[]
+  quizQuestions QuizQuestion[]
+
+  @@index([courseId])
+}
+
+model Topic {
+  id       Int     @id @default(autoincrement())
+  moduleId Int
+  module   Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title    String
+  text     String
+  code     String?
+  note     String?
+  order    Int     @default(0)
+
+  @@index([moduleId])
+}
+
+model QuizQuestion {
+  id            Int      @id @default(autoincrement())
+  moduleId      Int
+  module        Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  text          String
+  options       String[]
+  correctAnswer String
+
+  @@index([moduleId])
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  amount    Int
+  status    String   // "PENDING", "SUCCESS", "FAILED"
+  reference String?  // payment processor reference (e.g. Razorpay payment id)
+  createdAt DateTime @default(now())
+
+  @@index([userId, courseId])
 }
