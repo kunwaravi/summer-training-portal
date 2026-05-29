@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { ShieldCheck, ShieldAlert, FileSearch, ArrowLeft, Building2, CheckCircle2 } from 'lucide-react';
@@ -6,22 +6,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const Verify = () => {
   const navigate = useNavigate();
-  const [credentialId, setCredentialId] = useState('');
+  const query = new URLSearchParams(window.location.search);
+  const initialId = query.get('id') || query.get('credentialId') || '';
+
+  const [credentialId, setCredentialId] = useState(initialId);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
 
-  // Auto-verify if "id" query parameter is passed in URL: e.g. /verify?id=NEX-...
+  // Auto-verify if "id" query parameter is passed in URL
   useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    const id = query.get('id') || query.get('credentialId');
-    if (id) {
-      setCredentialId(id);
-      handleVerify(id);
+    if (initialId) {
+      handleVerify(initialId);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialId]);
 
-  const handleVerify = async (idToVerify: string) => {
+  async function handleVerify(idToVerify: string) {
     const targetId = idToVerify || credentialId;
     if (!targetId.trim()) {
       setError('Please enter a valid Credential ID.');
@@ -40,7 +41,7 @@ const Verify = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div className="py-8 max-w-3xl mx-auto px-4 space-y-8">

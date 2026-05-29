@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -36,10 +36,7 @@ const CourseDetail = () => {
     fetchContent();
   }, [id, currentWeek]);
 
-  // Reset reader checkbox when switching weeks
-  useEffect(() => {
-    setHasReadMaterial(false);
-  }, [activeWeekIndex]);
+
 
   const handleCopyCode = (code: string, topicIndex: number) => {
     navigator.clipboard.writeText(code);
@@ -52,6 +49,16 @@ const CourseDetail = () => {
   }
 
   const selectedWeek = weeks[activeWeekIndex];
+
+  // Calculate circular progress metrics for the sidebar
+  const completedPercentage = Math.min(Math.round(((progressInfo?.weekCompleted || 0) / 4) * 100), 100);
+  const radius = 20;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (completedPercentage / 100) * circumference;
+
+  // Calculate estimated reading time
+  const wordCount = selectedWeek?.topics?.reduce((acc: number, t: any) => acc + (t.text?.split(/\s+/).length || 0), 0) || 0;
+  const readingTime = Math.max(Math.ceil(wordCount / 200), 1);
 
   return (
     <div className="py-6 max-w-6xl mx-auto px-4 space-y-6">
@@ -76,8 +83,42 @@ const CourseDetail = () => {
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         
         {/* Left Column: Weekly Modules Sidebar */}
-        <div className="w-full lg:w-1/3 bg-slate-900/40 border border-slate-800 rounded-2xl p-4 space-y-3 shrink-0">
+        <div className="w-full lg:w-1/3 bg-slate-900/40 border border-slate-800 rounded-2xl p-4 space-y-3.5 shrink-0">
           <h2 className="text-lg font-extrabold tracking-tight px-2 pb-2 border-b border-slate-800">Weekly Modules</h2>
+          
+          {/* Circular Progress Widget in Sidebar */}
+          <div className="flex items-center gap-3.5 p-3 bg-slate-900/60 border border-slate-800/85 rounded-xl shadow-inner">
+            <div className="relative flex items-center justify-center shrink-0">
+              <svg className="w-12 h-12 transform -rotate-90">
+                <circle
+                  cx="24"
+                  cy="24"
+                  r={radius}
+                  className="text-slate-800"
+                  strokeWidth="3"
+                  stroke="currentColor"
+                  fill="transparent"
+                />
+                <circle
+                  cx="24"
+                  cy="24"
+                  r={radius}
+                  className="text-blue-500 transition-all duration-700 ease-out"
+                  strokeWidth="3"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="transparent"
+                />
+              </svg>
+              <span className="absolute text-[9px] font-black text-white">{completedPercentage}%</span>
+            </div>
+            <div>
+              <h3 className="text-xs font-black text-slate-100 uppercase tracking-wider">Track Progress</h3>
+              <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{progressInfo?.weekCompleted || 0} of 4 Modules Completed</p>
+            </div>
+          </div>
           
           <div className="space-y-2.5">
             {weeks.map((week, index) => {
@@ -89,7 +130,10 @@ const CourseDetail = () => {
                 <button
                   key={index}
                   disabled={!isUnlocked}
-                  onClick={() => setActiveWeekIndex(index)}
+                  onClick={() => {
+                    setActiveWeekIndex(index);
+                    setHasReadMaterial(false);
+                  }}
                   className={`w-full text-left p-3.5 rounded-xl border flex items-center justify-between transition-all duration-200 group ${
                     isActive 
                       ? 'bg-blue-600/10 border-blue-500/50 text-white shadow-lg shadow-blue-500/5' 
@@ -133,8 +177,13 @@ const CourseDetail = () => {
             >
               {/* Header block */}
               <div>
-                <div className="inline-block text-xs font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded mb-2">
-                  Module {selectedWeek.week} Study Material
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <div className="inline-block text-xs font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded">
+                    Module {selectedWeek.week} Study Material
+                  </div>
+                  <div className="text-[9px] font-bold text-slate-455 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
+                    ⏱ {readingTime} Min Read
+                  </div>
                 </div>
                 <h2 className="text-2xl font-extrabold tracking-tight text-white">{selectedWeek.title}</h2>
                 <p className="text-slate-400 text-sm mt-1">{selectedWeek.description}</p>
@@ -241,6 +290,39 @@ const CourseDetail = () => {
                     <span>Complete Week {currentWeek + 1} quiz to unlock the subsequent learning materials.</span>
                   </div>
                 )}
+              </div>
+
+              {/* Navigation controls at the bottom of content */}
+              <div className="flex justify-between items-center pt-6 border-t border-slate-800/80 mt-10">
+                <button
+                  disabled={activeWeekIndex === 0}
+                  onClick={() => {
+                    setActiveWeekIndex(activeWeekIndex - 1);
+                    setHasReadMaterial(false);
+                  }}
+                  className={`px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-[0.98] ${
+                    activeWeekIndex === 0
+                      ? 'border-slate-900 text-slate-700 cursor-not-allowed opacity-30 bg-transparent'
+                      : 'border-slate-800 hover:border-slate-700 text-slate-355 hover:text-white bg-slate-950/40 hover:bg-slate-950/60 shadow-sm'
+                  }`}
+                >
+                  ← Prev Module
+                </button>
+                
+                <button
+                  disabled={activeWeekIndex >= Math.min(currentWeek, 3)}
+                  onClick={() => {
+                    setActiveWeekIndex(activeWeekIndex + 1);
+                    setHasReadMaterial(false);
+                  }}
+                  className={`px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-[0.98] ${
+                    activeWeekIndex >= Math.min(currentWeek, 3)
+                      ? 'border-slate-900 text-slate-700 cursor-not-allowed opacity-30 bg-transparent'
+                      : 'border-slate-800 hover:border-slate-700 text-slate-355 hover:text-white bg-slate-950/40 hover:bg-slate-950/60 shadow-sm'
+                  }`}
+                >
+                  Next Module →
+                </button>
               </div>
             </motion.div>
           </AnimatePresence>

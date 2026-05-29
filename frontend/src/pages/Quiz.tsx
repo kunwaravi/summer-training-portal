@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Send, ArrowRight, ArrowLeft, Clock, Award, AlertTriangle, CheckCircle, XCircle, ChevronLeft } from 'lucide-react';
+import { Send, ArrowRight, ArrowLeft, Clock, AlertTriangle, CheckCircle, XCircle, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 const Quiz = () => {
   const { courseId, week } = useParams();
@@ -18,13 +19,24 @@ const Quiz = () => {
   
   // Quiz Timer State: 5 minutes (300 seconds)
   const [timeLeft, setTimeLeft] = useState(300);
-  const [isTimeUp, setIsTimeUp] = useState(false);
 
   // Submission Results State
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [passed, setPassed] = useState(false);
   const [breakdown, setBreakdown] = useState<any[]>([]);
+
+  // Celebrate success when passing the assessment!
+  useEffect(() => {
+    if (submitted && passed) {
+      confetti({
+        particleCount: 140,
+        spread: 80,
+        origin: { y: 0.65 },
+        colors: ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6']
+      });
+    }
+  }, [submitted, passed]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -45,7 +57,6 @@ const Quiz = () => {
     if (submitted || loading || questions.length === 0) return;
     
     if (timeLeft <= 0) {
-      setIsTimeUp(true);
       handleSubmitQuiz(true); // Auto-submit when time is up
       return;
     }
@@ -55,6 +66,7 @@ const Quiz = () => {
     }, 1000);
 
     return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, submitted, loading, questions]);
 
   const handleOptionSelect = (option: string) => {
@@ -74,7 +86,7 @@ const Quiz = () => {
     }
   };
 
-  const handleSubmitQuiz = async (forceSubmit = false) => {
+  async function handleSubmitQuiz(forceSubmit = false) {
     if (!forceSubmit && Object.keys(answers).length < questions.length) {
       alert('Please answer all questions before submitting.');
       return;
@@ -105,7 +117,7 @@ const Quiz = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { Award, ArrowLeft, Printer, ShieldCheck } from 'lucide-react';
+import { Award, Printer, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
 
 const Certificate = () => {
   const { user } = useAuth();
@@ -244,7 +245,7 @@ const Certificate = () => {
               </p>
             </div>
             
-            {/* Red stamp seal - Center */}
+            {/* Red stamp seal - Center Left */}
             <div className="flex flex-col items-center gap-1 shrink-0">
               <div className="w-14 h-14 rounded-full flex items-center justify-center relative select-none">
                 <svg width="56" height="56" viewBox="0 0 64 64" className="text-red-500/90 filter drop-shadow-[0_0_5px_rgba(239,68,68,0.35)]">
@@ -262,6 +263,19 @@ const Certificate = () => {
                   </text>
                 </svg>
               </div>
+            </div>
+
+            {/* Dynamic Verification QR Code - Center Right */}
+            <div className="flex flex-col items-center gap-1 shrink-0 bg-white p-1 rounded-lg shadow-md border border-slate-200/95 gold-glow-border">
+              <QRCodeSVG 
+                value={`${window.location.origin}/verify?id=${data.credentialId}`} 
+                size={48}
+                bgColor={"#ffffff"} 
+                fgColor={"#060a16"} 
+                level={"M"}
+                includeMargin={true}
+              />
+              <span className="text-[6px] font-mono text-slate-800 uppercase font-black tracking-tight leading-none">Scan to Verify</span>
             </div>
 
             {/* CAO Signature - Right */}
