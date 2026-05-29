@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../api';
 
 interface AuthContextType {
   user: any;
@@ -14,11 +15,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const syncAuth = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      // Seed with local storage immediately if available
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+
+      if (token) {
+        try {
+          // Fetch fresh user profile from backend (includes complete course progress)
+          const response = await api.get('/auth/me');
+          setUser(response.data);
+          localStorage.setItem('user', JSON.stringify(response.data));
+        } catch (error) {
+          console.error('Session sync failed:', error);
+          // Token is likely invalid or expired, clear auth state
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+    
+    syncAuth();
   }, []);
 
   const login = (token: string, userData: any) => {

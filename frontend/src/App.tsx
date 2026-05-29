@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import CourseDetail from './pages/CourseDetail';
 import Quiz from './pages/Quiz';
 import Certificate from './pages/Certificate';
+import Verify from './pages/Verify';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -26,6 +27,7 @@ function AppRoutes() {
           <Route path="/course/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
           <Route path="/quiz/:courseId/:week" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
           <Route path="/certificate" element={<ProtectedRoute><Certificate /></ProtectedRoute>} />
+          <Route path="/verify" element={<Verify />} />
         </Routes>
       </div>
     </div>

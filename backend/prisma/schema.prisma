@@ -4,28 +4,44 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  password     String
-  name         String
-  fatherName   String?
-  collegeName  String?
-  branchName   String?
-  grade        String?  @default("N/A")
-  progress     Int      @default(0) // 0 to 100
-  weekCompleted Int     @default(0) // 0 to 4
-  courseType   String   @default("Electronics") // Default course
-  results      QuizResult[]
-  createdAt    DateTime @default(now())
+  id            Int              @id @default(autoincrement())
+  email         String           @unique
+  password      String
+  name          String
+  fatherName    String?
+  collegeName   String?
+  branchName    String?
+  grade         String?          @default("N/A")
+  progress      Int              @default(0) // legacy global progress
+  weekCompleted Int              @default(0) // legacy global weekCompleted
+  courseType    String           @default("Electronics")
+  progresses    CourseProgress[]
+  results       QuizResult[]
+  createdAt     DateTime         @default(now())
+}
+
+model CourseProgress {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  courseId      String   // "C", "C++", "IoT", "Embedded"
+  weekCompleted Int      @default(0) // 0 to 4
+  progress      Int      @default(0) // 0 to 100
+  completed     Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, courseId])
 }
 
 model QuizResult {
   id        Int      @id @default(autoincrement())
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
+  courseId  String   @default("C")
   week      Int
   score     Int
   passed    Boolean
