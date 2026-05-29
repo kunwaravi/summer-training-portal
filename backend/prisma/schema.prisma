@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  name         String
+  fatherName   String?
+  collegeName  String?
+  branchName   String?
+  grade        String?  @default("N/A")
+  progress     Int      @default(0) // 0 to 100
+  weekCompleted Int     @default(0) // 0 to 4
+  courseType   String   @default("Electronics") // Default course
+  results      QuizResult[]
+  createdAt    DateTime @default(now())
+}
+
+model QuizResult {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  week      Int
+  score     Int
+  passed    Boolean
+  createdAt DateTime @default(now())
+}
