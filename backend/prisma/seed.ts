@@ -4,6 +4,25 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+const courseMetadata: Record<string, { title: string, description: string }> = {
+  "C": {
+    title: "C & Systems Programming for Hardware",
+    description: "Learn the core foundations of procedural programming."
+  },
+  "C++": {
+    title: "C++ & OOP for Embedded Systems",
+    description: "Migrate to object-oriented paradigms and generic programming."
+  },
+  "IoT": {
+    title: "IoT & Smart Interfacing Solutions",
+    description: "Discover Internet of Things basics, sensory inputs, and network layering."
+  },
+  "Embedded": {
+    title: "Embedded Systems & Real-Time OS",
+    description: "Master embedded architectures and real-time operating systems."
+  }
+};
+
 async function main() {
   console.log('Seeding relational curriculum database...');
 
@@ -11,68 +30,69 @@ async function main() {
   await prisma.topic.deleteMany();
   await prisma.quizQuestion.deleteMany();
   await prisma.module.deleteMany();
+  // Don't delete courses if we want to upsert to keep relations intact, but doing so for clean slate
   await prisma.course.deleteMany();
 
-  const courseIds = Object.keys(curriculum);
-
-  for (const courseId of courseIds) {
-    const courseWeeks = curriculum[courseId];
-    
-    let displayCourseName = "Advanced Computing Solutions";
-    if (courseId === "C") displayCourseName = "C & Systems Programming for Hardware";
-    else if (courseId === "C++") displayCourseName = "C++ & OOP for Embedded Systems";
-    else if (courseId === "IoT") displayCourseName = "IoT & Smart Interfacing Solutions";
-    else if (courseId === "Embedded") displayCourseName = "Embedded Systems & Real-Time OS";
-
-    console.log(`Creating Course: ${courseId}`);
+  // Upsert Courses
+  for (const [courseId, meta] of Object.entries(courseMetadata)) {
     const course = await prisma.course.create({
       data: {
         id: courseId,
-        title: displayCourseName,
-        description: `Master standard industrial skills in ${courseId} training tracks with verify-ready certification.`,
-      },
+        title: meta.title,
+        description: meta.description,
+        price: 999, // ₹999 for the certificate
+        isPublished: true,
+      }
     });
 
-    for (const weekData of courseWeeks) {
-      console.log(`  Creating Module for Week ${weekData.week}: ${weekData.title}`);
-      const module = await prisma.module.create({
-        data: {
-          courseId: course.id,
-          week: weekData.week,
-          title: weekData.title,
-          description: weekData.description,
-        },
-      });
+    console.log(`Upserted Course: ${course.id}`);
 
-      // Create Topics
-      for (let i = 0; i < weekData.topics.length; i++) {
-        const topicData = weekData.topics[i];
-        await prisma.topic.create({
+    // Seed Modules (Weeks) and Topics
+    const courseWeeks = curriculum[courseId];
+    if (courseWeeks) {
+      for (const week of courseWeeks) {
+        const module = await prisma.module.create({
           data: {
-            moduleId: module.id,
-            title: topicData.title,
-            text: topicData.text,
-            code: topicData.code,
-            note: topicData.note,
-            order: i,
-          },
+            courseId: courseId,
+            week: week.week,
+            title: week.title,
+            description: week.description
+          }
         });
-      }
+        
+        console.log(`Upserted Module: ${courseId} - Week ${week.week}`);
 
-      // Find quiz questions for this week
-      const courseQuizzes = quizzes[courseId] || [];
-      const weekQuiz = courseQuizzes.find(q => q.week === weekData.week);
-      if (weekQuiz) {
-        console.log(`    Creating ${weekQuiz.questions.length} quiz questions...`);
-        for (const q of weekQuiz.questions) {
-          await prisma.quizQuestion.create({
+        for (let i = 0; i < week.topics.length; i++) {
+          const topicData = week.topics[i];
+          await prisma.topic.create({
             data: {
               moduleId: module.id,
-              text: q.text,
-              options: q.options,
-              correctAnswer: q.correctAnswer,
-            },
+              title: topicData.title,
+              text: topicData.text,
+              code: topicData.code || null,
+              note: topicData.note || null,
+              order: i
+            }
           });
+        }
+        
+        // Seed Quizzes
+        const courseQuizzes = quizzes[courseId];
+        if (courseQuizzes) {
+          const weekQuiz = courseQuizzes.find(q => q.week === week.week);
+          if (weekQuiz) {
+            for (const question of weekQuiz.questions) {
+              await prisma.quizQuestion.create({
+                data: {
+                  moduleId: module.id,
+                  text: question.text,
+                  options: question.options,
+                  correctAnswer: question.correctAnswer
+                }
+              });
+            }
+            console.log(`Seeded Quizzes for: ${courseId} - Week ${week.week}`);
+          }
         }
       }
     }

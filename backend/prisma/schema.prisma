@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id            Int              @id @default(autoincrement())
   email         String           @unique
@@ -19,7 +24,7 @@ model User {
   progress      Int              @default(0) // legacy global progress
   weekCompleted Int              @default(0) // legacy global weekCompleted
   courseType    String           @default("Electronics")
-  role          String           @default("USER") // Role-based access control (USER, ADMIN)
+  role          Role             @default(USER)
   progresses    CourseProgress[]
   results       QuizResult[]
   payments      Payment[]
@@ -31,6 +36,7 @@ model CourseProgress {
   userId        Int
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId      String   // "C", "C++", "IoT", "Embedded"
+  course        Course   @relation(fields: [courseId], references: [id])
   weekCompleted Int      @default(0) // 0 to 4
   progress      Int      @default(0) // 0 to 100
   completed     Boolean  @default(false)
@@ -45,6 +51,7 @@ model QuizResult {
   userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId  String   @default("C")
+  course    Course   @relation(fields: [courseId], references: [id])
   week      Int
   score     Int
   passed    Boolean
@@ -54,10 +61,17 @@ model QuizResult {
 }
 
 model Course {
-  id          String   @id // "C", "C++", "IoT", "Embedded"
+  id          String           @id // "C", "C++", "IoT", "Embedded"
   title       String
   description String
+  price       Int              @default(999) // Price in rupees
+  isPublished Boolean          @default(true)
   modules     Module[]
+  progresses  CourseProgress[]
+  results     QuizResult[]
+  payments    Payment[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 model Module {
@@ -69,19 +83,24 @@ model Module {
   description   String
   topics        Topic[]
   quizQuestions QuizQuestion[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
+  @@unique([courseId, week])
   @@index([courseId])
 }
 
 model Topic {
-  id       Int     @id @default(autoincrement())
-  moduleId Int
-  module   Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  title    String
-  text     String
-  code     String?
-  note     String?
-  order    Int     @default(0)
+  id          Int      @id @default(autoincrement())
+  moduleId    Int
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title       String
+  text        String
+  code        String?
+  note        String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([moduleId])
 }
@@ -93,19 +112,30 @@ model QuizQuestion {
   text          String
   options       String[]
   correctAnswer String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([moduleId])
 }
 
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model Payment {
-  id        String   @id @default(uuid())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId  String
-  amount    Int
-  status    String   // "PENDING", "SUCCESS", "FAILED"
-  reference String?  // payment processor reference (e.g. Razorpay payment id)
-  createdAt DateTime @default(now())
+  id            String        @id @default(uuid())
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course        @relation(fields: [courseId], references: [id])
+  transactionId String?       @unique
+  amount        Int
+  status        PaymentStatus @default(PENDING)
+  reference     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@index([userId, courseId])
 }
