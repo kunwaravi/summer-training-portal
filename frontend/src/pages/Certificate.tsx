@@ -142,7 +142,12 @@ const Certificate = () => {
             height: auto !important;
             aspect-ratio: 1.414 / 1 !important;
             background-color: #fdfcf7 !important;
+            background-image: 
+              radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+              url("https://www.transparenttextures.com/patterns/pinstriped-suit.png") !important;
             border: 20px solid #1a2a44 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           h1, h2, h3, h4, p {
             white-space: nowrap !important;

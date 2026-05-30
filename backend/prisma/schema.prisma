@@ -23,12 +23,16 @@ model User {
   grade         String?          @default("N/A")
   progress      Int              @default(0) // legacy global progress
   weekCompleted Int              @default(0) // legacy global weekCompleted
-  courseType    String           @default("Electronics")
-  role          Role             @default(USER)
-  progresses    CourseProgress[]
-  results       QuizResult[]
-  payments      Payment[]
-  createdAt     DateTime         @default(now())
+  courseType        String           @default("Electronics")
+  role              Role             @default(USER)
+  isVerified        Boolean          @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpires DateTime?
+  progresses        CourseProgress[]
+  results           QuizResult[]
+  payments          Payment[]
+  createdAt         DateTime         @default(now())
 }
 
 model CourseProgress {

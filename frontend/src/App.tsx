@@ -6,6 +6,7 @@ import CourseDetail from './pages/CourseDetail';
 import Quiz from './pages/Quiz';
 import Certificate from './pages/Certificate';
 import Verify from './pages/Verify';
+import ResetPassword from './pages/ResetPassword';
 import AdminDashboard from './pages/AdminDashboard';
 import Navbar from './components/Navbar';
 import './App.css';
@@ -36,6 +37,7 @@ function AppRoutes() {
           <Route path="/quiz/:courseId/:week" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
           <Route path="/certificate" element={<ProtectedRoute><Certificate /></ProtectedRoute>} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Routes>
       </div>

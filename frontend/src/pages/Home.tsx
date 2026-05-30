@@ -22,6 +22,28 @@ const Home = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Forgot password flow states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
+  const [forgotPasswordError, setForgotPasswordError] = useState('');
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotPasswordError('');
+    setForgotPasswordSuccess(false);
+    setForgotPasswordLoading(true);
+    try {
+      await api.post('/auth/forgot-password', { email: forgotPasswordEmail });
+      setForgotPasswordSuccess(true);
+    } catch (err: any) {
+      setForgotPasswordError(err.response?.data?.message || 'Connection error. Please try again.');
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
   // Accordion active week syllabus previews
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
   
@@ -31,6 +53,15 @@ const Home = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!isLogin) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        setError('Password must be at least 8 characters, and contain uppercase, lowercase, numbers, and special characters (@$!%*?&).');
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const endpoint = isLogin ? '/auth/login' : '/auth/register';
@@ -504,6 +535,51 @@ const Home = () => {
                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
                   />
                 </div>
+
+                {isLogin && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotPasswordEmail('');
+                        setForgotPasswordError('');
+                        setForgotPasswordSuccess(false);
+                        setShowForgotPassword(true);
+                      }}
+                      className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 hover:text-indigo-800 transition"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
+
+                {!isLogin && password.length > 0 && (
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-2 text-left text-[10px] animate-in fade-in duration-200">
+                    <p className="font-extrabold uppercase text-slate-500 tracking-wider">Password Complexity Checklist</p>
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-slate-600 font-bold">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full transition ${password.length >= 8 ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
+                        <span>Min 8 characters</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full transition ${/[A-Z]/.test(password) ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
+                        <span>One uppercase (A-Z)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full transition ${/[a-z]/.test(password) ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
+                        <span>One lowercase (a-z)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full transition ${/\d/.test(password) ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
+                        <span>One number (0-9)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 col-span-2">
+                        <span className={`w-1.5 h-1.5 rounded-full transition ${/[@$!%*?&]/.test(password) ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
+                        <span>One special symbol (@$!%*?&)</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {error && (
                   <motion.p 
@@ -548,6 +624,83 @@ const Home = () => {
         </div>
 
       </div>
+
+      {/* Forgot Password Modal (Issue #39 M14) */}
+      <AnimatePresence>
+        {showForgotPassword && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0 }}
+              className="bg-white border border-slate-200 p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-6 relative text-left font-sans"
+            >
+              <button 
+                onClick={() => setShowForgotPassword(false)}
+                className="absolute right-4 top-4 text-slate-400 hover:text-slate-900 transition font-bold"
+              >
+                ✕
+              </button>
+
+              <div className="text-center space-y-1">
+                <h3 className="text-lg font-black text-indigo-950 uppercase tracking-tight">Forgot Password</h3>
+                <p className="text-xs text-slate-500 font-medium">Request a cryptographic password reset link</p>
+              </div>
+
+              {forgotPasswordSuccess ? (
+                <div className="space-y-4 text-center py-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600 text-lg font-black">
+                    ✓
+                  </div>
+                  <p className="text-xs text-slate-600 font-bold leading-relaxed">
+                    If that email address exists in our registry, a password reset link has been dispatched. Please check system logs for the simulated link.
+                  </p>
+                  <button
+                    onClick={() => setShowForgotPassword(false)}
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition"
+                  >
+                    Close Modal
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-3.5 text-slate-400" size={18} />
+                    <input 
+                      type="email" 
+                      placeholder="Registered Email Address" 
+                      required
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-50 rounded-2xl text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
+                    />
+                  </div>
+
+                  {forgotPasswordError && (
+                    <p className="text-[10px] text-red-500 font-black uppercase tracking-tight text-center">⚠ {forgotPasswordError}</p>
+                  )}
+
+                  <button 
+                    type="submit"
+                    disabled={forgotPasswordLoading}
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-350 text-white font-extrabold rounded-2xl transition duration-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2 active:scale-[0.99] shadow shadow-indigo-600/10"
+                  >
+                    {forgotPasswordLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Processing Dispatch...</span>
+                      </>
+                    ) : (
+                      <span>Request Reset Link</span>
+                    )}
+                  </button>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };

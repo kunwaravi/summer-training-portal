@@ -8,7 +8,9 @@ jest.mock('../lib/prisma', () => ({
     $queryRaw: jest.fn(),
     user: {
       findUnique: jest.fn(),
-      create: jest.fn()
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn()
     }
   }
 }));
@@ -21,14 +23,27 @@ describe('Auth & Health System Integration Tests', () => {
     (prisma.$queryRaw as jest.Mock).mockResolvedValue([{ '?column?': 1 }]);
     (prisma.user.findUnique as jest.Mock).mockImplementation((args) => {
       if (args.where.email === 'duplicate@nexus.com') {
-        return Promise.resolve({ id: 99, email: 'duplicate@nexus.com' });
+        return Promise.resolve({ id: 99, email: 'duplicate@nexus.com', isVerified: true });
       }
       return Promise.resolve(null);
+    });
+    (prisma.user.findFirst as jest.Mock).mockImplementation((args) => {
+      return Promise.resolve({
+        id: 1,
+        email: 'test@nexus.com',
+        verificationToken: 'valid_verification_token',
+        resetToken: 'valid_reset_token',
+        resetTokenExpires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour in future
+        isVerified: false
+      });
+    });
+    (prisma.user.update as jest.Mock).mockResolvedValue({
+      id: 1,
+      email: 'test@nexus.com'
     });
     (prisma.user.create as jest.Mock).mockResolvedValue({
       id: 1,
       email: 'test@nexus.com',
-      name: 'Test Student',
       progresses: [],
       results: []
     });
@@ -56,7 +71,7 @@ describe('Auth & Health System Integration Tests', () => {
       .post('/api/auth/register')
       .send({
         email: 'test@nexus.com',
-        password: 'password123',
+        password: 'Password123!',
         name: 'Test Student',
         fatherName: 'Father',
         collegeName: 'College',
@@ -74,7 +89,7 @@ describe('Auth & Health System Integration Tests', () => {
       .set('x-requested-with', 'XMLHttpRequest')
       .send({
         email: 'newuser@nexus.com',
-        password: 'password123',
+        password: 'Password123!',
         name: 'New Student',
         fatherName: 'Father',
         collegeName: 'College',
@@ -84,5 +99,56 @@ describe('Auth & Health System Integration Tests', () => {
     expect(res.status).toBe(201);
     expect(res.body.user).toBeDefined();
     expect(res.body.user.email).toBe('test@nexus.com');
+  });
+
+  it('POST /api/auth/register should fail when password is too simple', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .set('x-requested-with', 'XMLHttpRequest')
+      .send({
+        email: 'newuser@nexus.com',
+        password: 'simplepassword',
+        name: 'New Student',
+        fatherName: 'Father',
+        collegeName: 'College',
+        branchName: 'CSE'
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toContain('special character');
+  });
+
+  it('GET /api/auth/verify should successfully verify account token', async () => {
+    const res = await request(app)
+      .get('/api/auth/verify')
+      .query({ token: 'valid_verification_token' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toContain('verified');
+  });
+
+  it('POST /api/auth/forgot-password should successfully log simulated link', async () => {
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .set('x-requested-with', 'XMLHttpRequest')
+      .send({ email: 'test@nexus.com' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('POST /api/auth/reset-password should enforce strong password complexity and successfully apply update', async () => {
+    const res = await request(app)
+      .post('/api/auth/reset-password')
+      .set('x-requested-with', 'XMLHttpRequest')
+      .send({
+        token: 'valid_reset_token',
+        newPassword: 'StrongPassword123!'
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toContain('successfully reset');
   });
 });

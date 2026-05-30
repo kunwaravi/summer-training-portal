@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import prisma from '../lib/prisma';
 import { logger } from '../lib/logger';
 import { rateLimiter } from '../middleware/rateLimiter';
@@ -17,6 +18,14 @@ router.post(
   async (req: Request, res: Response): Promise<any> => {
     try {
       const { email, password, name, collegeName, branchName } = req.body;
+
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        logger.error(`Registration failed: Password complexity not met for ${email}`);
+        return res.status(400).json({ 
+          message: 'Password must be at least 8 characters long, and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).' 
+        });
+      }
       
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) {
@@ -25,13 +34,17 @@ router.post(
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      
       const user = await prisma.user.create({
         data: {
           email,
           password: hashedPassword,
           name,
           collegeName,
-          branchName
+          branchName,
+          isVerified: false,
+          verificationToken
         },
         include: {
           progresses: true,
@@ -39,21 +52,16 @@ router.post(
         }
       });
 
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
-      
-      // Set secure HTTP-Only cookie (Issue #1)
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 1 day
-      });
-
       // Omit password from return
       const { password: _, ...userWithoutPassword } = user;
 
+      logger.info(`[SIMULATION] Verification link generated for ${email}: http://localhost:8080/verify?token=${verificationToken}`);
       logger.info(`User successfully registered: ${email}`);
-      res.status(201).json({ user: userWithoutPassword });
+      
+      res.status(201).json({ 
+        user: userWithoutPassword,
+        message: 'Registration successful! Please check your verification link.' 
+      });
     } catch (error: any) {
       logger.error('Registration error caught in handler:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -85,6 +93,11 @@ router.post(
       if (!isMatch) {
         logger.error(`Login failed: Invalid password attempt for ${email}`);
         return res.status(400).json({ message: 'Invalid credentials' });
+      }
+
+      if (!user.isVerified) {
+        logger.error(`Login failed: Unverified email attempt for ${email}`);
+        return res.status(403).json({ message: 'Please verify your email address before logging in.' });
       }
 
       const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
@@ -127,6 +140,121 @@ router.get('/me', authenticateToken, async (req: any, res: Response): Promise<an
     res.json(userWithoutPassword);
   } catch (error: any) {
     logger.error('Fetch profile error caught in handler:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// GET /api/auth/verify - Verify student account via cryptographically secure token (Issue #39 M13)
+router.get('/verify', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { token } = req.query;
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ message: 'Verification token is required.' });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { verificationToken: token }
+    });
+
+    if (!user) {
+      logger.error(`Account verification failed: Invalid token ${token}`);
+      return res.status(400).json({ message: 'Invalid or expired verification token.' });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isVerified: true,
+        verificationToken: null
+      }
+    });
+
+    logger.info(`[SUCCESS] Account successfully verified: ${user.email}`);
+    res.json({ success: true, message: 'Email verified successfully!' });
+  } catch (error: any) {
+    logger.error('Account verification error caught in handler:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/forgot-password - Generate password reset token (Issue #39 M14)
+router.post('/forgot-password', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'Email address is required.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    // To prevent email enumeration, we always return success to the client
+    if (user) {
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          resetToken,
+          resetTokenExpires
+        }
+      });
+
+      logger.info(`[SIMULATION] Password reset link for ${email}: http://localhost:8080/reset-password?token=${resetToken}`);
+    } else {
+      logger.info(`Password reset requested for non-existent email: ${email}`);
+    }
+
+    res.json({ success: true, message: 'If that email address exists in our registry, a password reset link has been dispatched.' });
+  } catch (error: any) {
+    logger.error('Forgot password error caught in handler:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/reset-password - Verify reset token and apply new password (Issue #39 M14)
+router.post('/reset-password', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: 'Token and new password are required.' });
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({ 
+        message: 'Password must be at least 8 characters long, and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).' 
+      });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpires: {
+          gt: new Date()
+        }
+      }
+    });
+
+    if (!user) {
+      logger.error(`Password reset failed: Invalid or expired token ${token}`);
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpires: null
+      }
+    });
+
+    logger.info(`[SUCCESS] Password successfully reset for user: ${user.email}`);
+    res.json({ success: true, message: 'Password successfully reset! You can now log in.' });
+  } catch (error: any) {
+    logger.error('Reset password error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

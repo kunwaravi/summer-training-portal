@@ -8,11 +8,17 @@ const Verify = () => {
   const navigate = useNavigate();
   const query = new URLSearchParams(window.location.search);
   const initialId = query.get('id') || query.get('credentialId') || '';
+  const token = query.get('token') || '';
 
   const [credentialId, setCredentialId] = useState(initialId);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
+
+  // Email verification state hooks
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [emailVerificationError, setEmailVerificationError] = useState('');
+  const [emailVerificationSuccess, setEmailVerificationSuccess] = useState(false);
 
   // Auto-verify if "id" query parameter is passed in URL
   useEffect(() => {
@@ -21,6 +27,28 @@ const Verify = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialId]);
+
+  // Handle email verification flow if token is present
+  useEffect(() => {
+    if (token) {
+      handleEmailVerification(token);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  async function handleEmailVerification(verificationToken: string) {
+    setVerifyingEmail(true);
+    setEmailVerificationError('');
+    setEmailVerificationSuccess(false);
+    try {
+      await api.get('/auth/verify', { params: { token: verificationToken } });
+      setEmailVerificationSuccess(true);
+    } catch (err: any) {
+      setEmailVerificationError(err.response?.data?.message || 'Email verification failed. The token is invalid or has expired.');
+    } finally {
+      setVerifyingEmail(false);
+    }
+  }
 
   async function handleVerify(idToVerify: string) {
     const targetId = idToVerify || credentialId;
@@ -41,6 +69,80 @@ const Verify = () => {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (token) {
+    return (
+      <div className="py-20 max-w-md mx-auto px-4 flex flex-col items-center justify-center min-h-[80vh] no-print">
+        <div className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden text-center">
+          <div className="absolute inset-0 bg-radial-gradient from-cyan-500/5 to-transparent pointer-events-none"></div>
+          
+          <AnimatePresence mode="wait">
+            {verifyingEmail ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4 py-8"
+              >
+                <div className="w-12 h-12 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto"></div>
+                <h3 className="text-sm font-black uppercase text-cyan-400 tracking-widest">Verifying Academic Account...</h3>
+                <p className="text-xs text-slate-400">Verifying secure token registers in PostgreSQL...</p>
+              </motion.div>
+            ) : emailVerificationSuccess ? (
+              <motion.div
+                key="success"
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="space-y-6 py-6"
+              >
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
+                  <CheckCircle2 size={36} className="animate-bounce" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider">Account Verified!</h3>
+                  <p className="text-xs text-slate-350 leading-relaxed">
+                    Welcome to the Nexus Institute! Your email has been validated. You can now login to access your industrial curriculum.
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/')}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition shadow shadow-emerald-500/10 active:scale-[0.98]"
+                >
+                  Proceed to Login
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="error"
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="space-y-6 py-6"
+              >
+                <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
+                  <ShieldAlert size={36} />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-black text-rose-400 uppercase tracking-wider">Verification Failed</h3>
+                  <p className="text-xs text-slate-350 leading-relaxed">
+                    {emailVerificationError || 'The verification token provided is invalid or has expired.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/')}
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-750 text-white font-black text-xs uppercase tracking-widest rounded-xl transition border border-slate-750 active:scale-[0.98]"
+                >
+                  Back to Registration
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    );
   }
 
   return (

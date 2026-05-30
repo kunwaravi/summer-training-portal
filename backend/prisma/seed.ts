@@ -120,6 +120,7 @@ async function main() {
         name: 'Nexus Admin Staff',
         role: 'ADMIN',
         courseType: 'Embedded',
+        isVerified: true,
       },
     });
     console.log(`Admin user seeded: ${adminEmail}`);
