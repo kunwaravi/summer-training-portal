@@ -50,26 +50,26 @@ async function main() {
 
     console.log(`Upserted Course: ${course.id}`);
 
-    // Seed Modules (Weeks) and Topics
-    const courseWeeks = curriculum[courseId];
-    if (courseWeeks) {
-      for (const week of courseWeeks) {
-        const module = await prisma.module.create({
+    // Seed Modules and Topics
+    const courseModules = curriculum[courseId];
+    if (courseModules) {
+      for (const moduleData of courseModules) {
+        const moduleRecord = await prisma.module.create({
           data: {
             courseId: courseId,
-            week: week.week,
-            title: week.title,
-            description: week.description
+            order: moduleData.order,
+            title: moduleData.title,
+            description: moduleData.description
           }
         });
         
-        console.log(`Upserted Module: ${courseId} - Week ${week.week}`);
+        console.log(`Upserted Module: ${courseId} - Order ${moduleData.order}`);
 
-        for (let i = 0; i < week.topics.length; i++) {
-          const topicData = week.topics[i];
+        for (let i = 0; i < moduleData.topics.length; i++) {
+          const topicData = moduleData.topics[i];
           await prisma.topic.create({
             data: {
-              moduleId: module.id,
+              moduleId: moduleRecord.id,
               title: topicData.title,
               text: topicData.text,
               code: topicData.code || null,
@@ -78,24 +78,29 @@ async function main() {
             }
           });
         }
+      }
+      
+      // Seed Quizzes for the entire course, attaching them to the last module for grouping purposes, or the first module.
+      // The requirement was: "pura topic wise rkh skte jo jaise jaise course me topics rahenge but test ek baar hi final hoga"
+      // Since our QuizQuestion model still references moduleId, we will attach all course quiz questions to the first module of the course.
+      const courseQuizzes = quizzes[courseId];
+      if (courseQuizzes && courseModules.length > 0) {
+        const firstModule = await prisma.module.findFirst({
+          where: { courseId, order: courseModules[0].order }
+        });
         
-        // Seed Quizzes
-        const courseQuizzes = quizzes[courseId];
-        if (courseQuizzes) {
-          const weekQuiz = courseQuizzes.find(q => q.week === week.week);
-          if (weekQuiz) {
-            for (const question of weekQuiz.questions) {
-              await prisma.quizQuestion.create({
-                data: {
-                  moduleId: module.id,
-                  text: question.text,
-                  options: JSON.stringify(question.options),
-                  correctAnswer: question.correctAnswer
-                }
-              });
-            }
-            console.log(`Seeded Quizzes for: ${courseId} - Week ${week.week}`);
+        if (firstModule) {
+          for (const question of courseQuizzes.questions) {
+            await prisma.quizQuestion.create({
+              data: {
+                moduleId: firstModule.id,
+                text: question.text,
+                options: JSON.stringify(question.options),
+                correctAnswer: question.correctAnswer
+              }
+            });
           }
+          console.log(`Seeded Final Quiz for: ${courseId}`);
         }
       }
     }

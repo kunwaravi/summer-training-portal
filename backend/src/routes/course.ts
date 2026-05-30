@@ -22,12 +22,12 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
         modules: {
           select: {
             id: true,
-            week: true,
+            order: true,
             title: true,
             description: true
           },
           orderBy: {
-            week: 'asc'
+            order: 'asc'
           }
         }
       }
@@ -46,16 +46,16 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
   }
 });
 
-// GET /api/courses/:courseId/module/:week - Dynamic fetch for ONE module's full topics (Lazy loading detail view)
-router.get('/:courseId/module/:week', async (req: Request, res: Response): Promise<any> => {
+// GET /api/courses/:courseId/module/:order - Dynamic fetch for ONE module's full topics (Lazy loading detail view)
+router.get('/:courseId/module/:order', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { courseId, week } = req.params as any;
-    const weekNum = parseInt(week);
+    const { courseId, order } = req.params as any;
+    const orderNum = parseInt(order);
 
     const moduleRecord = await prisma.module.findFirst({
       where: {
         courseId,
-        week: weekNum
+        order: orderNum
       },
       include: {
         topics: {
@@ -67,8 +67,8 @@ router.get('/:courseId/module/:week', async (req: Request, res: Response): Promi
     });
 
     if (!moduleRecord) {
-      logger.error(`Fetch module details failure: Week ${week} for course ${courseId} not found.`);
-      return res.status(404).json({ message: `Week ${week} for course ${courseId} not found.` });
+      logger.error(`Fetch module details failure: Order ${order} for course ${courseId} not found.`);
+      return res.status(404).json({ message: `Module at order ${order} for course ${courseId} not found.` });
     }
 
     res.json(moduleRecord);
@@ -136,18 +136,18 @@ router.delete('/:courseId', authenticateToken, isAdmin, async (req: Request, res
 router.post('/:courseId/module', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
     const { courseId } = req.params as any;
-    const { week, title, description } = req.body;
+    const { order, title, description } = req.body;
 
     const newModule = await prisma.module.create({
       data: {
         courseId,
-        week: parseInt(week),
+        order: parseInt(order),
         title,
         description: description || ''
       }
     });
     
-    logger.info(`Admin successfully created module: ${courseId} Week ${week}`);
+    logger.info(`Admin successfully created module: ${courseId} Order ${order}`);
     res.status(201).json(newModule);
   } catch (error: any) {
     logger.error('Create module error caught in handler:', error);
@@ -160,12 +160,12 @@ router.put('/module/:moduleId', authenticateToken, isAdmin, async (req: Request,
   try {
     const { moduleId } = req.params as any;
     const moduleIdNum = parseInt(moduleId);
-    const { week, title, description } = req.body;
+    const { order, title, description } = req.body;
 
     const updatedModule = await prisma.module.update({
       where: { id: moduleIdNum },
       data: {
-        week: week !== undefined ? parseInt(week) : undefined,
+        order: order !== undefined ? parseInt(order) : undefined,
         title,
         description
       }

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   CheckCircle, Lock, BookOpen, Play, ArrowLeft, Clipboard, 
   CheckCircle2, ChevronRight, GraduationCap, Zap, Award, 
-  Sparkles, ShieldAlert, Check, Eye 
+  Sparkles, ShieldAlert, Check, Eye, TestTube
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -13,56 +13,49 @@ import { CheckoutModal } from '../components/course/CheckoutModal';
 import { ModuleBlueprintSVG } from '../components/course/ModuleBlueprintSVG';
 
 const CourseDetail = () => {
-  const { id } = useParams(); // Course ID: e.g., 'C', 'C++', 'IoT', 'Embedded'
-  const [weeks, setWeeks] = useState<any[]>([]);
-  const [activeWeekIndex, setActiveWeekIndex] = useState(0);
-  const [hasReadMaterial, setHasReadMaterial] = useState(false);
+  const { id } = useParams();
+  const [modules, setModules] = useState<any[]>([]);
+  const [activeModuleIndex, setActiveModuleIndex] = useState(0);
+  const [readModules, setReadModules] = useState<number[]>([]);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   
-  // Dynamic performance lazy loading & cache states (Issue #9)
   const [loadingSyllabus, setLoadingSyllabus] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(true);
   const [activeModuleDetail, setActiveModuleDetail] = useState<any>(null);
 
-  // Paywall checkout states (Issue #7)
   const [isPaid, setIsPaid] = useState(false);
   const [checkingPayment, setCheckingPayment] = useState(true);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [processingCheckout, setProcessingCheckout] = useState(false);
   
-  // Checkout mock forms
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
   const [upiCopied, setUpiCopied] = useState(false);
   const [couponCode, setCouponCode] = useState('');
-  const [discount, setDiscount] = useState(0); // 0 to 1 (e.g., 0.5 for 50%)
+  const [discount, setDiscount] = useState(0);
   const [couponError, setCouponError] = useState('');
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   
-  // Image Lightbox zoom state (Issue #13)
   const [lightboxImage, setLightboxImage] = useState<React.ReactNode | null>(null);
 
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Find course-specific completed week progress from user state
   const progressInfo = user?.progresses?.find((p: any) => p.courseId === id);
-  const currentWeek = progressInfo?.weekCompleted || 0; // 0 to 4
+  const isCourseCompleted = progressInfo?.completed || false;
+  
+  const passingResults = user?.results?.filter((r: any) => r.courseId === id && r.passed) || [];
+  const bestGrade = passingResults.length > 0 ? passingResults.reduce((prev: any, current: any) => (prev.accuracy > current.accuracy) ? prev : current).grade : null;
 
-  // 1. Fetch Syllabus List (Saves initial course metadata directory)
   useEffect(() => {
     const fetchSyllabus = async () => {
       setLoadingSyllabus(true);
       try {
         const res = await api.get('/courses');
-        const courseWeeks = res.data[id as string] || [];
-        setWeeks(courseWeeks);
-        
-        // Default active week index based on user's current progress milestone
-        const activeIndex = Math.min(currentWeek, 3);
-        setActiveWeekIndex(activeIndex);
+        const courseModules = res.data[id as string] || [];
+        setModules(courseModules);
       } catch (err) {
         console.error('Failed to fetch course syllabus:', err);
       } finally {
@@ -70,14 +63,13 @@ const CourseDetail = () => {
       }
     };
     fetchSyllabus();
-  }, [id, currentWeek]);
+  }, [id]);
 
-  // 2. Fetch Payment Clearance Status (Issue #7)
   useEffect(() => {
     const fetchPaymentStatus = async () => {
       setCheckingPayment(true);
       try {
-        const res = await api.get(`/payments/status/${id}`);
+        const res = await api.get(\`/payments/status/\${id}\`);
         setIsPaid(res.data.paid);
       } catch (err) {
         console.error('Failed to fetch payment status:', err);
@@ -91,33 +83,29 @@ const CourseDetail = () => {
     }
   }, [id, user]);
 
-  // 3. Lazy Load Module Details dynamically on Week navigation (Issue #9)
   useEffect(() => {
-    if (weeks.length === 0) return;
+    if (modules.length === 0) return;
     
     const fetchModuleDetails = async () => {
       setLoadingDetails(true);
       try {
-        const activeWeekNum = weeks[activeWeekIndex]?.week || (activeWeekIndex + 1);
-        
-        // Dynamic dynamic lazy load call
-        const res = await api.get(`/courses/${id}/module/${activeWeekNum}`);
+        const activeModuleId = modules[activeModuleIndex]?.order || 1;
+        const res = await api.get(\`/courses/\${id}/module/\${activeModuleId}\`);
         setActiveModuleDetail(res.data);
       } catch (err) {
         console.error('Lazy loading module failed, utilizing fallback dataset:', err);
-        // Fallback safety to keep platform operational if API isn't fully migrated locally
-        setActiveModuleDetail(weeks[activeWeekIndex]);
+        setActiveModuleDetail(modules[activeModuleIndex]);
       } finally {
         setLoadingDetails(false);
       }
     };
 
     fetchModuleDetails();
-  }, [id, weeks, activeWeekIndex]);
+  }, [id, modules, activeModuleIndex]);
 
   const handleCopyCode = (code: string, topicIndex: number) => {
     navigator.clipboard.writeText(code);
-    setCopiedText(`${topicIndex}`);
+    setCopiedText(\`\${topicIndex}\`);
     setTimeout(() => setCopiedText(null), 2000);
   };
 
@@ -125,6 +113,15 @@ const CourseDetail = () => {
     navigator.clipboard.writeText(text);
     setUpiCopied(true);
     setTimeout(() => setUpiCopied(false), 2000);
+  };
+
+  const handleMarkModuleRead = () => {
+    if (!readModules.includes(activeModuleIndex)) {
+        setReadModules([...readModules, activeModuleIndex]);
+    }
+    if (activeModuleIndex < modules.length - 1) {
+        setActiveModuleIndex(activeModuleIndex + 1);
+    }
   };
 
   const BASE_PRICE = 499;
@@ -150,7 +147,6 @@ const CourseDetail = () => {
     }
   };
 
-  // Mock Payment triggers
   const handleInitiatePayment = () => {
     setShowCheckoutModal(true);
   };
@@ -178,7 +174,6 @@ const CourseDetail = () => {
 
     setProcessingCheckout(true);
     try {
-      // 1. Backend: Initialize order (Issue #3)
       const orderRes = await api.post('/payments/create-order', {
         courseId: id,
         amount: currentPrice
@@ -187,7 +182,6 @@ const CourseDetail = () => {
       const { realPayment, orderId, razorpayOrderId, razorpayKeyId, mockSignature } = orderRes.data;
 
       if (realPayment && razorpayOrderId) {
-        // Implement official Razorpay Checkout Flow
         const isSDKLoaded = await loadRazorpay();
         if (!isSDKLoaded) {
           alert('Failed to load Razorpay payment SDK. Please verify your internet connection.');
@@ -200,7 +194,7 @@ const CourseDetail = () => {
           amount: currentPrice * 100, // paise
           currency: 'INR',
           name: 'Nexus Institute of Technology',
-          description: `Certified Specialization: ${id}`,
+          description: \`Certified Specialization: \${id}\`,
           order_id: razorpayOrderId,
           handler: async (response: any) => {
             setProcessingCheckout(true);
@@ -215,11 +209,7 @@ const CourseDetail = () => {
               if (verifyRes.data.success) {
                 setIsPaid(true);
                 setShowCheckoutModal(false);
-                confetti({
-                  particleCount: 150,
-                  spread: 80,
-                  origin: { y: 0.6 }
-                });
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
               }
             } catch (err: any) {
               console.error(err);
@@ -232,9 +222,7 @@ const CourseDetail = () => {
             name: user?.name || '',
             email: user?.email || ''
           },
-          theme: {
-            color: '#4f46e5'
-          }
+          theme: { color: '#4f46e5' }
         };
 
         const rzp = new (window as any).Razorpay(options);
@@ -243,40 +231,29 @@ const CourseDetail = () => {
         return;
       }
 
-      // Fallback: Secure Cryptographic Simulated Checkout Flow
-      // Simulate a small network latency
       await new Promise((resolve) => setTimeout(resolve, 1200));
 
       const randomSuffix = Math.random().toString(36).substring(2, 9).toUpperCase();
       let gatewayRef = '';
       if (currentPrice === 0) {
-        gatewayRef = `REF_COUPON_FREE_${randomSuffix}`;
+        gatewayRef = \`REF_COUPON_FREE_\${randomSuffix}\`;
       } else {
         gatewayRef = paymentMethod === 'card' 
-          ? `REF_MOCK_CARD_${randomSuffix}`
-          : `REF_MOCK_UPI_${randomSuffix}`;
+          ? \`REF_MOCK_CARD_\${randomSuffix}\`
+          : \`REF_MOCK_UPI_\${randomSuffix}\`;
       }
 
       const verifyRes = await api.post('/payments/verify', {
         orderId,
         mockSignature,
         gatewayReference: gatewayRef,
-        paymentDetails: {
-          paymentMethod,
-          cardNumber,
-          cardExpiry,
-          cardCvv
-        }
+        paymentDetails: { paymentMethod, cardNumber, cardExpiry, cardCvv }
       });
 
       if (verifyRes.data.success) {
         setIsPaid(true);
         setShowCheckoutModal(false);
-        confetti({
-          particleCount: 150,
-          spread: 80,
-          origin: { y: 0.6 }
-        });
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
       }
     } catch (err: any) {
       console.error('Checkout verification failed:', err);
@@ -286,45 +263,48 @@ const CourseDetail = () => {
     }
   };
 
-  // Concept Infographic Blueprint Renderer (Issue #13)
-  // Extracted to ModuleBlueprintSVG component
-
   if (loadingSyllabus) {
     return (
       <div className="py-20 text-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto"></div>
-        <p className="text-slate-400 text-sm font-semibold">Decrypting curriculum syllabus registry...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <p className="text-slate-400 text-sm font-semibold">Loading deep curriculum structure...</p>
       </div>
     );
   }
 
-  const selectedWeek = weeks[activeWeekIndex];
-
-  // Calculate circular progress metrics for the sidebar
-  const completedPercentage = Math.min(Math.round(((progressInfo?.weekCompleted || 0) / 4) * 100), 100);
+  const selectedModule = modules[activeModuleIndex];
+  const allModulesRead = readModules.length === modules.length || isCourseCompleted;
+  const completedPercentage = isCourseCompleted ? 100 : Math.min(Math.round((readModules.length / (modules.length || 1)) * 100), 100);
   const radius = 20;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (completedPercentage / 100) * circumference;
 
-  // Calculate estimated reading time
-  const wordCount = selectedWeek?.description?.split(/\s+/).length + (activeModuleDetail?.topics?.reduce((acc: number, t: any) => acc + (t.text?.split(/\s+/).length || 0), 0) || 0);
+  const wordCount = selectedModule?.description?.split(/\s+/).length + (activeModuleDetail?.topics?.reduce((acc: number, t: any) => acc + (t.text?.split(/\s+/).length || 0), 0) || 0);
   const readingTime = Math.max(Math.ceil(wordCount / 180), 1);
 
   return (
-    <div className="py-6 max-w-6xl mx-auto px-4 space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="py-6 max-w-7xl mx-auto px-4 space-y-6"
+    >
       
       {/* Top Navigation Row */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <button 
           onClick={() => navigate('/dashboard')} 
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition text-sm font-semibold"
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition text-sm font-bold"
         >
-          <ArrowLeft size={16} /> Back to Tracks
+          <ArrowLeft size={16} /> Back to Dashboard
         </button>
-        <div className="flex items-center gap-2">
-          <GraduationCap className="text-blue-400" size={20} />
-          <span className="text-xs uppercase tracking-widest text-slate-350 font-bold bg-slate-800 px-3 py-1 rounded-full border border-slate-700/60">
-            {id} Training Track
+        <div className="flex items-center gap-3">
+          {isCourseCompleted && (
+            <span className="text-xs uppercase tracking-widest text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full flex items-center gap-1.5">
+              <CheckCircle size={14} /> Passed: {bestGrade}
+            </span>
+          )}
+          <span className="text-xs uppercase tracking-widest text-slate-350 font-black bg-slate-800 px-3 py-1 rounded-full border border-slate-700/60">
+            {id}
           </span>
         </div>
       </div>
@@ -332,109 +312,99 @@ const CourseDetail = () => {
       {/* Main Split-Screen Layout */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         
-        {/* Left Column: Weekly Modules Sidebar */}
-        <div className="w-full lg:w-1/3 bg-slate-900/40 border border-slate-800 rounded-2xl p-4 space-y-3.5 shrink-0">
-          <h2 className="text-lg font-extrabold tracking-tight px-2 pb-2 border-b border-slate-800">Weekly Modules</h2>
+        {/* Left Column: Modules Sidebar */}
+        <div className="w-full lg:w-1/3 bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-3xl p-5 space-y-5 shrink-0 shadow-2xl">
+          <h2 className="text-lg font-black tracking-widest uppercase text-slate-200 px-2 border-b border-slate-800 pb-3">Curriculum</h2>
           
           {/* Circular Progress Widget in Sidebar */}
-          <div className="flex items-center gap-3.5 p-3 bg-slate-900/60 border border-slate-800/85 rounded-xl shadow-inner">
+          <div className="flex items-center gap-4 p-4 bg-slate-950/50 border border-slate-800 rounded-2xl shadow-inner">
             <div className="relative flex items-center justify-center shrink-0">
-              <svg className="w-12 h-12 transform -rotate-90">
+              <svg className="w-14 h-14 transform -rotate-90">
+                <circle cx="28" cy="28" r={radius} className="text-slate-800" strokeWidth="4" stroke="currentColor" fill="transparent" />
                 <circle
-                  cx="24"
-                  cy="24"
-                  r={radius}
-                  className="text-slate-800"
-                  strokeWidth="3"
-                  stroke="currentColor"
-                  fill="transparent"
-                />
-                <circle
-                  cx="24"
-                  cy="24"
-                  r={radius}
-                  className="text-cyan-400 transition-all duration-750 ease-out animate-pulse-slow"
-                  strokeWidth="3"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  stroke="currentColor"
-                  fill="transparent"
+                  cx="28" cy="28" r={radius}
+                  className="text-blue-500 transition-all duration-1000 ease-out"
+                  strokeWidth="4" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" stroke="currentColor" fill="transparent"
                 />
               </svg>
-              <span className="absolute text-[9px] font-black text-white">{completedPercentage}%</span>
+              <span className="absolute text-[10px] font-black text-white">{completedPercentage}%</span>
             </div>
             <div>
-              <h3 className="text-xs font-black text-slate-100 uppercase tracking-wider">Track Progress</h3>
-              <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{progressInfo?.weekCompleted || 0} of 4 Modules Completed</p>
+              <h3 className="text-xs font-black text-slate-200 uppercase tracking-widest">Study Progress</h3>
+              <p className="text-[10px] font-bold text-slate-500 mt-1">{readModules.length} of {modules.length} Modules Read</p>
             </div>
           </div>
           
-          <div className="space-y-2.5">
-            {weeks.map((week, index) => {
-              const isUnlocked = index <= currentWeek;
-              const isCompleted = index < currentWeek;
-              const isActive = index === activeWeekIndex;
+          <div className="space-y-3">
+            {modules.map((mod, index) => {
+              const isRead = readModules.includes(index) || isCourseCompleted;
+              const isActive = index === activeModuleIndex;
               
               return (
                 <button
                   key={index}
-                  disabled={!isUnlocked}
-                  onClick={() => {
-                    setActiveWeekIndex(index);
-                    setHasReadMaterial(false);
-                  }}
-                  className={`w-full text-left p-3.5 rounded-xl border flex items-center justify-between transition-all duration-200 group ${
+                  onClick={() => setActiveModuleIndex(index)}
+                  className={\`w-full text-left p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group \${
                     isActive 
-                      ? 'bg-cyan-500/10 border-cyan-500/50 text-white shadow-lg shadow-cyan-500/5' 
-                      : isUnlocked 
-                        ? 'bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800 hover:border-slate-600' 
-                        : 'bg-slate-950/20 border-slate-900 text-slate-500 opacity-50 cursor-not-allowed'
-                  }`}
+                      ? 'bg-blue-600/10 border-blue-500/50 text-white shadow-lg shadow-blue-900/20' 
+                      : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:border-slate-600 hover:text-slate-200'
+                  }\`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg transition-colors ${
-                      isActive 
-                        ? 'bg-cyan-500/20 text-cyan-400' 
-                        : isUnlocked 
-                          ? 'bg-slate-700/50 text-slate-400' 
-                          : 'bg-slate-800 text-slate-600'
-                     }`}>
-                      {isCompleted ? <CheckCircle size={18} className="text-emerald-400" /> : isUnlocked ? <BookOpen size={18} /> : <Lock size={18} />}
+                  <div className="flex items-center gap-3.5">
+                    <div className={\`p-2.5 rounded-xl transition-colors \${
+                      isActive ? 'bg-blue-500/20 text-blue-400' : isRead ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-900 text-slate-500'
+                     }\`}>
+                      {isRead ? <CheckCircle size={18} /> : <BookOpen size={18} />}
                     </div>
                     <div>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Week {week.week}</p>
-                      <h4 className="text-sm font-bold truncate max-w-[170px]">{week.title}</h4>
+                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Module {mod.order}</p>
+                      <h4 className="text-sm font-bold truncate max-w-[150px] mt-0.5">{mod.title}</h4>
                     </div>
                   </div>
-                  {isUnlocked && <ChevronRight size={16} className="text-slate-500 group-hover:translate-x-0.5 transition-transform" />}
                 </button>
               );
             })}
           </div>
+
+          {/* Final Exam Section Button */}
+          <div className="pt-4 border-t border-slate-800">
+             <button
+                onClick={() => navigate(\`/quiz/\${id}\`)}
+                disabled={!allModulesRead && !isCourseCompleted}
+                className={\`w-full p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group \${
+                  allModulesRead || isCourseCompleted
+                    ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/50 text-white hover:from-amber-500/20 hover:to-orange-500/20 shadow-lg shadow-amber-900/20' 
+                    : 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed'
+                }\`}
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className={\`p-2.5 rounded-xl transition-colors \${
+                    allModulesRead || isCourseCompleted ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-900 text-slate-700'
+                   }\`}>
+                    {isCourseCompleted ? <Award size={18} /> : allModulesRead ? <TestTube size={18} /> : <Lock size={18} />}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black uppercase tracking-wide">Final Examination</h4>
+                    <p className="text-[9px] font-bold text-slate-500 mt-0.5">{isCourseCompleted ? "Re-attempt Available" : allModulesRead ? "Unlocked" : "Read all modules to unlock"}</p>
+                  </div>
+                </div>
+                {(allModulesRead || isCourseCompleted) && <Play size={16} className="text-amber-400" />}
+             </button>
+          </div>
         </div>
 
-        {/* Right Column: Dynamic E-Learning Viewer Console */}
-        <div className="flex-1 w-full bg-slate-900/30 border border-slate-800 rounded-2xl p-6 lg:p-8 space-y-6">
+        {/* Right Column: E-Learning Viewer Console */}
+        <div className="flex-1 w-full bg-slate-900/40 backdrop-blur-sm border border-slate-800 rounded-3xl p-6 lg:p-10 shadow-2xl relative overflow-hidden">
           
           {loadingDetails ? (
-            /* Shimmering glassmorphism loading skeleton (Issue #9) */
             <div className="space-y-6 animate-pulse py-4">
-              <div className="flex gap-2">
-                <div className="h-6 w-32 bg-slate-800 rounded"></div>
-                <div className="h-6 w-20 bg-slate-800 rounded"></div>
-              </div>
-              <div className="h-8 w-2/3 bg-slate-800 rounded"></div>
-              <div className="h-4 w-full bg-slate-800 rounded"></div>
-              <div className="h-4 w-5/6 bg-slate-800 rounded"></div>
-              
-              <div className="space-y-6 pt-10 border-t border-slate-850">
+              <div className="h-8 w-1/3 bg-slate-800 rounded-lg"></div>
+              <div className="h-12 w-3/4 bg-slate-800 rounded-xl"></div>
+              <div className="space-y-4 pt-10">
                 {[1, 2].map((i) => (
-                  <div key={i} className="space-y-3 pl-8 relative">
-                    <div className="absolute left-0 top-0 h-6 w-6 rounded-full bg-slate-800"></div>
-                    <div className="h-6 w-40 bg-slate-800 rounded"></div>
-                    <div className="h-4 w-full bg-slate-800 rounded"></div>
-                    <div className="h-24 w-full bg-slate-850 rounded-xl"></div>
+                  <div key={i} className="space-y-3">
+                    <div className="h-6 w-40 bg-slate-800 rounded-lg"></div>
+                    <div className="h-24 w-full bg-slate-800/50 rounded-xl"></div>
                   </div>
                 ))}
               </div>
@@ -442,189 +412,138 @@ const CourseDetail = () => {
           ) : (
             <AnimatePresence mode="wait">
               <motion.div
-                key={activeWeekIndex}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-6"
+                key={activeModuleIndex}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-8"
               >
                 {/* Header block */}
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <div className="inline-block text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
-                      Module {selectedWeek.week} Study Material
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <div className="inline-block text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg">
+                      Module {selectedModule?.order}
                     </div>
-                    <div className="text-[9px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
+                    <div className="text-[10px] font-black text-slate-400 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-lg uppercase tracking-wider flex items-center gap-1.5">
                       ⏱ {readingTime} Min Read
                     </div>
                   </div>
-                  <h2 className="text-2xl font-extrabold tracking-tight text-white">{selectedWeek.title}</h2>
-                  <p className="text-slate-400 text-sm mt-1">{selectedWeek.description}</p>
+                  <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                    {selectedModule?.title}
+                  </h2>
+                  <p className="text-slate-400 text-sm md:text-base mt-4 leading-relaxed max-w-3xl">
+                    {selectedModule?.description}
+                  </p>
                 </div>
 
                 {/* Curriculum Topics List */}
-                <div className="space-y-8 pt-4 border-t border-slate-800/80">
+                <div className="space-y-12 pt-8 border-t border-slate-800/80">
                   {activeModuleDetail?.topics?.map((topic: any, idx: number) => (
-                    <div key={idx} className="space-y-3.5 group">
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center text-xs font-bold shrink-0">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      key={idx} 
+                      className="space-y-4 group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <span className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-sm font-black shrink-0 mt-1">
                           {idx + 1}
                         </span>
-                        <h3 className="text-lg font-bold text-slate-200 tracking-tight group-hover:text-white transition">
-                          {topic.title}
-                        </h3>
+                        <div className="space-y-2 flex-1">
+                          <h3 className="text-xl font-bold text-slate-100 tracking-tight group-hover:text-blue-400 transition-colors">
+                            {topic.title}
+                          </h3>
+                          <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                            {topic.text}
+                          </p>
+                        </div>
                       </div>
-                      
-                      <p className="text-slate-300 text-sm leading-relaxed pl-8">
-                        {topic.text}
-                      </p>
 
-                      {/* Highly aesthetic code blocks with copy features */}
                       {topic.code && (
-                        <div className="ml-8 rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner">
+                        <div className="ml-12 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/80 relative group/code shadow-2xl">
                           <button
                             onClick={() => handleCopyCode(topic.code, idx)}
-                            className="absolute right-3 top-3 p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all text-xs flex items-center gap-1.5 opacity-0 group-hover/code:opacity-100 focus:opacity-100"
-                            title="Copy Code"
+                            className="absolute right-3 top-3 p-2 rounded-xl bg-slate-800/80 backdrop-blur border border-slate-700 text-slate-300 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5 opacity-0 group-hover/code:opacity-100 focus:opacity-100 hover:scale-105"
                           >
                             <Clipboard size={14} />
-                            {copiedText === `${idx}` ? 'Copied!' : 'Copy'}
+                            {copiedText === \`\${idx}\` ? 'Copied!' : 'Copy'}
                           </button>
-                          <pre className="p-4 text-xs font-mono text-cyan-400 overflow-x-auto select-all leading-relaxed">
+                          <pre className="p-5 text-sm font-mono text-blue-300 overflow-x-auto select-all leading-relaxed">
                             <code>{topic.code}</code>
                           </pre>
                         </div>
                       )}
 
-                      {/* Highlighted core takeaways / notes */}
                       {topic.note && (
-                        <div className="ml-8 p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-teal-300 text-xs leading-relaxed flex items-start gap-3">
-                          <span className="text-lg leading-none select-none">💡</span>
+                        <div className="ml-12 p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-amber-200/90 text-sm leading-relaxed flex items-start gap-4 shadow-inner">
+                          <span className="text-2xl leading-none select-none">💡</span>
                           <div>
-                            <strong className="text-teal-200 block mb-0.5">Core Takeaway</strong>
+                            <strong className="text-amber-400 block mb-1 font-black tracking-wide uppercase text-[10px]">Core Takeaway</strong>
                             {topic.note}
                           </div>
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
 
-                {/* Concept Visualized Blueprint (Issue #13) */}
-                <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 ml-8">
-                  <div className="flex items-center gap-2 text-cyan-400">
-                    <Zap size={18} className="animate-pulse" />
-                    <h4 className="text-xs font-black uppercase tracking-widest">Concept Visualized Blueprint</h4>
+                {/* Concept Visualized Blueprint */}
+                <div className="p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 space-y-6 shadow-2xl relative overflow-hidden mt-12">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl"></div>
+                  <div className="flex items-center gap-3 text-blue-400 relative z-10">
+                    <Zap size={20} className="animate-pulse" />
+                    <h4 className="text-xs font-black uppercase tracking-widest">Concept Architecture</h4>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                    <div className="space-y-2 text-slate-350 text-xs leading-relaxed">
-                      <p className="font-bold text-slate-200">Interactive Blueprint Visualization</p>
-                      <p>Study this visual schematic representation of the concepts introduced this week. Click on the infographic mapping diagram to zoom in for detailed viewing.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative z-10">
+                    <div className="space-y-4 text-slate-300 text-sm leading-relaxed">
+                      <p className="font-bold text-white text-base">Interactive Visualization</p>
+                      <p>Study this schematic representation of the concepts introduced in this module. Visualizing the architecture solidifies your deep understanding.</p>
                       <button 
-                        onClick={() => setLightboxImage(<ModuleBlueprintSVG courseKey={id as string} weekNum={selectedWeek.week} />)}
-                        className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-white font-extrabold uppercase rounded text-[9px] border border-slate-700/60 transition active:scale-[0.98]"
+                        onClick={() => setLightboxImage(<ModuleBlueprintSVG courseKey={id as string} weekNum={selectedModule?.order || 1} />)}
+                        className="flex items-center gap-2 mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase rounded-xl text-[10px] tracking-wider transition-transform active:scale-95 shadow-lg shadow-blue-900/50"
                       >
-                        <Eye size={12} /> Click Diagram to Expand
+                        <Eye size={14} /> Expand Diagram
                       </button>
                     </div>
                     <div 
-                      onClick={() => setLightboxImage(<ModuleBlueprintSVG courseKey={id as string} weekNum={selectedWeek.week} />)}
-                      className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/80 hover:bg-slate-950/20 hover:border-slate-700 transition duration-300 cursor-pointer flex justify-center items-center group shadow-md"
+                      onClick={() => setLightboxImage(<ModuleBlueprintSVG courseKey={id as string} weekNum={selectedModule?.order || 1} />)}
+                      className="p-4 rounded-2xl border border-slate-800 bg-slate-950/50 hover:bg-slate-900 hover:border-blue-500/30 transition-all duration-300 cursor-zoom-in flex justify-center items-center group shadow-xl"
                     >
-                      <div className="transform group-hover:scale-[1.02] transition duration-300 w-full max-w-[280px]">
-                        <ModuleBlueprintSVG courseKey={id as string} weekNum={selectedWeek.week} />
+                      <div className="transform group-hover:scale-105 transition duration-500 w-full max-w-[280px]">
+                        <ModuleBlueprintSVG courseKey={id as string} weekNum={selectedModule?.order || 1} />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Lock / Quiz Unlocking Control Console */}
-                <div className="mt-10 p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-slate-300">Module Verification</h4>
-                  
-                  {activeWeekIndex < currentWeek ? (
-                    /* Module already passed */
-                    <div className="flex items-center gap-3 text-emerald-400">
-                      <CheckCircle2 size={24} />
-                      <div>
-                        <p className="text-sm font-bold">Week {selectedWeek.week} Completed successfully!</p>
-                        <p className="text-xs text-slate-400">You passed the quiz for this week. You can re-take it to improve your score if desired.</p>
-                      </div>
-                      <button 
-                        onClick={() => navigate(`/quiz/${id}/${selectedWeek.week}`)}
-                        className="ml-auto text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-lg text-slate-300 font-semibold transition"
-                      >
-                        Retry Quiz
-                      </button>
-                    </div>
-                  ) : activeWeekIndex === currentWeek ? (
-                    /* Current week to learn and pass */
-                    <div className="space-y-4">
-                      <label className="flex items-start gap-3 cursor-pointer group text-xs text-slate-400 select-none">
-                        <input 
-                          type="checkbox"
-                          checked={hasReadMaterial}
-                          onChange={(e) => setHasReadMaterial(e.target.checked)}
-                          className="mt-0.5 w-4 h-4 text-cyan-600 rounded bg-slate-800 border-slate-700 focus:ring-cyan-500 focus:ring-offset-slate-900 cursor-pointer"
-                        />
-                        <span className="group-hover:text-slate-200 transition leading-tight">
-                          I have read and understood all the study concepts for Week {selectedWeek.week} of this track. I am ready to attempt the quiz.
-                        </span>
-                      </label>
-
-                      <button 
-                        disabled={!hasReadMaterial}
-                        onClick={() => navigate(`/quiz/${id}/${selectedWeek.week}`)}
-                        className={`w-full py-3 rounded-xl font-extrabold text-sm transition flex items-center justify-center gap-2 text-white shadow-lg active:scale-[0.99] ${
-                          hasReadMaterial
-                            ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-cyan-500/20'
-                            : 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed opacity-50 shadow-none'
-                        }`}
-                      >
-                        <Play size={16} /> Unlock & Start Week {selectedWeek.week} Quiz
-                      </button>
-                    </div>
+                {/* Progress Control */}
+                <div className="flex justify-between items-center pt-8 border-t border-slate-800/80 mt-12">
+                  {!readModules.includes(activeModuleIndex) && !isCourseCompleted ? (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleMarkModuleRead}
+                      className="ml-auto px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-900/50 flex items-center gap-3"
+                    >
+                      Mark as Read & Continue <ChevronRight size={18} />
+                    </motion.button>
                   ) : (
-                    /* Fully locked module */
-                    <div className="flex items-center gap-3 text-slate-500 text-xs">
-                      <Lock size={18} />
-                      <span>Complete Week {currentWeek + 1} quiz to unlock the subsequent learning materials.</span>
+                    <div className="w-full flex justify-between items-center">
+                       <span className="text-emerald-400 font-black text-xs uppercase tracking-widest flex items-center gap-2 bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20">
+                          <CheckCircle2 size={16} /> Module Completed
+                       </span>
+                       {activeModuleIndex < modules.length - 1 && (
+                         <button
+                           onClick={() => setActiveModuleIndex(activeModuleIndex + 1)}
+                           className="px-6 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white font-bold text-xs uppercase tracking-widest hover:bg-slate-700 transition flex items-center gap-2"
+                         >
+                           Next Module <ChevronRight size={14} />
+                         </button>
+                       )}
                     </div>
                   )}
-                </div>
-
-                {/* Navigation controls at the bottom of content */}
-                <div className="flex justify-between items-center pt-6 border-t border-slate-800/80 mt-10">
-                  <button
-                    disabled={activeWeekIndex === 0}
-                    onClick={() => {
-                      setActiveWeekIndex(activeWeekIndex - 1);
-                      setHasReadMaterial(false);
-                    }}
-                    className={`px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-[0.98] ${
-                      activeWeekIndex === 0
-                        ? 'border-slate-900 text-slate-700 cursor-not-allowed opacity-30 bg-transparent'
-                        : 'border-slate-800 hover:border-slate-700 text-slate-355 hover:text-white bg-slate-950/40 hover:bg-slate-950/60 shadow-sm'
-                    }`}
-                  >
-                    ← Prev Module
-                  </button>
-                  
-                  <button
-                    disabled={activeWeekIndex >= Math.min(currentWeek, 3)}
-                    onClick={() => {
-                      setActiveWeekIndex(activeWeekIndex + 1);
-                      setHasReadMaterial(false);
-                    }}
-                    className={`px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-[0.98] ${
-                      activeWeekIndex >= Math.min(currentWeek, 3)
-                        ? 'border-slate-900 text-slate-700 cursor-not-allowed opacity-30 bg-transparent'
-                        : 'border-slate-800 hover:border-slate-700 text-slate-355 hover:text-white bg-slate-950/40 hover:bg-slate-950/60 shadow-sm'
-                    }`}
-                  >
-                    Next Module →
-                  </button>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -632,114 +551,107 @@ const CourseDetail = () => {
         </div>
       </div>
 
-      {/* Golden Accreditation Certificate Paywall / Access Panel (Issue #3 & #7) */}
-      {currentWeek >= 4 && !checkingPayment && (
+      {/* Certification Paywall */}
+      {isCourseCompleted && !checkingPayment && (
         <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="mt-10 p-8 rounded-2xl relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-yellow-500/30 shadow-xl shadow-yellow-500/5"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-12 p-10 rounded-3xl relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-yellow-500/20 shadow-2xl shadow-yellow-900/10"
         >
-          {/* Sparkles background */}
-          <div className="absolute top-3 left-4 text-yellow-500/5 text-7xl select-none font-serif">★</div>
-          <div className="absolute bottom-3 right-4 text-yellow-500/5 text-7xl select-none font-serif">★</div>
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-yellow-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
           {!isPaid ? (
-            /* Premium Golden Paywall Landing Screen (Issue #7) */
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
               
-              {/* Left Side: Blurred / Watermarked Certificate Mockup */}
-              <div className="relative group/cert select-none">
-                <div className="absolute -inset-1.5 bg-gradient-to-r from-yellow-500/30 to-amber-500/30 rounded-xl blur-lg opacity-60 group-hover/cert:opacity-90 transition duration-500"></div>
+              <div className="relative group/cert select-none perspective-1000">
+                <div className="absolute -inset-4 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-2xl blur-xl opacity-50 group-hover/cert:opacity-80 transition duration-700"></div>
                 
-                {/* Visual Certificate Frame */}
-                <div className="relative border-4 border-yellow-500/40 p-4 rounded-xl bg-slate-900 aspect-[1.41/1] overflow-hidden flex flex-col justify-between items-center text-center filter blur-[4px] contrast-75 brightness-75 select-none pointer-events-none">
-                  <div className="text-[7px] tracking-widest text-slate-500 font-extrabold uppercase">Nexus Academic Credentials</div>
-                  <div className="my-auto space-y-1">
-                    <h3 className="text-yellow-500/60 font-serif font-black text-sm uppercase tracking-wide">Certificate of Accomplishment</h3>
-                    <p className="text-[8px] text-slate-400">Awarded to the candidate</p>
-                    <p className="text-xs font-bold text-white tracking-tight underline underline-offset-4">{user?.name || "STUDENT NAME"}</p>
-                    <p className="text-[6px] text-slate-500 max-w-[200px] leading-tight mx-auto">for completing the intensive training curriculum in C & Embedded Systems Hardware tracks.</p>
+                <motion.div 
+                  whileHover={{ rotateY: 5, rotateX: 5 }}
+                  className="relative border-2 border-yellow-500/30 p-6 rounded-2xl bg-slate-950 aspect-[1.41/1] overflow-hidden flex flex-col justify-between items-center text-center filter blur-[2px] contrast-75 brightness-75 select-none pointer-events-none shadow-2xl"
+                >
+                  <div className="text-[9px] tracking-widest text-slate-500 font-black uppercase">Nexus Academic Registry</div>
+                  <div className="my-auto space-y-2 w-full px-8">
+                    <h3 className="text-yellow-500/80 font-serif font-black text-lg uppercase tracking-widest border-b border-yellow-500/20 pb-2">Certificate of Accomplishment</h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pt-2">Awarded to</p>
+                    <p className="text-2xl font-black text-white tracking-tight">{user?.name || "STUDENT NAME"}</p>
+                    <p className="text-[9px] text-slate-400 max-w-[280px] leading-relaxed mx-auto font-medium">for demonstrating outstanding expertise and passing the rigorous final examination in deep technical domains.</p>
                   </div>
-                  <div className="w-full flex justify-between items-center text-[5px] text-slate-650 px-2 font-mono">
-                    <div>DATE: 2026-05-29</div>
-                    <div>GRADE: A+</div>
+                  <div className="w-full flex justify-between items-center text-[8px] text-slate-500 px-4 font-mono font-bold">
+                    <div>VERIFIED ID: HIDDEN</div>
+                    <div>GRADE: {bestGrade}</div>
                   </div>
-                </div>
+                </motion.div>
 
-                {/* Giant Diagonal Diagonal Provisional Watermark Overlay */}
                 <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 rounded text-[9px] font-black tracking-widest uppercase rotate-[-12deg] shadow-lg shadow-black/80">
-                    Provisional Preview - Locked 🔒
-                  </span>
+                  <div className="px-6 py-3 bg-slate-950/80 backdrop-blur text-yellow-500 border border-yellow-500/50 rounded-2xl text-xs font-black tracking-widest uppercase rotate-[-8deg] shadow-2xl flex items-center gap-2">
+                    <Lock size={16} /> Locked
+                  </div>
                 </div>
               </div>
 
-              {/* Right Side: Accreditations, Value Proposition & CTA Checkout */}
-              <div className="space-y-5 text-left">
-                <div className="flex items-center gap-2 text-yellow-400">
-                  <Award size={24} className="animate-bounce" />
-                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">Unlock Your Verified Certificate 🎓</h2>
+              <div className="space-y-6 text-left relative z-10">
+                <div className="inline-block bg-yellow-500/10 border border-yellow-500/20 px-4 py-1.5 rounded-full text-yellow-500 text-[10px] font-black uppercase tracking-widest mb-2">
+                  Examination Passed
                 </div>
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">Claim Your Verified <br/>Credentials 🎓</h2>
                 
-                <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
-                  Congratulations! You have completed all course curriculum modules and passed the final examinations. Your credential is ready to be authorized and published.
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  You conquered the curriculum and aced the final exam. Your ISO-compliant certificate with verifiable registry data is ready to be published.
                 </p>
 
-                {/* Value Propositions Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] text-slate-300 font-bold bg-slate-900/50 p-4 rounded-xl border border-slate-800/80">
-                  <div className="flex items-start gap-2.5">
-                    <Check size={14} className="text-yellow-500 shrink-0 mt-0.5" />
-                    <span>ISO 9001:2015 Accredited Standards</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check size={14} className="text-yellow-500 shrink-0 mt-0.5" />
-                    <span>Verifiable Online Registry Entry</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check size={14} className="text-yellow-500 shrink-0 mt-0.5" />
-                    <span>One-Click Shareable to LinkedIn</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check size={14} className="text-yellow-500 shrink-0 mt-0.5" />
-                    <span>Durable High-Res Printable Format</span>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-300 font-bold">
+                  {[
+                    "ISO 9001:2015 Accredited", 
+                    "Verifiable Online Registry", 
+                    "LinkedIn Shareable", 
+                    "High-Res Printable"
+                  ].map((feature, idx) => (
+                    <div key={idx} className="flex items-center gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                      <Check size={16} className="text-yellow-500 shrink-0" />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-                  <button 
+                <div className="flex flex-col sm:flex-row items-center gap-5 pt-4">
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleInitiatePayment}
-                    className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-950 font-black rounded-xl shadow-lg shadow-yellow-500/10 hover:shadow-yellow-500/25 transition duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-xs uppercase tracking-widest"
+                    className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 font-black rounded-2xl shadow-xl shadow-yellow-600/20 text-xs uppercase tracking-widest"
                   >
-                    Unlock Official Credentials (₹499)
-                  </button>
-                  <div className="flex items-center gap-1.5 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                    <ShieldAlert size={14} /> Encrypted Gateway
+                    Unlock Certificate (₹499)
+                  </motion.button>
+                  <div className="flex items-center gap-2 text-slate-500 text-[10px] uppercase font-black tracking-widest bg-slate-900/50 px-4 py-2 rounded-xl">
+                    <ShieldAlert size={14} /> SSL Secured
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            /* Successful Checkout Celebration Presentation State */
-            <div className="text-center relative z-10 space-y-6 py-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
-                <Sparkles size={32} className="animate-spin-slow" />
+            <div className="text-center relative z-10 space-y-6 py-8">
+              <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400 shadow-inner">
+                <Sparkles size={40} className="animate-pulse" />
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-yellow-400 tracking-tight">Credentials Verified & Active! 🎓</h2>
-              <p className="text-slate-300 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-                Thank you! Your payment cleared successfully and your secure certification credentials have been generated. You can now download, print, or share your ISO-compliant certificate.
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Credentials Authorized!</h2>
+              <p className="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
+                Your payment cleared successfully. Your secure certification credentials have been generated and entered into the registry.
               </p>
-              <button 
-                onClick={() => navigate(`/certificate?courseId=${id}`)}
-                className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-950 font-black rounded-xl shadow-lg shadow-yellow-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-sm"
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate(\`/certificate?courseId=\${id}\`)}
+                className="mt-4 px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-2xl shadow-xl shadow-emerald-900/30 text-sm uppercase tracking-widest"
               >
-                Open High-Resolution Certificate
-              </button>
+                View High-Res Certificate
+              </motion.button>
             </div>
           )}
         </motion.div>
       )}
 
-      {/* Interactive Lightbox Infographic Zoom Modal (Issue #13) */}
+      {/* Lightbox Modal */}
       <AnimatePresence>
         {lightboxImage && (
           <motion.div 
@@ -747,36 +659,31 @@ const CourseDetail = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setLightboxImage(null)}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-zoom-out"
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
           >
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-slate-950/70 border border-slate-800 p-8 rounded-2xl w-full max-w-2xl aspect-[1.5/1] relative shadow-2xl flex flex-col justify-center items-center"
+              className="bg-slate-950 border border-slate-800 p-10 rounded-3xl w-full max-w-3xl aspect-[1.5/1] relative shadow-2xl flex flex-col justify-center items-center"
             >
               <button 
                 onClick={() => setLightboxImage(null)}
-                className="absolute right-4 top-4 text-xs font-bold text-slate-500 hover:text-white bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg transition"
+                className="absolute right-6 top-6 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 px-4 py-2 rounded-xl transition-all"
               >
                 Close ✕
               </button>
               
-              <div className="w-full h-full max-w-[500px] flex items-center justify-center">
+              <div className="w-full h-full flex items-center justify-center">
                 {lightboxImage}
               </div>
-              
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-4">
-                Interactive Technical Blueprint - Concept Visualized
-              </p>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Stripe/Razorpay Sleek Mock Checkout Modal (Issue #7 & #3) */}
       <CheckoutModal
         isOpen={showCheckoutModal}
         onClose={() => setShowCheckoutModal(false)}
@@ -801,7 +708,7 @@ const CourseDetail = () => {
         onCopyToClipboard={copyToClipboard}
       />
 
-    </div>
+    </motion.div>
   );
 };
 

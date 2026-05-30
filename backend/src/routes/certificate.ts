@@ -3,7 +3,6 @@ import prisma from '../lib/prisma';
 import { authenticateToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
 import { rateLimiter } from '../middleware/rateLimiter';
-import { businessRules } from '../lib/businessRules';
 
 const router = Router();
 
@@ -35,9 +34,9 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
 
     // Check course-specific progress in DB
     const progress = user.progresses.find(p => p.courseId === courseId);
-    if (!progress || progress.weekCompleted < 4) {
+    if (!progress || !progress.completed) {
       logger.error(`Certificate fetch denied: Track ${courseId} is uncompleted for user ${userId}.`);
-      return res.status(403).json({ message: `Training track '${courseId}' not completed yet. Complete all 4 weeks to unlock.` });
+      return res.status(403).json({ message: `Training track '${courseId}' not completed yet. Pass the final exam to unlock.` });
     }
 
     // Secure Certificate Generation: Ensure successful payment record exists in DB
@@ -57,24 +56,17 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
       });
     }
 
-    // Calculate course-specific grade based on the highest passing scores for each of the 4 weeks
+    // Get the best quiz result for this course
     const coursePassingResults = user.results.filter(r => r.courseId === courseId && r.passed);
-    const highestWeekScores: Record<number, number> = {};
-    
-    coursePassingResults.forEach(res => {
-      if (!highestWeekScores[res.week] || res.score > highestWeekScores[res.week]) {
-        highestWeekScores[res.week] = res.score;
-      }
-    });
+    if (coursePassingResults.length === 0) {
+      return res.status(403).json({ message: `Final exam for '${courseId}' has not been passed.` });
+    }
 
-    const scores = Object.values(highestWeekScores);
-    const avgScore = scores.length > 0 
-      ? scores.reduce((acc, curr) => acc + curr, 0) / scores.length 
-      : businessRules.zeroScoreFallback; // fallback if no scores recorded
+    const bestResult = coursePassingResults.reduce((prev, current) => 
+        (prev.accuracy > current.accuracy) ? prev : current
+    );
 
-    let grade = "A";
-    if (avgScore >= 90) grade = "A+";
-    else if (avgScore >= 75) grade = "A";
+    const grade = bestResult.grade || "Good";
 
     // Clean course names for NEXUS Solutions presentation
     let displayCourseName = "Advanced Computing Solutions";
@@ -112,13 +104,11 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
   }
 });
 
-// GET /api/certificate/verify/:credentialId - Public verification registry endpoint with rate limiting (Issue #2)
+// GET /api/certificate/verify/:credentialId - Public verification registry endpoint with rate limiting
 router.get('/verify/:credentialId', rateLimiter(10, 60 * 1000), async (req: Request, res: Response): Promise<any> => {
   try {
     const { credentialId } = req.params as any;
 
-    // Parse the ID format: e.g. NEX-CPP_EMBEDDED-AVIN1001-VERIFIED
-    // We match the numeric code before the "-VERIFIED" suffix
     const match = credentialId.match(/-[A-Z0-9_]+([0-9]{4})-VERIFIED$/i);
     if (!match) {
       logger.error(`Certificate verification query failed: Invalid Credential ID format ${credentialId}`);
@@ -144,7 +134,6 @@ router.get('/verify/:credentialId', rateLimiter(10, 60 * 1000), async (req: Requ
       return res.status(404).json({ message: 'No registered candidate matches this credential.' });
     }
 
-    // Determine which course matches the credential ID
     let courseId = "C";
     if (credentialId.toUpperCase().includes("CPP_EMBEDDED")) courseId = "C++";
     else if (credentialId.toUpperCase().includes("IOT")) courseId = "IoT";
@@ -152,34 +141,25 @@ router.get('/verify/:credentialId', rateLimiter(10, 60 * 1000), async (req: Requ
     else if (credentialId.toUpperCase().includes("C_SYSTEMS")) courseId = "C";
 
     const progress = user.progresses.find(p => p.courseId === courseId);
-    if (!progress || progress.weekCompleted < 4) {
+    if (!progress || !progress.completed) {
       logger.error(`Certificate verification query failed: Track ${courseId} is incomplete for student ${calculatedUserId}`);
       return res.status(403).json({ message: 'Credential is still active/uncompleted in database.' });
     }
 
-    // Regenerate and match the credential ID to prevent brute forcing or spoofing names
     const expectedId = generateCredentialId(user.id, user.name, courseId);
     if (expectedId.toLowerCase() !== credentialId.toLowerCase()) {
       logger.error(`Certificate verification query failed: Signature mismatch for ${credentialId}`);
       return res.status(400).json({ message: 'Credential verification signature mismatch.' });
     }
 
-    // Calculate final grade
     const coursePassingResults = user.results.filter(r => r.courseId === courseId && r.passed);
-    const highestWeekScores: Record<number, number> = {};
-    coursePassingResults.forEach(res => {
-      if (!highestWeekScores[res.week] || res.score > highestWeekScores[res.week]) {
-        highestWeekScores[res.week] = res.score;
-      }
-    });
-    const scores = Object.values(highestWeekScores);
-    const avgScore = scores.length > 0 
-      ? scores.reduce((acc, curr) => acc + curr, 0) / scores.length 
-      : businessRules.zeroScoreFallback;
-
-    let grade = "A";
-    if (avgScore >= 90) grade = "A+";
-    else if (avgScore >= 75) grade = "A";
+    let grade = "Good";
+    if (coursePassingResults.length > 0) {
+      const bestResult = coursePassingResults.reduce((prev, current) => 
+          (prev.accuracy > current.accuracy) ? prev : current
+      );
+      grade = bestResult.grade || "Good";
+    }
 
     let displayCourseName = "Advanced Computing Solutions";
     if (courseId === "C") displayCourseName = "C & Systems Programming for Hardware";

@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Award, CheckCircle2, TrendingUp } from 'lucide-react';
+import { BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Star, ShieldAlert } from 'lucide-react';
 import { coursesConfig } from '../config/courses';
+import { motion } from 'framer-motion';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -9,15 +10,23 @@ const Dashboard = () => {
 
   // Helper to extract course specific stats
   const getCourseProgress = (courseId: string) => {
-    if (!user || !user.progresses) return { progress: 0, weekCompleted: 0, completed: false };
+    if (!user || !user.progresses) return { progress: 0, completed: false };
     const p = user.progresses.find((item: any) => item.courseId === courseId);
-    return p ? { progress: p.progress, weekCompleted: p.weekCompleted, completed: p.completed } : { progress: 0, weekCompleted: 0, completed: false };
+    return p ? { progress: p.progress, completed: p.completed } : { progress: 0, completed: false };
+  };
+
+  const getBestGrade = (courseId: string) => {
+    if (!user || !user.results) return null;
+    const passingResults = user.results.filter((r: any) => r.courseId === courseId && r.passed);
+    if (passingResults.length === 0) return null;
+    const best = passingResults.reduce((prev: any, current: any) => (prev.accuracy > current.accuracy) ? prev : current);
+    return best.grade;
   };
 
   // Aggregated metrics
   const activeTracksCount = user?.progresses?.filter((p: any) => p.progress > 0 && p.progress < 100).length || 0;
   const completedTracksCount = user?.progresses?.filter((p: any) => p.progress === 100).length || 0;
-  const totalQuizzesPassed = user?.results?.filter((r: any) => r.passed).length || 0;
+  const highestAccuracy = user?.results?.length > 0 ? Math.max(...user.results.map((r: any) => r.accuracy)) : 0;
 
   const getGreeting = () => {
     const hr = new Date().getHours();
@@ -26,52 +35,66 @@ const Dashboard = () => {
     return "Good Evening";
   };
 
-
-
-  const hasWeek1 = user?.progresses?.some((p: any) => p.weekCompleted >= 1) || false;
-  const hasWeek2 = user?.progresses?.some((p: any) => p.weekCompleted >= 2) || false;
-  const hasWeek3 = user?.progresses?.some((p: any) => p.weekCompleted >= 3) || false;
-  const hasCompleted = user?.progresses?.some((p: any) => p.completed) || false;
-
   const activeTracks = user?.progresses?.filter((p: any) => p.progress > 0 && p.progress < 100) || [];
   const latestProgressInfo = activeTracks.length > 0 ? activeTracks[0] : null;
   const latestActiveCourse = latestProgressInfo ? {
     id: latestProgressInfo.courseId,
     progress: latestProgressInfo.progress,
-    weekCompleted: latestProgressInfo.weekCompleted,
     title: coursesConfig.find(c => c.id === latestProgressInfo.courseId)?.titleShort || "Specialized Track"
   } : null;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 }
+    }
+  };
+
   return (
-    <div className="py-8 space-y-10 max-w-7xl mx-auto px-4">
+    <motion.div 
+      initial="hidden" 
+      animate="visible" 
+      variants={containerVariants}
+      className="py-8 space-y-10 max-w-7xl mx-auto px-4"
+    >
       
       {/* Welcome Heading & Profile Details */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6 relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent">
             {getGreeting()}, {user?.name?.split(' ')[0]}!
           </h1>
-          <p className="text-slate-450 text-sm">
-            Welcome to your student academic console. Manage your industrial learning tracks below.
+          <p className="text-slate-400 text-sm max-w-xl">
+            Welcome to your next-generation academic console. Master deep technical tracks and earn accuracy-based certifications.
           </p>
         </div>
         
         <div className="flex flex-wrap gap-2 text-xs font-bold items-center">
-
-          <span className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
-            🏢 {user?.collegeName || 'Government Polytechnic'}
+          <span className="px-4 py-2 rounded-xl bg-slate-800/80 backdrop-blur-md border border-slate-700 text-slate-300 shadow-sm flex items-center gap-2">
+            <span className="text-blue-400">🏢</span> {user?.collegeName || 'Government Polytechnic'}
           </span>
-          <span className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
-            ⚙ {user?.branchName || 'ECE'}
+          <span className="px-4 py-2 rounded-xl bg-slate-800/80 backdrop-blur-md border border-slate-700 text-slate-300 shadow-sm flex items-center gap-2">
+            <span className="text-emerald-400">⚙</span> {user?.branchName || 'ECE'}
           </span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Staff Privileges Banner */}
       {user?.role === 'ADMIN' && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-lg shadow-red-950/20">
+        <motion.div variants={itemVariants} className="p-4 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-lg shadow-red-950/20">
           <div className="flex items-center gap-2">
-            <span className="text-sm">🛡</span>
+            <ShieldAlert size={18} />
             <span>STAFF PRIVILEGES ACTIVE: You have complete administrative privileges over course contents, transactions, and quizzes.</span>
           </div>
           <button 
@@ -80,255 +103,209 @@ const Dashboard = () => {
           >
             Open CMS Editor Panel
           </button>
-        </div>
+        </motion.div>
       )}
 
       {/* Analytics Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="p-5 bg-slate-800 border border-slate-700 rounded-xl flex items-center gap-4 shadow-md">
-          <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400">
-            <BookOpen size={24} />
-          </div>
-          <div>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Active Tracks</p>
-            <h3 className="text-2xl font-bold">{activeTracksCount}</h3>
-          </div>
-        </div>
+      <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { title: "Active Tracks", value: activeTracksCount, icon: BookOpen, color: "text-blue-400", bg: "bg-blue-500/10" },
+          { title: "Completed Tracks", value: completedTracksCount, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+          { title: "Highest Accuracy", value: `${highestAccuracy}%`, icon: Target, color: "text-purple-400", bg: "bg-purple-500/10" },
+          { title: "Certificates", value: completedTracksCount, icon: Award, color: "text-amber-400", bg: "bg-amber-500/10" }
+        ].map((stat, idx) => (
+          <motion.div 
+            key={idx}
+            variants={itemVariants} 
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="p-5 bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-2xl flex items-center gap-4 shadow-xl shadow-black/20"
+          >
+            <div className={`p-4 ${stat.bg} rounded-xl ${stat.color}`}>
+              <stat.icon size={24} />
+            </div>
+            <div>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.title}</p>
+              <h3 className="text-2xl font-bold text-white mt-1">{stat.value}</h3>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
 
-        <div className="p-5 bg-slate-800 border border-slate-700 rounded-xl flex items-center gap-4 shadow-md">
-          <div className="p-3 bg-emerald-500/10 rounded-lg text-emerald-400">
-            <CheckCircle2 size={24} />
-          </div>
-          <div>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Completed Tracks</p>
-            <h3 className="text-2xl font-bold">{completedTracksCount}</h3>
-          </div>
-        </div>
-
-        <div className="p-5 bg-slate-800 border border-slate-700 rounded-xl flex items-center gap-4 shadow-md">
-          <div className="p-3 bg-purple-500/10 rounded-lg text-purple-400">
-            <TrendingUp size={24} />
-          </div>
-          <div>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Quizzes Passed</p>
-            <h3 className="text-2xl font-bold">{totalQuizzesPassed}</h3>
-          </div>
-        </div>
-
-        <div className="p-5 bg-slate-800 border border-slate-700 rounded-xl flex items-center gap-4 shadow-md">
-          <div className="p-3 bg-amber-500/10 rounded-lg text-amber-400">
-            <Award size={24} />
-          </div>
-          <div>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Certificates Earned</p>
-            <h3 className="text-2xl font-bold">{completedTracksCount}</h3>
-          </div>
-        </div>
-      </div>
-
-      {/* Dynamic Mid-Section: Quick Resume & Milestone Badges */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Dynamic Mid-Section */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Column (2/3 width): Quick Resume Card */}
-        <div className="lg:col-span-2 p-6 bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col justify-between relative overflow-hidden shadow-md">
-          {/* Faint blue ambient glow */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none"></div>
+        {/* Left Column: Quick Resume Card */}
+        <div className="lg:col-span-2 p-8 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/80 rounded-3xl flex flex-col justify-between relative overflow-hidden shadow-2xl">
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
           
-          <div className="space-y-4">
+          <div className="space-y-5 relative z-10">
             <div className="flex items-center gap-2 text-blue-400 text-xs font-black uppercase tracking-wider">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-              </span>
-              Pick Up Where You Left Off
+              <Zap size={14} className="animate-pulse text-amber-400" />
+              Your Next Objective
             </div>
             
             {latestActiveCourse ? (
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white tracking-tight">{latestActiveCourse.title}</h3>
-                <p className="text-slate-400 text-xs leading-relaxed max-w-xl">
-                  You are currently on Week {latestActiveCourse.weekCompleted + 1} module. Resume your studies and clear the weekly assessment to proceed!
+              <div className="space-y-3">
+                <h3 className="text-3xl font-extrabold text-white tracking-tight">{latestActiveCourse.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
+                  Dive deep into the curriculum. Complete all modules to unlock the final comprehensive exam and earn your certification.
                 </p>
-                <div className="flex items-center gap-3 pt-2">
-                  <div className="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden p-[0.5px]">
-                    <div 
-                      className="h-full bg-blue-500 rounded-full transition-all duration-500" 
-                      style={{ width: `${latestActiveCourse.progress}%` }}
-                    ></div>
+                <div className="flex items-center gap-4 pt-4">
+                  <div className="flex-1 h-3 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-slate-800">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: \`\${latestActiveCourse.progress}%\` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full relative overflow-hidden" 
+                    >
+                      <div className="absolute inset-0 bg-white/20 w-full animate-shimmer" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', backgroundSize: '200% 100%' }}></div>
+                    </motion.div>
                   </div>
-                  <span className="text-[10px] font-black text-slate-355 font-mono shrink-0">{latestActiveCourse.progress}% Completed</span>
+                  <span className="text-xs font-black text-blue-400 font-mono shrink-0 bg-blue-500/10 px-3 py-1 rounded-lg">{latestActiveCourse.progress}%</span>
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white tracking-tight">Ready to start your journey?</h3>
-                <p className="text-slate-400 text-xs leading-relaxed max-w-xl">
-                  Choose a specialized engineering track below, study the industrial-focused weekly curriculum, and claim your accredited certifications!
+              <div className="space-y-3">
+                <h3 className="text-3xl font-extrabold text-white tracking-tight">Begin Your Training</h3>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
+                  Choose an engineering track below. Study the deep industrial curriculum and ace the final exam to claim your accredited credentials.
                 </p>
               </div>
             )}
           </div>
           
-          <div className="pt-4 mt-4 border-t border-slate-700/50 flex justify-end">
-            <button 
-              onClick={() => navigate(latestActiveCourse ? `/course/${latestActiveCourse.id}` : `/course/C`)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow active:scale-95 flex items-center gap-1"
+          <div className="pt-6 mt-6 border-t border-slate-700/50 flex justify-end relative z-10">
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(latestActiveCourse ? \`/course/\${latestActiveCourse.id}\` : \`/course/C\`)}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-sm px-8 py-3 rounded-xl transition-all shadow-lg shadow-blue-900/50 flex items-center gap-2"
             >
-              {latestActiveCourse ? "Resume Course →" : "Get Started →"}
-            </button>
+              {latestActiveCourse ? "Resume Training" : "Explore Tracks"} <TrendingUp size={16} />
+            </motion.button>
           </div>
         </div>
 
-        {/* Right Column (1/3 width): Gamified Badges Panel */}
-        <div className="p-6 bg-slate-800 border border-slate-700/80 rounded-2xl space-y-4 shadow-md">
-          <h3 className="text-sm font-black uppercase tracking-wider text-slate-350 pl-0.5 border-b border-slate-750 pb-2">Milestone Badges</h3>
+        {/* Right Column: Guidelines */}
+        <div className="p-8 bg-slate-800/50 backdrop-blur-md border border-slate-700/80 rounded-3xl space-y-5 shadow-2xl">
+          <div className="flex items-center gap-2 border-b border-slate-700 pb-3">
+            <Star className="text-amber-400" size={20} />
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">New Grading System</h3>
+          </div>
           
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <div className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${
-              hasWeek1 
-                ? 'bg-blue-500/5 border-blue-500/30 text-amber-400 shadow-md shadow-blue-500/5' 
-                : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-60'
-            }`}>
-              <span className={`text-2xl mb-1 filter ${hasWeek1 ? 'drop-shadow-md' : 'grayscale'}`}>🚀</span>
-              <h4 className="text-[10px] font-black uppercase tracking-wide text-slate-200">First Step</h4>
-              <p className="text-[8px] text-slate-500 mt-0.5 font-bold uppercase tracking-tight">{hasWeek1 ? "Passed W1" : "Lock"}</p>
-            </div>
-
-            <div className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${
-              hasWeek2 
-                ? 'bg-purple-500/5 border-purple-500/30 text-amber-400 shadow-md shadow-purple-500/5' 
-                : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-60'
-            }`}>
-              <span className={`text-2xl mb-1 filter ${hasWeek2 ? 'drop-shadow-md' : 'grayscale'}`}>🎯</span>
-              <h4 className="text-[10px] font-black uppercase tracking-wide text-slate-200">Quiz Ace</h4>
-              <p className="text-[8px] text-slate-500 mt-0.5 font-bold uppercase tracking-tight">{hasWeek2 ? "Passed W2" : "Lock"}</p>
-            </div>
-
-            <div className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${
-              hasWeek3 
-                ? 'bg-orange-500/5 border-orange-500/30 text-amber-400 shadow-md shadow-orange-500/5' 
-                : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-60'
-            }`}>
-              <span className={`text-2xl mb-1 filter ${hasWeek3 ? 'drop-shadow-md' : 'grayscale'}`}>🛡</span>
-              <h4 className="text-[10px] font-black uppercase tracking-wide text-slate-200">Specialist</h4>
-              <p className="text-[8px] text-slate-500 mt-0.5 font-bold uppercase tracking-tight">{hasWeek3 ? "Passed W3" : "Lock"}</p>
-            </div>
-
-            <div className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${
-              hasCompleted 
-                ? 'bg-emerald-500/5 border-emerald-500/30 text-amber-400 shadow-md shadow-emerald-500/5' 
-                : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-60'
-            }`}>
-              <span className={`text-2xl mb-1 filter ${hasCompleted ? 'drop-shadow-md' : 'grayscale'}`}>🎓</span>
-              <h4 className="text-[10px] font-black uppercase tracking-wide text-slate-200">Graduate</h4>
-              <p className="text-[8px] text-slate-500 mt-0.5 font-bold uppercase tracking-tight">{hasCompleted ? "Certified" : "Lock"}</p>
-            </div>
-          </div>
+          <ul className="text-slate-300 text-xs space-y-4">
+            <li className="flex items-start gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+              <span className="text-emerald-500 shrink-0 text-lg">🎓</span>
+              <div><strong className="text-white block">One Final Exam</strong> Tests your deep knowledge across the entire track.</div>
+            </li>
+            <li className="flex items-start gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+              <span className="text-blue-500 shrink-0 text-lg">📊</span>
+              <div><strong className="text-white block">Accuracy Based</strong> 60% (Good), 70% (Very Good), 80% (Excellent), 90%+ (Outstanding).</div>
+            </li>
+            <li className="flex items-start gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+              <span className="text-amber-500 shrink-0 text-lg">🔄</span>
+              <div><strong className="text-white block">Re-attempts Allowed</strong> Score below 60%? Review the deep topics and try again to improve.</div>
+            </li>
+          </ul>
         </div>
 
-      </div>
+      </motion.div>
 
-      {/* Courses/Tracks Grid (Using original colorful two-toned layout) */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-extrabold tracking-tight">Choose Your Training Track</h2>
+      {/* Courses/Tracks Grid */}
+      <motion.div variants={itemVariants} className="space-y-8 pt-4">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-2 bg-blue-500 rounded-full"></div>
+          <h2 className="text-3xl font-extrabold tracking-tight">Available Engineering Tracks</h2>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {coursesConfig.map((course) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {coursesConfig.map((course, index) => {
             const progressInfo = getCourseProgress(course.id);
             const isCompleted = progressInfo.completed;
             const hasStarted = progressInfo.progress > 0;
+            const grade = getBestGrade(course.id);
 
             return (
-              <div 
+              <motion.div 
                 key={course.id}
-                onClick={() => navigate(`/course/${course.id}`)}
-                className="group cursor-pointer bg-slate-800 rounded-2xl overflow-hidden border border-slate-700 hover:border-blue-500 transition-all transform hover:-translate-y-2 shadow-lg flex flex-col justify-between"
+                variants={itemVariants}
+                whileHover={{ y: -10 }}
+                onClick={() => navigate(\`/course/\${course.id}\`)}
+                className="group cursor-pointer bg-slate-800/80 backdrop-blur-sm rounded-3xl overflow-hidden border border-slate-700 hover:border-blue-500/50 transition-all shadow-xl hover:shadow-2xl hover:shadow-blue-900/20 flex flex-col justify-between relative"
               >
-                {/* Top Half: Original Colorful Gradient Header Block */}
-                <div className={`h-32 bg-gradient-to-br ${course.colorDark} flex items-center justify-center relative`}>
-                  <course.icon size={48} className="text-white drop-shadow-md" />
+                {/* Header Block */}
+                <div className={\`h-36 bg-gradient-to-br \${course.colorDark} flex items-center justify-center relative overflow-hidden\`}>
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <motion.div 
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <course.icon size={56} className="text-white drop-shadow-xl relative z-10" />
+                  </motion.div>
                   
-                  {/* Dynamic Status Badge overlay */}
-                  <div className="absolute top-3 right-3">
+                  {/* Dynamic Status Badge */}
+                  <div className="absolute top-4 right-4 z-20">
                     {isCompleted ? (
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-black tracking-wider shadow">
-                        Completed
+                      <span className="px-3 py-1.5 rounded-xl bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black tracking-wider shadow border border-emerald-400">
+                        {grade ? \`\${grade}\` : 'COMPLETED'}
                       </span>
                     ) : hasStarted ? (
-                      <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black tracking-wider shadow">
-                        Week {progressInfo.weekCompleted}/4
+                      <span className="px-3 py-1.5 rounded-xl bg-blue-600/90 backdrop-blur text-white text-[10px] font-black tracking-wider shadow border border-blue-500">
+                        IN PROGRESS
                       </span>
                     ) : (
-                      <span className="px-2.5 py-1 rounded-full bg-slate-900/60 text-slate-200 text-[10px] font-black tracking-wider shadow">
-                        Not Started
+                      <span className="px-3 py-1.5 rounded-xl bg-slate-900/80 backdrop-blur text-slate-300 text-[10px] font-black tracking-wider shadow border border-slate-700">
+                        NOT STARTED
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Bottom Half: Detailed Course Content & Re-designed Progress Bars */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-bold group-hover:text-blue-400 transition tracking-tight">
+                {/* Body Content */}
+                <div className="p-6 flex-1 flex flex-col justify-between space-y-6">
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-extrabold group-hover:text-blue-400 transition-colors tracking-tight">
                       {course.titleShort}
                     </h3>
-                    <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
+                    <p className="text-slate-400 text-xs leading-relaxed line-clamp-3">
                       {course.descShort}
                     </p>
                   </div>
 
-                  {/* Course Progress Section */}
-                  <div className="space-y-2 pt-2 border-t border-slate-700/60">
-                    <div className="flex justify-between items-center text-[10px] font-bold uppercase text-slate-400">
-                      <span>Progress</span>
-                      <span className="text-slate-200">{progressInfo.progress}%</span>
+                  {/* Progress Ring / Bar */}
+                  <div className="space-y-3 pt-4 border-t border-slate-700/60">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400">
+                      <span>Track Mastery</span>
+                      <span className={isCompleted ? 'text-emerald-400' : 'text-slate-200'}>{progressInfo.progress}%</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full ${course.barColor} transition-all duration-700`}
-                        style={{ width: `${progressInfo.progress}%` }}
-                      ></div>
+                    <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        whileInView={{ width: \`\${progressInfo.progress}%\` }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1, delay: index * 0.1 }}
+                        className={\`h-full rounded-full \${course.barColor}\`}
+                      ></motion.div>
                     </div>
                   </div>
 
-                  {/* Navigation Callout */}
-                  <div className={`flex items-center font-bold text-xs ${course.textColor} pt-1 group-hover:translate-x-1 transition-transform`}>
-                    {isCompleted ? 'View Certificate' : hasStarted ? 'Resume Training' : 'Start Training'} →
+                  {/* Call to Action */}
+                  <div className={\`flex items-center justify-between font-black text-xs \${course.textColor} pt-2\`}>
+                    <span className="group-hover:translate-x-1 transition-transform">
+                      {isCompleted ? 'View Results & Certificate' : hasStarted ? 'Continue Deep Dive' : 'Start Course'}
+                    </span>
+                    <span className="bg-slate-900/50 p-2 rounded-lg group-hover:bg-slate-700 transition-colors">
+                      →
+                    </span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Guidelines Accordion Info Panel */}
-      <div className="p-6 bg-slate-800 border border-slate-700 rounded-2xl relative overflow-hidden shadow-md">
-        <h2 className="text-xl font-bold mb-4 tracking-tight">Training Guidelines</h2>
-        <ul className="text-slate-400 text-sm space-y-3 pl-1">
-          <li className="flex items-start gap-2">
-            <span className="text-blue-500 shrink-0">✔</span>
-            <span>The training is structured into 4 weeks per course.</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-blue-500 shrink-0">✔</span>
-            <span>Each week has dedicated study material that must be reviewed before unlocking quizzes.</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-blue-500 shrink-0">✔</span>
-            <span>A quiz is mandatory at the end of each week to unlock the next. You need at least <strong>60%</strong> in each quiz to pass.</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-blue-500 shrink-0">✔</span>
-            <span>Progress is tracked separately for C, C++, IoT, and Embedded tracks, allowing you to study multiple tracks simultaneously!</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-blue-500 shrink-0">✔</span>
-            <span>Complete all 4 weeks of any track to generate and print your official certified certificate.</span>
-          </li>
-        </ul>
-      </div>
-    </div>
+    </motion.div>
   );
 };
 

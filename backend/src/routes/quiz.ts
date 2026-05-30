@@ -3,7 +3,6 @@ import prisma from '../lib/prisma';
 import { authenticateToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
 import { validateBody } from '../middleware/validate';
-import { businessRules } from '../lib/businessRules';
 
 const router = Router();
 
@@ -16,36 +15,47 @@ const isAdmin = (req: any, res: Response, next: NextFunction): any => {
   }
 };
 
-// GET /api/quiz/questions/:courseId/:week - Fetch questions for a specific week's quiz (omitting correct answers)
-router.get('/questions/:courseId/:week', async (req: Request, res: Response): Promise<any> => {
-  try {
-    const { courseId, week } = req.params as any;
-    const weekNum = parseInt(week);
+// Helper for grading logic
+const calculateGrade = (accuracy: number): { grade: string, passed: boolean } => {
+  if (accuracy >= 90) return { grade: 'Outstanding', passed: true };
+  if (accuracy >= 80) return { grade: 'Excellent', passed: true };
+  if (accuracy >= 70) return { grade: 'Very Good', passed: true };
+  if (accuracy >= 60) return { grade: 'Good', passed: true };
+  return { grade: 'Fail', passed: false };
+};
 
-    const moduleRecord = await prisma.module.findFirst({
-      where: {
-        courseId,
-        week: weekNum
-      },
+// GET /api/quiz/questions/:courseId - Fetch ALL questions for a specific course's final exam
+router.get('/questions/:courseId', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { courseId } = req.params as any;
+
+    const modules = await prisma.module.findMany({
+      where: { courseId },
       include: {
         quizQuestions: true
-      }
+      },
+      orderBy: { order: 'asc' }
     });
 
-    if (!moduleRecord) {
-      logger.error(`Quiz fetch failure: Module for course ${courseId} week ${week} not found.`);
-      return res.status(404).json({ message: 'Quiz for this week not found' });
+    if (!modules || modules.length === 0) {
+      logger.error(`Quiz fetch failure: No modules found for course ${courseId}.`);
+      return res.status(404).json({ message: 'Quizzes for this course not found' });
     }
 
+    // Flatten all questions across all modules
+    let allQuestions: any[] = [];
+    modules.forEach(m => {
+      allQuestions = allQuestions.concat(m.quizQuestions);
+    });
+
     // Map questions to omit correct answers for safe transfer
-    const safeQuestions = (moduleRecord as any).quizQuestions.map(({ correctAnswer, ...q }: any) => ({
+    const safeQuestions = allQuestions.map(({ correctAnswer, ...q }: any) => ({
       ...q,
       options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
     }));
 
     res.json({
       courseId,
-      week: weekNum,
       questions: safeQuestions
     });
   } catch (error: any) {
@@ -54,35 +64,39 @@ router.get('/questions/:courseId/:week', async (req: Request, res: Response): Pr
   }
 });
 
-// POST /api/quiz/submit - Grade quiz submissions and update course progress
+// POST /api/quiz/submit - Grade final exam submissions
 router.post(
   '/submit',
   authenticateToken,
-  validateBody(['courseId', 'week', 'answers']),
+  validateBody(['courseId', 'answers']),
   async (req: any, res: Response): Promise<any> => {
     try {
-      const { courseId, week, answers } = req.body;
-      const weekNum = parseInt(week);
+      const { courseId, answers } = req.body;
       const userIdNum = req.user.id;
 
-      const moduleRecord = await prisma.module.findFirst({
-        where: {
-          courseId,
-          week: weekNum
-        },
-        include: {
-          quizQuestions: true
-        }
+      const modules = await prisma.module.findMany({
+        where: { courseId },
+        include: { quizQuestions: true }
       });
 
-      if (!moduleRecord || moduleRecord.quizQuestions.length === 0) {
-        logger.error(`Quiz submission failed: Module for course ${courseId} week ${week} not found.`);
-        return res.status(404).json({ message: 'Quiz for this week not found' });
+      if (!modules || modules.length === 0) {
+        logger.error(`Quiz submission failed: No questions found for course ${courseId}.`);
+        return res.status(404).json({ message: 'Quiz for this course not found' });
       }
 
+      let allQuestions: any[] = [];
+      modules.forEach(m => {
+        allQuestions = allQuestions.concat(m.quizQuestions);
+      });
+
       let correctCount = 0;
-      const totalQuestions = moduleRecord.quizQuestions.length;
-      const breakdown = moduleRecord.quizQuestions.map(q => {
+      const totalQuestions = allQuestions.length;
+      
+      if (totalQuestions === 0) {
+          return res.status(400).json({ message: 'No questions available to grade.' });
+      }
+
+      const breakdown = allQuestions.map(q => {
         const userAnswer = answers[q.id];
         const isCorrect = userAnswer === q.correctAnswer;
         if (isCorrect) correctCount++;
@@ -95,55 +109,41 @@ router.post(
         };
       });
 
-      const score = Math.round((correctCount / totalQuestions) * 100);
-      const passed = score >= businessRules.passingScoreThreshold;
+      const accuracy = Math.round((correctCount / totalQuestions) * 100);
+      const { grade, passed } = calculateGrade(accuracy);
 
-      // Save to QuizResult DB and Update / upsert CourseProgress inside a safe Prisma Transaction (Issue #8)
+      // Save to QuizResult DB and Update CourseProgress inside a safe Prisma Transaction
       const result = await prisma.$transaction(async (tx) => {
         const quizResult = await tx.quizResult.create({
           data: {
             userId: userIdNum,
             courseId,
-            week: weekNum,
-            score,
+            score: correctCount, // Store raw score as well
+            accuracy,
+            grade,
             passed
           }
         });
 
         if (passed) {
-          const currentProgress = await tx.courseProgress.findUnique({
+          await tx.courseProgress.upsert({
             where: {
               userId_courseId: {
                 userId: userIdNum,
                 courseId
               }
+            },
+            update: {
+              progress: 100,
+              completed: true
+            },
+            create: {
+              userId: userIdNum,
+              courseId,
+              progress: 100,
+              completed: true
             }
           });
-
-          const currentWeekCompleted = currentProgress?.weekCompleted || 0;
-          
-          if (weekNum > currentWeekCompleted) {
-            await tx.courseProgress.upsert({
-              where: {
-                userId_courseId: {
-                  userId: userIdNum,
-                  courseId
-                }
-              },
-              update: {
-                weekCompleted: weekNum,
-                progress: weekNum * businessRules.weeklyProgressIncrement,
-                completed: weekNum >= businessRules.maxWeeks
-              },
-              create: {
-                userId: userIdNum,
-                courseId,
-                weekCompleted: weekNum,
-                progress: weekNum * businessRules.weeklyProgressIncrement,
-                completed: weekNum >= businessRules.maxWeeks
-              }
-            });
-          }
         }
         return quizResult;
       });
@@ -157,11 +157,12 @@ router.post(
         }
       });
 
-      logger.info(`Quiz submitted by user ${userIdNum} for ${courseId} Week ${weekNum}. Score: ${score}% (Passed: ${passed})`);
+      logger.info(`Final Exam submitted by user ${userIdNum} for ${courseId}. Accuracy: ${accuracy}%, Grade: ${grade} (Passed: ${passed})`);
 
       res.json({
         result,
-        score,
+        accuracy,
+        grade,
         passed,
         breakdown,
         updatedUser

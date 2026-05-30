@@ -13,16 +13,15 @@ enum Role {
 }
 
 model User {
-  id            Int              @id @default(autoincrement())
-  email         String           @unique
-  password      String
-  name          String
-  fatherName    String?
-  collegeName   String?
-  branchName    String?
-  grade         String?          @default("N/A")
-  progress      Int              @default(0) // legacy global progress
-  weekCompleted Int              @default(0) // legacy global weekCompleted
+  id                Int              @id @default(autoincrement())
+  email             String           @unique
+  password          String
+  name              String
+  fatherName        String?
+  collegeName       String?
+  branchName        String?
+  grade             String?          @default("N/A")
+  progress          Int              @default(0) // legacy global progress
   courseType        String           @default("Electronics")
   role              Role             @default(USER)
   isVerified        Boolean          @default(false)
@@ -36,15 +35,14 @@ model User {
 }
 
 model CourseProgress {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId      String   // "C", "C++", "IoT", "Embedded"
-  course        Course   @relation(fields: [courseId], references: [id])
-  weekCompleted Int      @default(0) // 0 to 4
-  progress      Int      @default(0) // 0 to 100
-  completed     Boolean  @default(false)
-  updatedAt     DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String // "C", "C++", "IoT", "Embedded"
+  course    Course   @relation(fields: [courseId], references: [id])
+  progress  Int      @default(0) // 0 to 100
+  completed Boolean  @default(false)
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, courseId])
   @@index([courseId])
@@ -56,8 +54,9 @@ model QuizResult {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId  String   @default("C")
   course    Course   @relation(fields: [courseId], references: [id])
-  week      Int
   score     Int
+  accuracy  Int      @default(0) // 0 to 100 percentage
+  grade     String?
   passed    Boolean
   createdAt DateTime @default(now())
 
@@ -82,7 +81,7 @@ model Module {
   id            Int            @id @default(autoincrement())
   courseId      String
   course        Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  week          Int
+  order         Int            @default(0)
   title         String
   description   String
   topics        Topic[]
@@ -90,21 +89,21 @@ model Module {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  @@unique([courseId, week])
+  @@unique([courseId, order])
   @@index([courseId])
 }
 
 model Topic {
-  id          Int      @id @default(autoincrement())
-  moduleId    Int
-  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  title       String
-  text        String
-  code        String?
-  note        String?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  moduleId  Int
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title     String
+  text      String
+  code      String?
+  note      String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([moduleId])
 }
