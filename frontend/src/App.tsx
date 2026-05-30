@@ -34,7 +34,7 @@ function AppRoutes() {
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/course/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
-          <Route path="/quiz/:courseId/:week" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+          <Route path="/quiz/:id" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
           <Route path="/certificate" element={<ProtectedRoute><Certificate /></ProtectedRoute>} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/reset-password" element={<ResetPassword />} />

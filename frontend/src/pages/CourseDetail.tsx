@@ -69,7 +69,7 @@ const CourseDetail = () => {
     const fetchPaymentStatus = async () => {
       setCheckingPayment(true);
       try {
-        const res = await api.get(`/payments/status/\${id}`);
+        const res = await api.get(`/payments/status/${id}`);
         setIsPaid(res.data.paid);
       } catch (err) {
         console.error('Failed to fetch payment status:', err);
@@ -90,7 +90,7 @@ const CourseDetail = () => {
       setLoadingDetails(true);
       try {
         let activeModuleId = modules[activeModuleIndex]?.order || 1;
-        const res = await api.get(`/courses/\${id}/module/\${activeModuleId}`);
+        const res = await api.get(`/courses/${id}/module/${activeModuleId}`);
         setActiveModuleDetail(res.data);
       } catch (err) {
         console.error('Lazy loading module failed, utilizing fallback dataset:', err);
@@ -103,9 +103,9 @@ const CourseDetail = () => {
     fetchModuleDetails();
   }, [id, modules, activeModuleIndex]);
 
-  const handleCopyCode = (code: string) => {
+  const handleCopyCode = (code: string, idx: number) => {
     navigator.clipboard.writeText(code);
-    setCopiedText(`\${topicIndex}`);
+    setCopiedText(`${idx}`);
     setTimeout(() => setCopiedText(null), 2000);
   };
 
@@ -194,7 +194,7 @@ const CourseDetail = () => {
           amount: currentPrice * 100, // paise
           currency: 'INR',
           name: 'Nexus Institute of Technology',
-          description: `Certified Specialization: \${id}`,
+          description: `Certified Specialization: ${id}`,
           order_id: razorpayOrderId,
           handler: async (response: any) => {
             setProcessingCheckout(true);
@@ -236,11 +236,11 @@ const CourseDetail = () => {
       let randomSuffix = Math.random().toString(36).substring(2, 9).toUpperCase();
       let gatewayRef = '';
       if (currentPrice === 0) {
-        gatewayRef = `REF_COUPON_FREE_\${randomSuffix}`;
+        gatewayRef = `REF_COUPON_FREE_${randomSuffix}`;
       } else {
         gatewayRef = paymentMethod === 'card' 
-          ? `REF_MOCK_CARD_\${randomSuffix}`
-          : `REF_MOCK_UPI_\${randomSuffix}`;
+          ? `REF_MOCK_CARD_${randomSuffix}`
+          : `REF_MOCK_UPI_${randomSuffix}`;
       }
 
       const verifyRes = await api.post('/payments/verify', {
@@ -344,14 +344,14 @@ const CourseDetail = () => {
                 <button
                   key={index}
                   onClick={() => setActiveModuleIndex(index)}
-                  className={`w-full text-left p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group \${
+                  className={`w-full text-left p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group ${
                     isActive 
                       ? 'bg-blue-600/10 border-blue-500/50 text-white shadow-lg shadow-blue-900/20' 
                       : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:border-slate-600 hover:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className={`p-2.5 rounded-xl transition-colors \${
+                    <div className={`p-2.5 rounded-xl transition-colors ${
                       isActive ? 'bg-blue-500/20 text-blue-400' : isRead ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-900 text-slate-500'
                      }`}>
                       {isRead ? <CheckCircle size={18} /> : <BookOpen size={18} />}
@@ -369,16 +369,16 @@ const CourseDetail = () => {
           {/* Final Exam Section Button */}
           <div className="pt-4 border-t border-slate-800">
              <button
-                onClick={() => navigate(`/quiz/\${id}`)}
+                onClick={() => navigate(`/quiz/${id}`)}
                 disabled={!allModulesRead && !isCourseCompleted}
-                className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group \${
+                className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group ${
                   allModulesRead || isCourseCompleted
                     ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/50 text-white hover:from-amber-500/20 hover:to-orange-500/20 shadow-lg shadow-amber-900/20' 
                     : 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed'
                 }`}
               >
                 <div className="flex items-center gap-3.5">
-                  <div className={`p-2.5 rounded-xl transition-colors \${
+                  <div className={`p-2.5 rounded-xl transition-colors ${
                     allModulesRead || isCourseCompleted ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-900 text-slate-700'
                    }`}>
                     {isCourseCompleted ? <Award size={18} /> : allModulesRead ? <TestTube size={18} /> : <Lock size={18} />}
@@ -464,11 +464,11 @@ const CourseDetail = () => {
                       {topic.code && (
                         <div className="ml-12 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/80 relative group/code shadow-2xl">
                           <button
-                            onClick={() => handleCopyCode(topic.code)}
+                            onClick={() => handleCopyCode(topic.code, idx)}
                             className="absolute right-3 top-3 p-2 rounded-xl bg-slate-800/80 backdrop-blur border border-slate-700 text-slate-300 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5 opacity-0 group-hover/code:opacity-100 focus:opacity-100 hover:scale-105"
                           >
                             <Clipboard size={14} />
-                            {copiedText === `\${idx}` ? 'Copied!' : 'Copy'}
+                            {copiedText === `${idx}` ? 'Copied!' : 'Copy'}
                           </button>
                           <pre className="p-5 text-sm font-mono text-blue-300 overflow-x-auto select-all leading-relaxed">
                             <code>{topic.code}</code>
@@ -641,7 +641,7 @@ const CourseDetail = () => {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate(`/certificate?courseId=\${id}`)}
+                onClick={() => navigate(`/certificate?courseId=${id}`)}
                 className="mt-4 px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-2xl shadow-xl shadow-emerald-900/30 text-sm uppercase tracking-widest"
               >
                 View High-Res Certificate

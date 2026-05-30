@@ -154,7 +154,7 @@ const Dashboard = () => {
                   <div className="flex-1 h-3 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-slate-800">
                     <motion.div 
                       initial={{ width: 0 }}
-                      animate={{ width: `\${latestActiveCourse.progress}%` }}
+                      animate={{ width: `${latestActiveCourse.progress}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
                       className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full relative overflow-hidden" 
                     >
@@ -178,7 +178,7 @@ const Dashboard = () => {
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate(latestActiveCourse ? `/course/\${latestActiveCourse.id}` : `/course/C`)}
+              onClick={() => navigate(latestActiveCourse ? `/course/${latestActiveCourse.id}` : `/course/C`)}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-sm px-8 py-3 rounded-xl transition-all shadow-lg shadow-blue-900/50 flex items-center gap-2"
             >
               {latestActiveCourse ? "Resume Training" : "Explore Tracks"} <TrendingUp size={16} />
@@ -230,11 +230,11 @@ const Dashboard = () => {
                 key={course.id}
                 variants={itemVariants as any}
                 whileHover={{ y: -10 }}
-                onClick={() => navigate(`/course/\${course.id}`)}
+                onClick={() => navigate(`/course/${course.id}`)}
                 className="group cursor-pointer bg-slate-800/80 backdrop-blur-sm rounded-3xl overflow-hidden border border-slate-700 hover:border-blue-500/50 transition-all shadow-xl hover:shadow-2xl hover:shadow-blue-900/20 flex flex-col justify-between relative"
               >
                 {/* Header Block */}
-                <div className={`h-36 bg-gradient-to-br \${course.colorDark} flex items-center justify-center relative overflow-hidden`}>
+                <div className={`h-36 bg-gradient-to-br ${course.colorDark} flex items-center justify-center relative overflow-hidden`}>
                   <div className="absolute inset-0 bg-black/10"></div>
                   <motion.div 
                     whileHover={{ scale: 1.1, rotate: 5 }}
@@ -247,7 +247,7 @@ const Dashboard = () => {
                   <div className="absolute top-4 right-4 z-20">
                     {isCompleted ? (
                       <span className="px-3 py-1.5 rounded-xl bg-emerald-500/90 backdrop-blur text-white text-[10px] font-black tracking-wider shadow border border-emerald-400">
-                        {grade ? `\${grade}` : 'COMPLETED'}
+                        {grade ? `${grade}` : 'COMPLETED'}
                       </span>
                     ) : hasStarted ? (
                       <span className="px-3 py-1.5 rounded-xl bg-blue-600/90 backdrop-blur text-white text-[10px] font-black tracking-wider shadow border border-blue-500">
@@ -281,16 +281,16 @@ const Dashboard = () => {
                     <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
                       <motion.div 
                         initial={{ width: 0 }}
-                        whileInView={{ width: `\${progressInfo.progress}%` }}
+                        whileInView={{ width: `${progressInfo.progress}%` }}
                         viewport={{ once: true }}
                         transition={{ duration: 1, delay: index * 0.1 }}
-                        className={`h-full rounded-full \${course.barColor}`}
+                        className={`h-full rounded-full ${course.barColor}`}
                       ></motion.div>
                     </div>
                   </div>
 
                   {/* Call to Action */}
-                  <div className={`flex items-center justify-between font-black text-xs \${course.textColor} pt-2`}>
+                  <div className={`flex items-center justify-between font-black text-xs ${course.textColor} pt-2`}>
                     <span className="group-hover:translate-x-1 transition-transform">
                       {isCompleted ? 'View Results & Certificate' : hasStarted ? 'Continue Deep Dive' : 'Start Course'}
                     </span>
