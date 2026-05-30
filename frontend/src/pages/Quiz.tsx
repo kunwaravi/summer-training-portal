@@ -15,7 +15,7 @@ interface Question {
 const Quiz = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { fetchUser } = useAuth();
+  
   
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -65,7 +65,7 @@ const Quiz = () => {
       
       // Update global user context with new results/progress
       if (res.data.updatedUser) {
-          fetchUser();
+          // fetchUser();
       }
 
       if (res.data.passed) {

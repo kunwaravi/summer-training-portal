@@ -283,9 +283,9 @@ const Home = () => {
                           >
                             <div className="grid grid-cols-1 gap-4">
                               {course.syllabus.map((syll) => (
-                                <div key={syll.week} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex gap-4 items-start">
+                                <div key={syll.order} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex gap-4 items-start">
                                   <span className="text-xs font-black text-indigo-600 bg-white w-10 h-10 flex items-center justify-center rounded-xl shadow-sm border border-indigo-50 shrink-0">
-                                    W{syll.week}
+                                    W{syll.order}
                                   </span>
                                   <div>
                                     <p className="text-sm font-bold text-indigo-950 leading-tight">{syll.title}</p>
