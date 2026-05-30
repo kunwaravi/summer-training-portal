@@ -6,7 +6,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://nexusadmin:nexuspassword@db:5432/nexus?schema=public
+      - DATABASE_URL=postgresql://${DB_USER:-nexusadmin}:${DB_PASSWORD:-nexuspassword}@db:5432/${DB_NAME:-nexus}?schema=public
       - PORT=5000
     depends_on:
       db:
@@ -22,13 +22,13 @@ services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: nexusadmin
-      POSTGRES_PASSWORD: nexuspassword
-      POSTGRES_DB: nexus
+      POSTGRES_USER: ${DB_USER:-nexusadmin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nexuspassword}
+      POSTGRES_DB: ${DB_NAME:-nexus}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nexusadmin -d nexus"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-nexusadmin} -d ${DB_NAME:-nexus}"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -4,79 +4,19 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { 
   LogIn, UserPlus, Mail, Lock, User, GraduationCap, BookOpen, 
-  ShieldCheck, ChevronDown, ChevronUp, CheckCircle2 
+  ChevronDown, ChevronUp, CheckCircle2,  
+  Target, Award, Users, MessageCircle, FileText, Gift,
+  Globe, Zap, ArrowRight, Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const courseDetails = [
-  {
-    id: 'C',
-    title: 'C & Systems Programming',
-    difficulty: 'Beginner to Intermediate',
-    tags: ['Core Electronics', 'Hardware Mapping'],
-    color: 'from-blue-500/20 via-blue-600/10 to-transparent border-blue-500/30',
-    iconColor: 'text-blue-400 bg-blue-500/10',
-    desc: 'Master procedural programming, binary systems, hardware mapping, memory allocations, and register compilations.',
-    syllabus: [
-      { week: 1, title: 'Procedural Fundamentals', details: 'Variables, Data Types, Control Flows, and Memory Layouts' },
-      { week: 2, title: 'Modular Architecture', details: 'Functions, Scopes, Arrays, and Pointer Arithmetic' },
-      { week: 3, title: 'Structures & I/O Systems', details: 'Dynamic Memory Allocation, Structs, and Hardware File I/O' },
-      { week: 4, title: 'Low-Level Register Macros', details: 'Compilation pipelines, Register keywords, and direct hardware macros' }
-    ]
-  },
-  {
-    id: 'C++',
-    title: 'C++ & OOP for Embedded Systems',
-    difficulty: 'Intermediate',
-    tags: ['Object-Oriented', 'High Performance'],
-    color: 'from-purple-500/20 via-purple-600/10 to-transparent border-purple-500/30',
-    iconColor: 'text-purple-400 bg-purple-500/10',
-    desc: 'Architect high-performance OOP software structures, customized template classes, and embedded-optimized collections.',
-    syllabus: [
-      { week: 1, title: 'Object-Oriented Encapsulation', details: 'Classes, Objects, Members, and Access Specifiers' },
-      { week: 2, title: 'Inheritance & Polymorphism', details: 'Base/Derived classes, Virtual Functions, and VTables' },
-      { week: 3, title: 'Generic Programming', details: 'Function/Class templates, and Standard Template Library (STL) overrides' },
-      { week: 4, title: 'Embedded Space Optimization', details: 'No-overhead allocations, inline functions, and lightweight classes' }
-    ]
-  },
-  {
-    id: 'IoT',
-    title: 'IoT & Smart Interfacing Solutions',
-    difficulty: 'Intermediate to Advanced',
-    tags: ['Microcontrollers', 'Cloud Services'],
-    color: 'from-green-500/20 via-green-600/10 to-transparent border-green-500/30',
-    iconColor: 'text-green-400 bg-green-500/10',
-    desc: 'Connect physical systems with ESP microcontrollers, ADCs, custom serial buses, MQTT client protocols, and remote cloud metrics.',
-    syllabus: [
-      { week: 1, title: 'IoT Microcontroller Baselines', details: 'ESP Core architecture, pinouts, and hardware development setups' },
-      { week: 2, title: 'Hardware Interfacing', details: 'ADCs, DACs, I2C, SPI, and UART serial communication' },
-      { week: 3, title: 'Connectivity Protocols', details: 'WiFi configurations, MQTT Clients, publish/subscribe payloads' },
-      { week: 4, title: 'Cloud Dashboards & Alerts', details: 'Real-time telemetry, remote actuator control, and cloud hooks' }
-    ]
-  },
-  {
-    id: 'Embedded',
-    title: 'Embedded Systems & Real-Time OS',
-    difficulty: 'Advanced',
-    tags: ['RTOS Kernels', 'Hardware Interrupts'],
-    color: 'from-orange-500/20 via-orange-600/10 to-transparent border-orange-500/30',
-    iconColor: 'text-orange-400 bg-orange-500/10',
-    desc: 'Implement low-level peripheral drivers, nested vectored interrupts, RTOS task scheduling, semaphores, and power configurations.',
-    syllabus: [
-      { week: 1, title: 'Peripheral Driver Baselines', details: 'GPIO register manipulation, clock gating, and abstract HALs' },
-      { week: 2, title: 'Interrupt Handlers & PWM', details: 'Timer hardware interrupts, nested interrupt priorities, and PWM control' },
-      { week: 3, title: 'RTOS Task Management', details: 'Preemptive scheduler, task priorities, queues, and mutexes' },
-      { week: 4, title: 'System Diagnostics & Safety', details: 'Watchdog timers, brown-out detectors, and ultra-low power modes' }
-    ]
-  }
-];
+import { coursesConfig } from '../config/courses';
 
 const Home = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [fatherName, setFatherName] = useState('');
   const [collegeName, setCollegeName] = useState('');
   const [branchName, setBranchName] = useState('');
   const [error, setError] = useState('');
@@ -96,7 +36,7 @@ const Home = () => {
       const endpoint = isLogin ? '/auth/login' : '/auth/register';
       const data = isLogin 
         ? { email, password } 
-        : { email, password, name, fatherName, collegeName, branchName };
+        : { email, password, name, collegeName, branchName };
       
       const response = await api.post(endpoint, data);
       login(response.data.token, response.data.user);
@@ -122,375 +62,492 @@ const Home = () => {
   };
 
   return (
-    <div className="space-y-24 py-12 px-4 max-w-7xl mx-auto">
+    <div className="bg-white min-h-screen font-sans selection:bg-indigo-100 selection:text-indigo-700">
       
-      {/* 1. Hero & Branding Introduction Block */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-12 min-h-[65vh]">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex-1 text-center lg:text-left space-y-6"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-black uppercase tracking-wider shadow-sm">
-            <ShieldCheck size={14} /> ISO 9001:2015 Accredited Portal
-          </div>
-          
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight text-white">
-            Nexus Academic & <br />
-            <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-md">
-              Embedded Innovation
-            </span>
-          </h1>
-          
-          <p className="text-slate-350 text-sm sm:text-base leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
-            Access specialized industrial training curriculums covering low-level C programming, object-oriented software design, IoT controller networks, and real-time RTOS microkernels.
-          </p>
-
-          <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-2">
-            <button 
-              onClick={scrollToEnroll}
-              className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider transition-all transform active:scale-95 shadow-lg shadow-amber-500/10"
-            >
-              Start Learning Now
-            </button>
-            <button 
-              onClick={() => {
-                const el = document.getElementById('catalog-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="px-6 py-3 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 font-bold rounded-xl text-xs uppercase tracking-wider transition-all"
-            >
-              Browse Curriculum
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Hero Decorative Illustration card */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7 }}
-          className="flex-1 w-full max-w-md relative select-none hidden lg:block"
-        >
-          <div className="p-8 rounded-2xl bg-gradient-to-br from-slate-900/60 to-slate-950/60 border border-slate-850 shadow-2xl relative overflow-hidden flex flex-col gap-6 text-center">
-            {/* Ambient gradients */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-
-            <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <GraduationCap size={32} />
-            </div>
-            
-            <div className="space-y-1">
-              <h3 className="text-lg font-black text-white uppercase tracking-wider">Industrial Training Registry</h3>
-              <p className="text-slate-450 text-xs font-semibold uppercase tracking-widest">Accredited by Nexus Labs</p>
-            </div>
-            
-            <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-900 text-[10px] text-slate-400 leading-relaxed font-mono uppercase tracking-tight space-y-1">
-              <p className="text-amber-500 font-bold">✔ 100% Verified Credentials</p>
-              <p>✔ Realtime Database Security</p>
-              <p>✔ Comprehensive Syllabus Accordions</p>
-            </div>
-          </div>
-        </motion.div>
+      {/* 1. Navbar / Top Banner */}
+      <div className="bg-indigo-950 text-white py-2 px-4 text-center text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em]">
+        🚀 Registration Open for Summer Training Batch 2026 • ISO 9001:2015 Certified
       </div>
 
-      {/* 2. Trust Metrics / Social Proof Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-y border-slate-850 py-8">
-        <div className="text-center space-y-1">
-          <h2 className="text-3xl font-black text-amber-500 tracking-tight sm:text-4xl">1,250+</h2>
-          <p className="text-slate-450 text-xs font-black uppercase tracking-widest">Accredited Students</p>
-        </div>
-        <div className="text-center space-y-1 border-y sm:border-y-0 sm:border-x border-slate-850 py-4 sm:py-0">
-          <h2 className="text-3xl font-black text-amber-500 tracking-tight sm:text-4xl">4 Tracks</h2>
-          <p className="text-slate-450 text-xs font-black uppercase tracking-widest">Specialized Courses</p>
-        </div>
-        <div className="text-center space-y-1">
-          <h2 className="text-3xl font-black text-amber-500 tracking-tight sm:text-4xl">100%</h2>
-          <p className="text-slate-450 text-xs font-black uppercase tracking-widest">Free & Verifiable</p>
-        </div>
-      </div>
+      <div className="max-w-7xl mx-auto px-4 space-y-24 pb-24">
+        
+        {/* 2. Hero Section: Better than Indigo */}
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 pt-16 min-h-[70vh]">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex-1 text-center lg:text-left space-y-8"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest shadow-sm">
+              <Zap size={14} className="fill-indigo-600" /> Learn Today • Lead Tomorrow
+            </div>
+            
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-[1.05] tracking-tight text-indigo-950">
+              BUILD SKILLS THAT <br />
+              <span className="text-blue-600 italic">BUILD YOUR CAREER</span>
+            </h1>
+            
+            <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
+              Join India's most advanced industrial training portal. Master Embedded Systems, IoT, and Systems Programming with ISO-certified curriculum and expert mentorship.
+            </p>
 
-      {/* 3. Interactive Course Catalog Section */}
-      <div id="catalog-section" className="space-y-10">
-        <div className="text-center space-y-2 max-w-xl mx-auto">
-          <h2 className="text-3xl font-extrabold tracking-tight text-white uppercase">Accredited Course Catalog</h2>
-          <p className="text-slate-450 text-sm font-medium leading-relaxed">
-            Expand our specialized weekly modules. Click the Syllabus accordion on any track to preview what you will learn.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {courseDetails.map((course) => {
-            const isExpanded = expandedCourse === course.id;
-
-            return (
-              <div 
-                key={course.id}
-                className={`bg-slate-900/30 border rounded-2xl p-6 transition-all duration-300 relative overflow-hidden flex flex-col justify-between hover:border-slate-700/80 shadow-lg ${
-                  isExpanded ? 'border-amber-500/20 shadow-amber-500/5' : 'border-slate-850'
-                }`}
+            <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
+              <button 
+                onClick={scrollToEnroll}
+                className="group px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest transition-all transform active:scale-95 shadow-xl shadow-indigo-600/20 flex items-center gap-2"
               >
-                {/* Visual Accent */}
-                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ${course.color} rounded-full blur-3xl pointer-events-none`}></div>
+                Workshop Registration <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button 
+                onClick={scrollToEnroll}
+                className="px-8 py-4 bg-white border-2 border-slate-200 hover:border-indigo-600 hover:text-indigo-600 text-slate-700 font-black rounded-2xl text-xs uppercase tracking-widest transition-all"
+              >
+                Summer Training
+              </button>
+            </div>
+
+            <div className="flex items-center gap-6 justify-center lg:justify-start pt-4 border-t border-slate-100">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+                    <img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="student" />
+                  </div>
+                ))}
+                <div className="w-10 h-10 rounded-full border-2 border-white bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white">
+                  +1k
+                </div>
+              </div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-tight">
+                Trusted by <span className="text-indigo-600">1,250+ Students</span> across India
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7 }}
+            className="flex-1 w-full max-w-lg relative hidden lg:block"
+          >
+            <div className="relative p-2 bg-slate-100 rounded-[2.5rem] shadow-inner overflow-hidden border border-slate-200">
+              <div className="bg-white rounded-[2rem] overflow-hidden shadow-2xl relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop" 
+                  alt="Industrial Lab" 
+                  className="w-full aspect-[4/5] object-cover opacity-90"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/80 via-transparent to-transparent"></div>
                 
-                <div className="space-y-4">
-                  {/* Top tags row */}
-                  <div className="flex justify-between items-center flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-wider">
-                      Free to Learn
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                      ⚡ {course.difficulty}
-                    </span>
+                <div className="absolute bottom-8 left-8 right-8 text-white space-y-2">
+                  <div className="flex gap-1 text-yellow-400">
+                    {[1, 2, 3, 4, 5].map(i => <Star key={i} size={14} fill="currentColor" />)}
                   </div>
-
-                  <div className="space-y-1.5">
-                    <h3 className="text-xl font-bold text-white tracking-tight">{course.title}</h3>
-                    <p className="text-slate-400 text-xs leading-relaxed">{course.desc}</p>
-                  </div>
-
-                  {/* Expandable Accordion Syllabus Trigger */}
-                  <div className="pt-2">
-                    <button 
-                      onClick={() => toggleSyllabus(course.id)}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all ${
-                        isExpanded 
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
-                          : 'bg-slate-950/40 border-slate-900 text-slate-350 hover:bg-slate-900/60 hover:text-white'
-                      }`}
-                    >
-                      <span className="flex items-center gap-1.5 uppercase tracking-wider">
-                        <BookOpen size={14} /> {isExpanded ? "Hide Syllabus Details" : "View Syllabus Details"}
-                      </span>
-                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
-
-                    {/* Expandable Content (Weekly Syllabus) */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="overflow-hidden mt-3.5 space-y-3.5 pl-1.5"
-                        >
-                          <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-850 pb-1.5 pl-0.5">Syllabus Breakdown</h4>
-                          <div className="space-y-3">
-                            {course.syllabus.map((syll) => (
-                              <div key={syll.week} className="flex gap-3 text-left">
-                                <span className="text-[10px] font-black text-amber-400 shrink-0 bg-amber-500/10 h-5 w-9 flex items-center justify-center rounded border border-amber-500/20">
-                                  W{syll.week}
-                                </span>
-                                <div>
-                                  <p className="text-xs font-bold text-white leading-tight">{syll.title}</p>
-                                  <p className="text-[10px] text-slate-450 mt-0.5 font-medium leading-relaxed">{syll.details}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-
-                <div className="pt-6 mt-6 border-t border-slate-850/60 flex justify-end">
-                  <button 
-                    onClick={scrollToEnroll}
-                    className="text-xs font-extrabold uppercase text-amber-450 hover:text-amber-300 transition-colors flex items-center gap-1"
-                  >
-                    Start Learning →
-                  </button>
+                  <p className="text-lg font-black leading-tight italic">"The most practical embedded course I've ever taken!"</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-indigo-300">— Gaurav Singh, Technical Director</p>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          </motion.div>
         </div>
-      </div>
 
-      {/* 4. Value Propositions / Credibility Accreditations */}
-      <div className="space-y-8">
-        <h3 className="text-xs font-black uppercase tracking-widest text-center text-slate-450 border-b border-slate-850 pb-4">Accreditation & Quality Standards</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-5 bg-slate-900/20 border border-slate-850 rounded-xl space-y-2">
-            <CheckCircle2 className="text-amber-500" size={24} />
-            <h4 className="text-sm font-bold text-white tracking-tight uppercase">ISO Certified</h4>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              Complies with ISO 9001:2015 & ISO/IEC 27001 secure operation baselines.
-            </p>
-          </div>
-          
-          <div className="p-5 bg-slate-900/20 border border-slate-850 rounded-xl space-y-2">
-            <CheckCircle2 className="text-amber-500" size={24} />
-            <h4 className="text-sm font-bold text-white tracking-tight uppercase">Secure Verification</h4>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              Each student gets a unique scannable QR Code and verifiable Registry ID.
-            </p>
+        {/* 3. Why Choose Us: Benefits Section */}
+        <div className="space-y-16">
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <h2 className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em]">Excellence Defined</h2>
+            <h3 className="text-3xl sm:text-4xl font-black text-indigo-950 tracking-tight">Why Choose Our Training?</h3>
+            <p className="text-slate-500 text-sm font-medium">We don't just teach code; we architect careers with industrial precision.</p>
           </div>
 
-          <div className="p-5 bg-slate-900/20 border border-slate-850 rounded-xl space-y-2">
-            <CheckCircle2 className="text-amber-500" size={24} />
-            <h4 className="text-sm font-bold text-white tracking-tight uppercase">Hands-on Labs</h4>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              Learn dynamically with real codes, timing maps, and ESP microcontroller drivers.
-            </p>
-          </div>
-
-          <div className="p-5 bg-slate-900/20 border border-slate-850 rounded-xl space-y-2">
-            <CheckCircle2 className="text-amber-500" size={24} />
-            <h4 className="text-sm font-bold text-white tracking-tight uppercase">100% Free Access</h4>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              No enrollment fees or payments for learning curriculum.
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { icon: <Zap />, title: 'Practical Learning', desc: 'Hands-on hardware interfacing and real-time project development cycles.' },
+              { icon: <Users />, title: 'Mentor Support', desc: 'Direct access to industry experts and personalized code reviews.' },
+              { icon: <Award />, title: 'ISO Certification', desc: 'Industry-recognized verifiable credentials with unique QR tracking.' },
+              { icon: <MessageCircle />, title: 'Recorded Lectures', desc: 'Lifetime access to all session recordings and module walk-throughs.' },
+              { icon: <Target />, title: 'Career Guidance', desc: 'Placement assistance, resume building, and mock interview prep.' },
+              { icon: <FileText />, title: 'Resource Hub', desc: 'Complete access to exclusive notes, project files, and library.' },
+            ].map((benefit, i) => (
+              <div key={i} className="group p-8 bg-white border border-slate-100 rounded-3xl hover:border-indigo-600/20 hover:shadow-2xl hover:shadow-indigo-600/5 transition-all duration-300">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                  {benefit.icon}
+                </div>
+                <h4 className="text-xl font-bold text-indigo-950 mb-2">{benefit.title}</h4>
+                <p className="text-slate-500 text-sm leading-relaxed">{benefit.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* 5. Enrollment Portal (Login/Register Form Section) */}
-      <div id="enrollment-section" className="flex justify-center pt-8 border-t border-slate-850">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <div className="relative bg-slate-900/50 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden">
-            
-            {/* Decorative glowing gradient sphere */}
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-            <h2 className="text-3xl font-extrabold text-center mb-2 tracking-tight bg-gradient-to-r from-white to-slate-350 bg-clip-text text-transparent uppercase">
-              {isLogin ? 'Student Login' : 'Registration'}
-            </h2>
-            <p className="text-center text-slate-400 text-sm mb-6">
-              {isLogin ? 'Sign in to access NEXUS training portal' : 'Enroll in smart electronics programs'}
-            </p>
-            
-            <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
-              <AnimatePresence mode="wait">
-                {!isLogin && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-4 overflow-hidden"
-                  >
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 text-slate-450" size={18} />
-                      <input 
-                        type="text" 
-                        placeholder="Full Name" 
-                        value={name} 
-                        onChange={(e) => setName(e.target.value)} 
-                        required 
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-white placeholder-slate-450 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm" 
-                      />
-                    </div>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 text-slate-455" size={18} />
-                      <input 
-                        type="text" 
-                        placeholder="Father's Name" 
-                        value={fatherName} 
-                        onChange={(e) => setFatherName(e.target.value)} 
-                        required 
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-white placeholder-slate-450 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm" 
-                      />
-                    </div>
-                    <div className="relative">
-                      <GraduationCap className="absolute left-3 top-3 text-slate-450" size={18} />
-                      <input 
-                        type="text" 
-                        placeholder="College Name" 
-                        value={collegeName} 
-                        onChange={(e) => setCollegeName(e.target.value)} 
-                        required 
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-white placeholder-slate-455 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm" 
-                      />
-                    </div>
-                    <div className="relative">
-                      <GraduationCap className="absolute left-3 top-3 text-slate-455" size={18} />
-                      <input 
-                        type="text" 
-                        placeholder="Branch (e.g. ECE, EEE, CSE)" 
-                        value={branchName} 
-                        onChange={(e) => setBranchName(e.target.value)} 
-                        required 
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-white placeholder-slate-450 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm" 
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 text-slate-450" size={18} />
-                <input 
-                  type="email" 
-                  placeholder="Email Address" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  required 
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-white placeholder-slate-450 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm" 
-                />
-              </div>
-              
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 text-slate-455" size={18} />
-                <input 
-                  type="password" 
-                  placeholder="Password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  required 
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-white placeholder-slate-450 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm" 
-                />
-              </div>
-              
-              {error && (
-                <motion.p 
-                  initial={{ opacity: 0, y: -5 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  className="text-red-400 text-xs font-semibold pl-1"
-                >
-                  ⚠ {error}
-                </motion.p>
-              )}
-              
-              <button 
-                type="submit" 
-                disabled={isLoading}
-                className="w-full mt-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 text-slate-950 shadow-lg shadow-amber-500/10 active:scale-[0.98] disabled:opacity-75 disabled:pointer-events-none text-sm uppercase tracking-wider"
-              >
-                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></div>
-                ) : isLogin ? (
-                  <><LogIn size={18} /> Login</>
-                ) : (
-                  <><UserPlus size={18} /> Enroll Now</>
-                )}
-              </button>
-            </form>
-            
-            <div className="mt-6 text-center text-slate-400 text-sm">
-              {isLogin ? "New to the portal?" : "Already enrolled?"}
-              <button 
-                onClick={() => { setIsLogin(!isLogin); setError(''); }} 
-                className="ml-2 text-amber-450 hover:underline font-semibold"
-              >
-                {isLogin ? 'Create Account' : 'Login Here'}
-              </button>
+        {/* 4. Course Catalog: Ultra-Premium Cards */}
+        <div id="catalog-section" className="space-y-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-4">
+              <h2 className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em]">Curriculum</h2>
+              <h3 className="text-3xl sm:text-4xl font-black text-indigo-950 tracking-tight">Accredited Learning Tracks</h3>
+            </div>
+            <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
+              <button className="px-4 py-2 bg-white rounded-lg text-xs font-bold text-indigo-600 shadow-sm">All Courses</button>
+              <button className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition">Embedded</button>
+              <button className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition">IoT</button>
             </div>
           </div>
-        </motion.div>
-      </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {coursesConfig.map((course) => {
+              const isExpanded = expandedCourse === course.id;
+
+              return (
+                <div 
+                  key={course.id}
+                  className={`bg-white border-2 rounded-[2rem] p-8 transition-all duration-300 relative overflow-hidden flex flex-col justify-between hover:shadow-2xl hover:shadow-indigo-600/10 ${
+                    isExpanded ? 'border-indigo-600' : 'border-slate-50'
+                  }`}
+                >
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-start">
+                      <div className={`w-14 h-14 rounded-2xl ${course.iconColor} flex items-center justify-center text-2xl`}>
+                        <BookOpen size={28} />
+                      </div>
+                      <div className="text-right">
+                        <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                          Active Batch
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-black text-indigo-950 tracking-tight">{course.title}</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {course.tags.map(tag => (
+                          <span key={tag} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{tag}</span>
+                        ))}
+                      </div>
+                      <p className="text-slate-500 text-sm leading-relaxed pt-2">{course.desc}</p>
+                    </div>
+
+                    <div className="pt-2">
+                      <button 
+                        onClick={() => toggleSyllabus(course.id)}
+                        className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 text-xs font-black transition-all ${
+                          isExpanded 
+                            ? 'bg-indigo-600 border-indigo-600 text-white' 
+                            : 'bg-slate-50 border-slate-50 text-indigo-950 hover:border-indigo-100 hover:bg-white'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2 uppercase tracking-widest">
+                          <FileText size={16} /> {isExpanded ? "Hide Syllabus Details" : "View Syllabus Breakdown"}
+                        </span>
+                        {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                      </button>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="overflow-hidden mt-6 space-y-4"
+                          >
+                            <div className="grid grid-cols-1 gap-4">
+                              {course.syllabus.map((syll) => (
+                                <div key={syll.week} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex gap-4 items-start">
+                                  <span className="text-xs font-black text-indigo-600 bg-white w-10 h-10 flex items-center justify-center rounded-xl shadow-sm border border-indigo-50 shrink-0">
+                                    W{syll.week}
+                                  </span>
+                                  <div>
+                                    <p className="text-sm font-bold text-indigo-950 leading-tight">{syll.title}</p>
+                                    <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">{syll.details}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 mt-8 border-t border-slate-50 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Zap size={14} className="text-indigo-600 fill-indigo-600" />
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{course.difficulty}</span>
+                    </div>
+                    <button 
+                      onClick={scrollToEnroll}
+                      className="text-xs font-black uppercase text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 group"
+                    >
+                      Enroll in Track <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 5. Ambassador Program: Referral Rewards */}
+        <div className="relative rounded-[3rem] bg-indigo-600 p-8 sm:p-16 overflow-hidden shadow-2xl shadow-indigo-600/30">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] -mr-32 -mt-32"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full blur-[100px] -ml-32 -mb-32"></div>
+          
+          <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12">
+            <div className="flex-1 space-y-6 text-center lg:text-left text-white">
+              <h2 className="text-xs font-black uppercase tracking-[0.4em] text-indigo-200">Ambassador Program</h2>
+              <h3 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+                Learn for Free & <br />
+                <span className="text-blue-200">Get Paid to Refer</span>
+              </h3>
+              <p className="text-indigo-100 text-base sm:text-lg max-w-xl mx-auto lg:mx-0">
+                Join our Campus Ambassador program and earn exclusive rewards for every friend you refer to our training portal.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+                  <Gift className="mb-2 text-blue-200" />
+                  <p className="text-xs font-black uppercase tracking-widest">50% Discount</p>
+                  <p className="text-[10px] text-indigo-100 mt-1">On 3 Referrals</p>
+                </div>
+                <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+                  <Star className="mb-2 text-yellow-400" />
+                  <p className="text-xs font-black uppercase tracking-widest">100% Free</p>
+                  <p className="text-[10px] text-indigo-100 mt-1">On 5 Referrals</p>
+                </div>
+                <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+                  <Zap className="mb-2 text-emerald-400" />
+                  <p className="text-xs font-black uppercase tracking-widest">Paid Intern</p>
+                  <p className="text-[10px] text-indigo-100 mt-1">On 10+ Referrals</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex-shrink-0 w-full max-w-xs bg-white rounded-[2rem] p-8 shadow-2xl">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto">
+                  <Users size={32} />
+                </div>
+                <h4 className="text-indigo-950 font-black uppercase tracking-widest text-sm">Become an Ambassador</h4>
+                <p className="text-slate-500 text-xs font-medium">Join 200+ ambassadors already earning with Nexus Labs.</p>
+                <button 
+                  onClick={scrollToEnroll}
+                  className="w-full py-4 bg-indigo-600 text-white font-black rounded-xl text-xs uppercase tracking-widest hover:bg-indigo-700 transition shadow-lg shadow-indigo-600/20"
+                >
+                  Join Program
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 6. Resources & Community Hub */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="p-8 sm:p-12 bg-slate-50 rounded-[3rem] space-y-8 border border-slate-100">
+            <h3 className="text-2xl font-black text-indigo-950 tracking-tight">Resource Library</h3>
+            <div className="space-y-4">
+              {[
+                { title: 'Project Source Files', desc: 'Download C/C++ libraries and ESP32 drivers.', icon: <FileText /> },
+                { title: 'Training Handouts', desc: 'Summary notes for all 4 weeks of training.', icon: <BookOpen /> },
+                { title: 'Placement Guide', desc: 'Top embedded companies interview questions.', icon: <Target /> },
+              ].map((res, i) => (
+                <div key={i} className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-200/50 hover:border-indigo-600/30 transition shadow-sm group">
+                  <div className="text-indigo-600 mt-1 group-hover:scale-110 transition-transform">{res.icon}</div>
+                  <div>
+                    <p className="text-sm font-bold text-indigo-950">{res.title}</p>
+                    <p className="text-[11px] text-slate-500 font-medium">{res.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-8 sm:p-12 bg-indigo-50 rounded-[3rem] space-y-8 border border-indigo-100 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-indigo-100 rounded-full blur-3xl"></div>
+            <h3 className="text-2xl font-black text-indigo-950 tracking-tight relative z-10">Student Community</h3>
+            <div className="space-y-6 relative z-10">
+              <p className="text-slate-600 text-sm font-medium leading-relaxed">
+                Join our active WhatsApp groups to discuss projects, clear doubts, and get real-time updates from mentors.
+              </p>
+              <div className="flex flex-col gap-3">
+                <button className="flex items-center justify-between p-5 bg-white rounded-2xl border border-indigo-200 text-indigo-600 font-black uppercase tracking-widest text-xs hover:shadow-lg transition group">
+                  <span className="flex items-center gap-3"><MessageCircle size={20} className="text-emerald-500" /> WhatsApp Community</span>
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button className="flex items-center justify-between p-5 bg-white rounded-2xl border border-indigo-200 text-indigo-600 font-black uppercase tracking-widest text-xs hover:shadow-lg transition group">
+                  <span className="flex items-center gap-3"><Globe size={20} className="text-blue-500" /> LinkedIn Network</span>
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 7. Enrollment Portal (Login/Register Form Section) */}
+        <div id="enrollment-section" className="flex flex-col lg:flex-row items-center gap-16 pt-16 border-t border-slate-100">
+          <div className="flex-1 space-y-6 text-center lg:text-left">
+            <h2 className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em]">Get Started</h2>
+            <h3 className="text-4xl sm:text-5xl font-black text-indigo-950 tracking-tight leading-tight">
+              Ready to Accelerate <br />
+              <span className="text-blue-600">Your Future?</span>
+            </h3>
+            <p className="text-slate-600 text-base font-medium leading-relaxed max-w-lg">
+              Enroll now to access the full training modules, interactive quizzes, and claim your industrial certification.
+            </p>
+            <div className="flex flex-col gap-4 pt-4 max-w-sm mx-auto lg:mx-0">
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <CheckCircle2 className="text-emerald-500 shrink-0" />
+                <p className="text-xs font-bold text-indigo-950 uppercase tracking-tight">Instant LMS Access</p>
+              </div>
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <CheckCircle2 className="text-emerald-500 shrink-0" />
+                <p className="text-xs font-bold text-indigo-950 uppercase tracking-tight">Verified Digital Credentials</p>
+              </div>
+            </div>
+          </div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="w-full max-w-md"
+          >
+            <div className="relative bg-white p-8 sm:p-10 rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(30,27,75,0.15)] border border-slate-100 overflow-hidden">
+              
+              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl mb-8">
+                <button 
+                  onClick={() => setIsLogin(true)}
+                  className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${isLogin ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-500 hover:text-indigo-600'}`}
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={() => setIsLogin(false)}
+                  className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${!isLogin ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-500 hover:text-indigo-600'}`}
+                >
+                  Register
+                </button>
+              </div>
+
+              <h2 className="text-2xl font-black text-indigo-950 mb-2 tracking-tight uppercase text-center">
+                {isLogin ? 'Welcome Back' : 'Create Account'}
+              </h2>
+              <p className="text-slate-500 text-xs font-medium text-center mb-8">
+                {isLogin ? 'Enter your credentials to continue' : 'Join the elite engineering community'}
+              </p>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <AnimatePresence mode="wait">
+                  {!isLogin && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      <div className="relative">
+                        <User className="absolute left-4 top-3.5 text-slate-400" size={18} />
+                        <input 
+                          type="text" 
+                          placeholder="Full Name" 
+                          value={name} 
+                          onChange={(e) => setName(e.target.value)} 
+                          required 
+                          className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <GraduationCap className="absolute left-4 top-3.5 text-slate-400" size={18} />
+                        <input 
+                          type="text" 
+                          placeholder="College Name" 
+                          value={collegeName} 
+                          onChange={(e) => setCollegeName(e.target.value)} 
+                          required 
+                          className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
+                        />
+                      </div>
+                      <div className="relative">
+                        <Target className="absolute left-4 top-3.5 text-slate-400" size={18} />
+                        <input 
+                          type="text" 
+                          placeholder="Branch (e.g. ECE, EEE, CSE)" 
+                          value={branchName} 
+                          onChange={(e) => setBranchName(e.target.value)} 
+                          required 
+                          className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="relative">
+                  <Mail className="absolute left-4 top-3.5 text-slate-400" size={18} />
+                  <input 
+                    type="email" 
+                    placeholder="Email Address" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    required 
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
+                  />
+                </div>
+                
+                <div className="relative">
+                  <Lock className="absolute left-4 top-3.5 text-slate-400" size={18} />
+                  <input 
+                    type="password" 
+                    placeholder="Password" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    required 
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
+                  />
+                </div>
+                
+                {error && (
+                  <motion.p 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    className="text-red-500 text-[10px] font-black uppercase tracking-tight text-center"
+                  >
+                    ⚠ {error}
+                  </motion.p>
+                )}
+                
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 text-white shadow-xl shadow-indigo-600/20 active:scale-[0.98] disabled:opacity-75 text-xs uppercase tracking-[0.2em]"
+                >
+                  {isLoading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : isLogin ? (
+                    <><LogIn size={18} /> Sign In</>
+                  ) : (
+                    <><UserPlus size={18} /> Create Account</>
+                  )}
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* 8. Footer */}
+        <div className="pt-24 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+          <div className="space-y-4">
+            <h4 className="text-xl font-black text-indigo-950 uppercase tracking-widest">Nexus Institute of Technology</h4>
+            <p className="text-slate-500 text-xs font-medium max-w-sm">
+              Empowering the next generation of engineers with industrial hardware expertise and accredited certifications.
+            </p>
+          </div>
+          <div className="flex flex-col items-center md:items-end gap-2">
+            <p className="text-indigo-600 font-black uppercase tracking-[0.2em] text-[10px]">ISO 9001:2015 Accredited Organization</p>
+            <p className="text-slate-400 text-[10px] font-bold">© 2026 Nexus Automation Labs • Ghaziabad, UP</p>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 };

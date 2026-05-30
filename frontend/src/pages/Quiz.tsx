@@ -9,7 +9,7 @@ import confetti from 'canvas-confetti';
 const Quiz = () => {
   const { courseId, week } = useParams();
   const navigate = useNavigate();
-  const { user, login } = useAuth();
+  const { login } = useAuth();
   
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -95,7 +95,6 @@ const Quiz = () => {
     setLoading(true);
     try {
       const res = await api.post('/quiz/submit', {
-        userId: user.id,
         courseId,
         week: parseInt(week as string),
         answers

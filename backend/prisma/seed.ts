@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { curriculum, quizzes } from '../src/lib/curriculumData';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -99,10 +102,17 @@ async function main() {
   }
 
   // Seed default admin account
-  const adminEmail = 'admin@nexus.com';
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    console.error("FATAL ERROR: ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be defined for seeding!");
+    process.exit(1);
+  }
+
   const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
     await prisma.user.create({
       data: {
         email: adminEmail,
@@ -112,7 +122,7 @@ async function main() {
         courseType: 'Embedded',
       },
     });
-    console.log('Admin user seeded: admin@nexus.com / admin123');
+    console.log(`Admin user seeded: ${adminEmail}`);
   }
 
   console.log('Database seeding successfully finished!');

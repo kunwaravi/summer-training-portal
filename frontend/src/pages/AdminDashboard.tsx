@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
 import { 
-  Shield, Users, Award, BookOpen, Edit3, Trash2, Plus, 
-  ArrowUp, ArrowDown, Eye, DollarSign, 
-  Save, FileText, Image, RefreshCw, ChevronDown, ChevronRight 
+  Shield, BookOpen, Edit3, Trash2, Plus, 
+  ArrowUp, ArrowDown, DollarSign, RefreshCw, ChevronDown, ChevronRight,
+  FileText, Award
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PaymentAuditTable } from '../components/admin/PaymentAuditTable';
+import { TopicEditorModal } from '../components/admin/TopicEditorModal';
 
 interface Topic {
   id?: number;
@@ -42,9 +44,12 @@ interface Course {
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<'transactions' | 'cms'>('transactions');
   
-  // Transaction logs states
+  // Transaction logs states (PAGINATED)
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   
   // CMS courses states
   const [courses, setCourses] = useState<Course[]>([]);
@@ -68,11 +73,14 @@ const AdminDashboard = () => {
   const [uploadingAsset, setUploadingAsset] = useState(false);
 
   // Fetch initial payment transactions for audit dashboard
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (page = 1) => {
     setLoadingTransactions(true);
     try {
-      const res = await api.get('/payments/admin/all');
-      setTransactions(res.data);
+      const res = await api.get(`/payments/admin/all?page=${page}&limit=10`);
+      setTransactions(res.data.payments);
+      setTotalPages(res.data.totalPages);
+      setTotalCount(res.data.total);
+      setCurrentPage(res.data.page);
     } catch (err) {
       console.error('Failed to fetch payment list:', err);
     } finally {
@@ -370,63 +378,14 @@ const AdminDashboard = () => {
       <div className="space-y-6">
         
         {activeTab === 'transactions' && (
-          /* High-Fidelity audit logs (Issue #2) */
-          <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
-              <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                <Users size={18} className="text-cyan-400" /> Student Verification & Checkout Registry
-              </h3>
-              <span className="text-[10px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold">
-                {transactions.length} Total Captured Events
-              </span>
-            </div>
-
-            {loadingTransactions ? (
-              <div className="py-12 text-center text-slate-500 font-semibold text-sm">Fetching audit logs...</div>
-            ) : transactions.length === 0 ? (
-              <div className="py-12 text-center text-slate-500 text-xs">No transaction records captured in SQLite/PostgreSQL.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
-                      <th className="py-3 px-4">Transaction ID</th>
-                      <th className="py-3 px-4">Student</th>
-                      <th className="py-3 px-4">Course ID</th>
-                      <th className="py-3 px-4">Fee Charged</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4">Gateway Reference</th>
-                      <th className="py-3 px-4">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-850">
-                    {transactions.map((t, idx) => (
-                      <tr key={idx} className="hover:bg-slate-900/40 text-slate-300 transition">
-                        <td className="py-3.5 px-4 font-mono text-[10px] text-cyan-400">{t.id}</td>
-                        <td className="py-3.5 px-4">
-                          <div className="font-bold text-white">{t.user?.name}</div>
-                          <div className="text-[10px] text-slate-500 font-mono">{t.user?.email}</div>
-                        </td>
-                        <td className="py-3.5 px-4 font-bold uppercase">{t.courseId}</td>
-                        <td className="py-3.5 px-4 text-emerald-400 font-black">₹{t.amount}</td>
-                        <td className="py-3.5 px-4">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                            t.status === 'SUCCESS'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25'
-                              : 'bg-red-500/10 text-red-400 border border-red-500/25'
-                          }`}>
-                            {t.status}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-slate-450 text-[10px]">{t.reference || 'N/A'}</td>
-                        <td className="py-3.5 px-4 text-slate-500 font-mono">{new Date(t.createdAt).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          <PaymentAuditTable
+            payments={transactions}
+            loading={loadingTransactions}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPageChange={(page) => fetchTransactions(page)}
+          />
         )}
 
         {activeTab === 'cms' && (
@@ -635,181 +594,22 @@ const AdminDashboard = () => {
           </div>
         )}
 
-      </div>
-
-      {/* Gorgeous Side-by-Side Live WYSIWYG Editor Modal (Issue #8) */}
+      </div>      {/* Gorgeous Side-by-Side Live WYSIWYG Editor Modal (Issue #8) (COMPONENTIZED) */}
       <AnimatePresence>
         {editingTopic && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl overflow-hidden"
-            >
-              {/* Modal Header */}
-              <div className="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
-                <div className="flex items-center gap-2 text-cyan-400">
-                  <Edit3 size={18} />
-                  <h3 className="text-sm font-black uppercase tracking-wider">
-                    {isNewTopic ? 'Create Dynamic Topic Block' : 'Modify Topic Block'}
-                  </h3>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowLivePreview(!showLivePreview)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1.5 ${
-                      showLivePreview 
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' 
-                        : 'bg-slate-800 border border-slate-700 text-slate-400'
-                    }`}
-                  >
-                    <Eye size={12} /> {showLivePreview ? 'Hide Live Preview' : 'Show Live Preview'}
-                  </button>
-                  <button 
-                    onClick={() => setEditingTopic(null)}
-                    className="text-xs font-bold text-slate-500 hover:text-white px-2 py-1"
-                  >
-                    Cancel ✕
-                  </button>
-                </div>
-              </div>
-
-              {/* WYSIWYG Workspace: Left (Editor), Right (Live Visual Blueprint Preview) */}
-              <div className="flex-1 flex overflow-hidden">
-                
-                {/* Editor Form Panel */}
-                <div className="w-full md:w-1/2 p-6 overflow-y-auto space-y-4 border-r border-slate-850 text-left">
-                  
-                  {/* Topic Title */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Topic Title</label>
-                    <input 
-                      type="text"
-                      required
-                      placeholder="e.g. Memory Layout & Static Variables"
-                      value={editingTopic.title}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, title: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition"
-                    />
-                  </div>
-
-                  {/* Topic Main Content text */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Topic Content Body (Rich Markdown Support)</label>
-                    <textarea 
-                      rows={8}
-                      required
-                      placeholder="Enter detailed technical explanations for students..."
-                      value={editingTopic.text}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, text: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition font-sans leading-relaxed"
-                    />
-                  </div>
-
-                  {/* Inline Code Snippet */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Compiler Code Snippet (Optional)</label>
-                    <textarea 
-                      rows={4}
-                      placeholder="#include <stdio.h>\n..."
-                      value={editingTopic.code || ''}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, code: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-cyan-400 placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition font-mono"
-                    />
-                  </div>
-
-                  {/* Takeaway / note */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Highlight Takeaway / Core Note (Optional)</label>
-                    <input 
-                      type="text"
-                      placeholder="Highlight standard errors, caveats, or dynamic memory leaks..."
-                      value={editingTopic.note || ''}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, note: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition"
-                    />
-                  </div>
-
-                  {/* Asset Diagram Mock Upload Helper (Issue #8) */}
-                  <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3.5 mt-2">
-                    <div className="flex items-center gap-1.5 text-slate-300 text-[10px] font-black uppercase">
-                      <Image size={14} className="text-cyan-400" /> Embedded Infographic Upload Sandbox
-                    </div>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text"
-                        placeholder="Insert diagram URL (e.g. /blueprints/stages.svg)"
-                        value={mockAssetUrl}
-                        onChange={(e) => setMockAssetUrl(e.target.value)}
-                        className="flex-1 bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-cyan-500 transition"
-                      />
-                      <button 
-                        type="button"
-                        disabled={uploadingAsset || !mockAssetUrl}
-                        onClick={handleMockAssetUpload}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-40 text-cyan-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition"
-                      >
-                        {uploadingAsset ? 'Mounting...' : 'Mount Asset'}
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* WYSIWYG Side-by-Side Premium Live Preview Pane (Issue #8) */}
-                {showLivePreview && (
-                  <div className="hidden md:block w-1/2 p-6 bg-slate-950/40 overflow-y-auto space-y-4 text-left">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-900">
-                      <Eye size={14} className="text-cyan-400" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-450">
-                        Student Learning Pane Real-Time Preview
-                      </span>
-                    </div>
-
-                    <div className="space-y-4 pt-2">
-                      <h4 className="text-lg font-black text-white">{editingTopic.title || 'Untitled Topic'}</h4>
-                      <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{editingTopic.text || 'Study material description placeholder.'}</p>
-                      
-                      {editingTopic.code && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs font-mono text-cyan-400 overflow-x-auto shadow-inner leading-relaxed select-none">
-                          <pre><code>{editingTopic.code}</code></pre>
-                        </div>
-                      )}
-
-                      {editingTopic.note && (
-                        <div className="p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-teal-300 text-xs leading-relaxed flex items-start gap-3">
-                          <span className="text-lg select-none">💡</span>
-                          <div>
-                            <strong className="text-teal-200 block mb-0.5">Core Takeaway</strong>
-                            {editingTopic.note}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-              </div>
-
-              {/* Modal Footer Controls */}
-              <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
-                <button 
-                  onClick={() => setEditingTopic(null)}
-                  className="px-4 py-2 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl text-xs font-bold uppercase transition"
-                >
-                  Discard
-                </button>
-                <button 
-                  onClick={handleSaveTopic}
-                  className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-cyan-500/10 flex items-center gap-1.5 active:scale-[0.98]"
-                >
-                  <Save size={14} /> Commit & Publish Block
-                </button>
-              </div>
-
-            </motion.div>
-          </div>
+          <TopicEditorModal
+            editingTopic={editingTopic}
+            isNewTopic={isNewTopic}
+            onClose={() => setEditingTopic(null)}
+            onSave={handleSaveTopic}
+            onChange={(topic) => setEditingTopic(topic)}
+            showLivePreview={showLivePreview}
+            onTogglePreview={() => setShowLivePreview(!showLivePreview)}
+            mockAssetUrl={mockAssetUrl}
+            onChangeMockAssetUrl={(url) => setMockAssetUrl(url)}
+            uploadingAsset={uploadingAsset}
+            onMockAssetUpload={handleMockAssetUpload}
+          />
         )}
       </AnimatePresence>
 

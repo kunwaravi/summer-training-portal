@@ -21,7 +21,7 @@ const Certificate = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await api.get(`/certificate/${user.id}/${courseId}`);
+        const res = await api.get(`/certificate/${courseId}`);
         setData(res.data);
       } catch (err: any) {
         console.error(err);
@@ -231,9 +231,11 @@ const Certificate = () => {
 
             {/* Accomplishment Details */}
             <div className="space-y-3 font-garamond text-lg sm:text-xl text-[#333]">
-              <p>
-                Son / Daughter of <span className="font-bold text-[#1a2a44]">{data.fatherName}</span>
-              </p>
+              {data.fatherName && (
+                <p>
+                  Son / Daughter of <span className="font-bold text-[#1a2a44]">{data.fatherName}</span>
+                </p>
+              )}
               <p className="text-sm font-montserrat text-[#666] uppercase tracking-wider">
                 For successful completion of advanced industrial training in
               </p>
@@ -294,9 +296,14 @@ const Certificate = () => {
 
             {/* ID & Verification Block */}
             <div className="w-full flex justify-between items-center px-4 pt-4 border-t border-[#b8860b]/20 mt-2">
-              <p className="text-[8px] font-montserrat font-bold text-[#888] uppercase tracking-widest">
-                Credential ID: {data.credentialId}
-              </p>
+              <div className="text-left space-y-1">
+                <p className="text-[8px] font-montserrat font-bold text-[#888] uppercase tracking-widest">
+                  Credential ID: {data.credentialId}
+                </p>
+                <p className="text-[6px] text-slate-400 italic max-w-sm leading-tight">
+                  * Training Simulator: Generated for academic presentation purposes.
+                </p>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-[7px] font-montserrat font-bold text-[#aaa] uppercase italic">Scan to Verify Authenticity</span>
                 <div className="bg-white p-0.5 border border-[#b8860b]/30">

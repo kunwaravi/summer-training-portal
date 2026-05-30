@@ -1,5 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
+import { authenticateToken } from '../middleware/auth';
+import { logger } from '../lib/logger';
+import { rateLimiter } from '../middleware/rateLimiter';
+import { businessRules } from '../lib/businessRules';
 
 const router = Router();
 
@@ -10,11 +14,11 @@ const generateCredentialId = (userId: number, name: string, courseId: string) =>
   return `NEX-${cleanCourseKey}-${cleanFirstName}${1000 + userId}-VERIFIED`;
 };
 
-// GET /api/certificate/:userId/:courseId - Generate certificate data for a specific user and course track
-router.get('/:userId/:courseId', async (req: any, res: any) => {
+// GET /api/certificate/:courseId - Generate certificate data for a specific authenticated user and course track
+router.get('/:courseId', authenticateToken, async (req: any, res: Response): Promise<any> => {
   try {
-    const userId = parseInt(req.params.userId);
-    const { courseId } = req.params;
+    const userId = req.user.id;
+    const { courseId } = req.params as any;
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -25,16 +29,18 @@ router.get('/:userId/:courseId', async (req: any, res: any) => {
     });
 
     if (!user) {
+      logger.error(`Certificate fetch failure: User ID ${userId} not found.`);
       return res.status(404).json({ message: 'User not found' });
     }
 
     // Check course-specific progress in DB
     const progress = user.progresses.find(p => p.courseId === courseId);
     if (!progress || progress.weekCompleted < 4) {
+      logger.error(`Certificate fetch denied: Track ${courseId} is uncompleted for user ${userId}.`);
       return res.status(403).json({ message: `Training track '${courseId}' not completed yet. Complete all 4 weeks to unlock.` });
     }
 
-    // Secure Certificate Generation: Ensure successful payment record exists in DB (Issue #3)
+    // Secure Certificate Generation: Ensure successful payment record exists in DB
     const successPayment = await prisma.payment.findFirst({
       where: {
         userId,
@@ -44,6 +50,7 @@ router.get('/:userId/:courseId', async (req: any, res: any) => {
     });
 
     if (!successPayment) {
+      logger.error(`Certificate fetch blocked: Payment clearance outstanding for track ${courseId} / user ${userId}.`);
       return res.status(402).json({ 
         message: `Payment clearance required to generate certified credentials for '${courseId}'.`,
         paymentRequired: true 
@@ -63,7 +70,7 @@ router.get('/:userId/:courseId', async (req: any, res: any) => {
     const scores = Object.values(highestWeekScores);
     const avgScore = scores.length > 0 
       ? scores.reduce((acc, curr) => acc + curr, 0) / scores.length 
-      : 70; // fallback if no scores recorded
+      : businessRules.zeroScoreFallback; // fallback if no scores recorded
 
     let grade = "A";
     if (avgScore >= 90) grade = "A+";
@@ -77,6 +84,8 @@ router.get('/:userId/:courseId', async (req: any, res: any) => {
     else if (courseId === "Embedded") displayCourseName = "Embedded Systems & Real-Time OS";
 
     const credentialId = generateCredentialId(user.id, user.name, courseId);
+
+    logger.info(`Certificate generated successfully for user ${userId} on track ${courseId}. Grade: ${grade}`);
 
     res.json({
       name: user.name,
@@ -97,26 +106,28 @@ router.get('/:userId/:courseId', async (req: any, res: any) => {
         technicalDirector: "Er. Gaurav Singh"
       }
     });
-  } catch (error) {
-    console.error('Fetch certificate error:', error);
+  } catch (error: any) {
+    logger.error('Fetch certificate error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// GET /api/certificate/verify/:credentialId - Public verification registry endpoint
-router.get('/verify/:credentialId', async (req: any, res: any) => {
+// GET /api/certificate/verify/:credentialId - Public verification registry endpoint with rate limiting (Issue #2)
+router.get('/verify/:credentialId', rateLimiter(10, 60 * 1000), async (req: Request, res: Response): Promise<any> => {
   try {
-    const { credentialId } = req.params;
+    const { credentialId } = req.params as any;
 
     // Parse the ID format: e.g. NEX-CPP_EMBEDDED-AVIN1001-VERIFIED
     // We match the numeric code before the "-VERIFIED" suffix
     const match = credentialId.match(/-[A-Z0-9_]+([0-9]{4})-VERIFIED$/i);
     if (!match) {
+      logger.error(`Certificate verification query failed: Invalid Credential ID format ${credentialId}`);
       return res.status(400).json({ message: 'Invalid Credential ID format.' });
     }
 
     const calculatedUserId = parseInt(match[1]) - 1000;
     if (isNaN(calculatedUserId) || calculatedUserId <= 0) {
+      logger.error(`Certificate verification query failed: Mismatched signature key ${credentialId}`);
       return res.status(400).json({ message: 'Invalid verification signature.' });
     }
 
@@ -129,6 +140,7 @@ router.get('/verify/:credentialId', async (req: any, res: any) => {
     });
 
     if (!user) {
+      logger.error(`Certificate verification query failed: Registered student ID ${calculatedUserId} not found.`);
       return res.status(404).json({ message: 'No registered candidate matches this credential.' });
     }
 
@@ -141,12 +153,14 @@ router.get('/verify/:credentialId', async (req: any, res: any) => {
 
     const progress = user.progresses.find(p => p.courseId === courseId);
     if (!progress || progress.weekCompleted < 4) {
+      logger.error(`Certificate verification query failed: Track ${courseId} is incomplete for student ${calculatedUserId}`);
       return res.status(403).json({ message: 'Credential is still active/uncompleted in database.' });
     }
 
     // Regenerate and match the credential ID to prevent brute forcing or spoofing names
     const expectedId = generateCredentialId(user.id, user.name, courseId);
     if (expectedId.toLowerCase() !== credentialId.toLowerCase()) {
+      logger.error(`Certificate verification query failed: Signature mismatch for ${credentialId}`);
       return res.status(400).json({ message: 'Credential verification signature mismatch.' });
     }
 
@@ -161,7 +175,7 @@ router.get('/verify/:credentialId', async (req: any, res: any) => {
     const scores = Object.values(highestWeekScores);
     const avgScore = scores.length > 0 
       ? scores.reduce((acc, curr) => acc + curr, 0) / scores.length 
-      : 70;
+      : businessRules.zeroScoreFallback;
 
     let grade = "A";
     if (avgScore >= 90) grade = "A+";
@@ -172,6 +186,8 @@ router.get('/verify/:credentialId', async (req: any, res: any) => {
     else if (courseId === "C++") displayCourseName = "C++ & OOP for Embedded Systems";
     else if (courseId === "IoT") displayCourseName = "IoT & Smart Interfacing Solutions";
     else if (courseId === "Embedded") displayCourseName = "Embedded Systems & Real-Time OS";
+
+    logger.info(`Certificate verified query success: registry matches ID ${credentialId} / user ${user.id}`);
 
     res.json({
       verified: true,
@@ -190,8 +206,8 @@ router.get('/verify/:credentialId', async (req: any, res: any) => {
       accreditationRegistry: "NEXUS EMBEDDED SYSTEMS CORPORATE REGISTRY (CIN: U72900DL2026PTC394820)",
       compliance: "ISO 9001:2015 & ISO/IEC 27001 Certified System Standards"
     });
-  } catch (error) {
-    console.error('Verify credential error:', error);
+  } catch (error: any) {
+    logger.error('Verify credential error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

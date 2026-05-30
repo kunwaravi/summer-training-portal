@@ -1,11 +1,12 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
-import { authenticateToken } from './auth';
+import { authenticateToken } from '../middleware/auth';
+import { logger } from '../lib/logger';
 
 const router = Router();
 
 // Middleware to verify admin privileges
-const isAdmin = (req: any, res: any, next: any) => {
+const isAdmin = (req: any, res: Response, next: NextFunction): any => {
   if (req.user && req.user.role === 'ADMIN') {
     next();
   } else {
@@ -13,8 +14,8 @@ const isAdmin = (req: any, res: any, next: any) => {
   }
 };
 
-// GET /api/courses - List all courses with lightweight module lists (LAZY LOAD: does NOT return topic content text/code)
-router.get('/', async (req: any, res: any) => {
+// GET /api/courses - List all courses with lightweight module lists (LAZY LOAD)
+router.get('/', async (req: Request, res: Response): Promise<any> => {
   try {
     const courses = await prisma.course.findMany({
       include: {
@@ -39,16 +40,16 @@ router.get('/', async (req: any, res: any) => {
     }
 
     res.json(curriculumMap);
-  } catch (error) {
-    console.error('Fetch courses error:', error);
+  } catch (error: any) {
+    logger.error('Fetch courses error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // GET /api/courses/:courseId/module/:week - Dynamic fetch for ONE module's full topics (Lazy loading detail view)
-router.get('/:courseId/module/:week', async (req: any, res: any) => {
+router.get('/:courseId/module/:week', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { courseId, week } = req.params;
+    const { courseId, week } = req.params as any;
     const weekNum = parseInt(week);
 
     const moduleRecord = await prisma.module.findFirst({
@@ -66,67 +67,75 @@ router.get('/:courseId/module/:week', async (req: any, res: any) => {
     });
 
     if (!moduleRecord) {
+      logger.error(`Fetch module details failure: Week ${week} for course ${courseId} not found.`);
       return res.status(404).json({ message: `Week ${week} for course ${courseId} not found.` });
     }
 
     res.json(moduleRecord);
-  } catch (error) {
-    console.error('Fetch module detail error:', error);
+  } catch (error: any) {
+    logger.error('Fetch module detail error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // ADMIN CRUD - POST /api/courses (Create new Course)
-router.post('/', authenticateToken, isAdmin, async (req: any, res: any) => {
+router.post('/', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
     const { id, title, description } = req.body;
     if (!id || !title) {
+      logger.error('Create course failed: Missing Course ID or Title.');
       return res.status(400).json({ message: 'Course ID and Title are required.' });
     }
 
     const course = await prisma.course.create({
       data: { id, title, description: description || '' }
     });
+    
+    logger.info(`Admin successfully created course: ${id}`);
     res.status(201).json(course);
-  } catch (error) {
-    console.error('Create course error:', error);
+  } catch (error: any) {
+    logger.error('Create course error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // ADMIN CRUD - PUT /api/courses/:courseId (Update Course)
-router.put('/:courseId', authenticateToken, isAdmin, async (req: any, res: any) => {
+router.put('/:courseId', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const { courseId } = req.params;
+    const { courseId } = req.params as any;
     const { title, description } = req.body;
 
     const course = await prisma.course.update({
       where: { id: courseId },
       data: { title, description }
     });
+    
+    logger.info(`Admin successfully updated course: ${courseId}`);
     res.json(course);
-  } catch (error) {
-    console.error('Update course error:', error);
+  } catch (error: any) {
+    logger.error('Update course error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // ADMIN CRUD - DELETE /api/courses/:courseId (Delete Course)
-router.delete('/:courseId', authenticateToken, isAdmin, async (req: any, res: any) => {
+router.delete('/:courseId', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const { courseId } = req.params;
+    const { courseId } = req.params as any;
     await prisma.course.delete({ where: { id: courseId } });
+    
+    logger.info(`Admin successfully deleted course: ${courseId}`);
     res.json({ message: 'Course deleted successfully' });
-  } catch (error) {
-    console.error('Delete course error:', error);
+  } catch (error: any) {
+    logger.error('Delete course error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // ADMIN CRUD - POST /api/courses/:courseId/module (Create Week Module)
-router.post('/:courseId/module', authenticateToken, isAdmin, async (req: any, res: any) => {
+router.post('/:courseId/module', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const { courseId } = req.params;
+    const { courseId } = req.params as any;
     const { week, title, description } = req.body;
 
     const newModule = await prisma.module.create({
@@ -137,55 +146,64 @@ router.post('/:courseId/module', authenticateToken, isAdmin, async (req: any, re
         description: description || ''
       }
     });
+    
+    logger.info(`Admin successfully created module: ${courseId} Week ${week}`);
     res.status(201).json(newModule);
-  } catch (error) {
-    console.error('Create module error:', error);
+  } catch (error: any) {
+    logger.error('Create module error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // ADMIN CRUD - PUT /api/courses/module/:moduleId (Update Module Metadata)
-router.put('/module/:moduleId', authenticateToken, isAdmin, async (req: any, res: any) => {
+router.put('/module/:moduleId', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const moduleId = parseInt(req.params.moduleId);
+    const { moduleId } = req.params as any;
+    const moduleIdNum = parseInt(moduleId);
     const { week, title, description } = req.body;
 
     const updatedModule = await prisma.module.update({
-      where: { id: moduleId },
+      where: { id: moduleIdNum },
       data: {
         week: week !== undefined ? parseInt(week) : undefined,
         title,
         description
       }
     });
+    
+    logger.info(`Admin successfully updated module ID: ${moduleId}`);
     res.json(updatedModule);
-  } catch (error) {
-    console.error('Update module error:', error);
+  } catch (error: any) {
+    logger.error('Update module error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // ADMIN CRUD - DELETE /api/courses/module/:moduleId (Delete Module)
-router.delete('/module/:moduleId', authenticateToken, isAdmin, async (req: any, res: any) => {
+router.delete('/module/:moduleId', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const moduleId = parseInt(req.params.moduleId);
-    await prisma.module.delete({ where: { id: moduleId } });
+    const { moduleId } = req.params as any;
+    const moduleIdNum = parseInt(moduleId);
+    await prisma.module.delete({ where: { id: moduleIdNum } });
+    
+    logger.info(`Admin successfully deleted module ID: ${moduleId}`);
     res.json({ message: 'Module deleted successfully' });
-  } catch (error) {
-    console.error('Delete module error:', error);
+  } catch (error: any) {
+    logger.error('Delete module error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // ADMIN CRUD - POST /api/courses/module/:moduleId/topic (Create Topic inside Module)
-router.post('/module/:moduleId/topic', authenticateToken, isAdmin, async (req: any, res: any) => {
+router.post('/module/:moduleId/topic', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const moduleId = parseInt(req.params.moduleId);
+    const { moduleId } = req.params as any;
+    const moduleIdNum = parseInt(moduleId);
     const { title, text, code, note, order } = req.body;
 
     const newTopic = await prisma.topic.create({
       data: {
-        moduleId,
+        moduleId: moduleIdNum,
         title,
         text,
         code,
@@ -193,21 +211,24 @@ router.post('/module/:moduleId/topic', authenticateToken, isAdmin, async (req: a
         order: order !== undefined ? parseInt(order) : 0
       }
     });
+    
+    logger.info(`Admin successfully created topic inside module ID ${moduleId}: ${title}`);
     res.status(201).json(newTopic);
-  } catch (error) {
-    console.error('Create topic error:', error);
+  } catch (error: any) {
+    logger.error('Create topic error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // ADMIN CRUD - PUT /api/courses/topic/:topicId (Update Topic)
-router.put('/topic/:topicId', authenticateToken, isAdmin, async (req: any, res: any) => {
+router.put('/topic/:topicId', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const topicId = parseInt(req.params.topicId);
+    const { topicId } = req.params as any;
+    const topicIdNum = parseInt(topicId);
     const { title, text, code, note, order } = req.body;
 
     const updatedTopic = await prisma.topic.update({
-      where: { id: topicId },
+      where: { id: topicIdNum },
       data: {
         title,
         text,
@@ -216,21 +237,26 @@ router.put('/topic/:topicId', authenticateToken, isAdmin, async (req: any, res: 
         order: order !== undefined ? parseInt(order) : undefined
       }
     });
+    
+    logger.info(`Admin successfully updated topic ID: ${topicId}`);
     res.json(updatedTopic);
-  } catch (error) {
-    console.error('Update topic error:', error);
+  } catch (error: any) {
+    logger.error('Update topic error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // ADMIN CRUD - DELETE /api/courses/topic/:topicId (Delete Topic)
-router.delete('/topic/:topicId', authenticateToken, isAdmin, async (req: any, res: any) => {
+router.delete('/topic/:topicId', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {
-    const topicId = parseInt(req.params.topicId);
-    await prisma.topic.delete({ where: { id: topicId } });
+    const { topicId } = req.params as any;
+    const topicIdNum = parseInt(topicId);
+    await prisma.topic.delete({ where: { id: topicIdNum } });
+    
+    logger.info(`Admin successfully deleted topic ID: ${topicId}`);
     res.json({ message: 'Topic deleted successfully' });
-  } catch (error) {
-    console.error('Delete topic error:', error);
+  } catch (error: any) {
+    logger.error('Delete topic error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

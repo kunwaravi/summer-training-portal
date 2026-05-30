@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const syncAuth = async () => {
-      const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
       
       // Seed with local storage immediately if available
@@ -24,19 +23,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(JSON.parse(storedUser));
       }
 
-      if (token) {
-        try {
-          // Fetch fresh user profile from backend (includes complete course progress)
-          const response = await api.get('/auth/me');
-          setUser(response.data);
-          localStorage.setItem('user', JSON.stringify(response.data));
-        } catch (error) {
-          console.error('Session sync failed:', error);
-          // Token is likely invalid or expired, clear auth state
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setUser(null);
-        }
+      try {
+        // Fetch fresh user profile from backend (includes complete course progress)
+        const response = await api.get('/auth/me');
+        setUser(response.data);
+        localStorage.setItem('user', JSON.stringify(response.data));
+      } catch (error) {
+        console.error('Session sync failed:', error);
+        // Session cookie is likely invalid or expired, clear auth state
+        localStorage.removeItem('user');
+        setUser(null);
       }
       setLoading(false);
     };
@@ -44,14 +40,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     syncAuth();
   }, []);
 
-  const login = (token: string, userData: any) => {
-    localStorage.setItem('token', token);
+  const login = (_token: string, userData: any) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout request failed:', err);
+    }
     localStorage.removeItem('user');
     setUser(null);
   };

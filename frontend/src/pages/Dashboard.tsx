@@ -1,45 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp } from 'lucide-react';
-
-const courses = [
-  { 
-    id: 'C', 
-    title: 'C Language', 
-    icon: Code, 
-    color: 'from-blue-500 to-blue-700', 
-    textColor: 'text-blue-400',
-    barColor: 'bg-blue-500', 
-    desc: 'Master procedural programming, memory maps, and hardware structure compilations.' 
-  },
-  { 
-    id: 'C++', 
-    title: 'C++ Language', 
-    icon: Box, 
-    color: 'from-purple-500 to-purple-700', 
-    textColor: 'text-purple-400',
-    barColor: 'bg-purple-500', 
-    desc: 'Implement high-performance object-oriented software design, templates, and STL.' 
-  },
-  { 
-    id: 'IoT', 
-    title: 'IoT (Internet of Things)', 
-    icon: Wifi, 
-    color: 'from-green-500 to-green-700', 
-    textColor: 'text-green-400',
-    barColor: 'bg-green-500', 
-    desc: 'Connect physical systems with ESP microcontrollers, MQTT protocols, and cloud services.' 
-  },
-  { 
-    id: 'Embedded', 
-    title: 'Embedded Systems', 
-    icon: Cpu, 
-    color: 'from-orange-500 to-orange-750', 
-    textColor: 'text-orange-400',
-    barColor: 'bg-orange-500', 
-    desc: 'Architect microcontroller interfaces, serial communication buses, and RTOS kernels.' 
-  },
-];
+import { BookOpen, Award, CheckCircle2, TrendingUp } from 'lucide-react';
+import { coursesConfig } from '../config/courses';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -64,7 +26,7 @@ const Dashboard = () => {
     return "Good Evening";
   };
 
-  const streakDays = totalQuizzesPassed > 0 ? (totalQuizzesPassed * 2 + 1) : activeTracksCount > 0 ? 1 : 0;
+
 
   const hasWeek1 = user?.progresses?.some((p: any) => p.weekCompleted >= 1) || false;
   const hasWeek2 = user?.progresses?.some((p: any) => p.weekCompleted >= 2) || false;
@@ -77,7 +39,7 @@ const Dashboard = () => {
     id: latestProgressInfo.courseId,
     progress: latestProgressInfo.progress,
     weekCompleted: latestProgressInfo.weekCompleted,
-    title: courses.find(c => c.id === latestProgressInfo.courseId)?.title || "Specialized Track"
+    title: coursesConfig.find(c => c.id === latestProgressInfo.courseId)?.titleShort || "Specialized Track"
   } : null;
 
   return (
@@ -95,9 +57,7 @@ const Dashboard = () => {
         </div>
         
         <div className="flex flex-wrap gap-2 text-xs font-bold items-center">
-          <span className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 shadow-sm">
-            🔥 {streakDays}-Day Learn Streak
-          </span>
+
           <span className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
             🏢 {user?.collegeName || 'Government Polytechnic'}
           </span>
@@ -273,7 +233,7 @@ const Dashboard = () => {
         <h2 className="text-2xl font-extrabold tracking-tight">Choose Your Training Track</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {courses.map((course) => {
+          {coursesConfig.map((course) => {
             const progressInfo = getCourseProgress(course.id);
             const isCompleted = progressInfo.completed;
             const hasStarted = progressInfo.progress > 0;
@@ -285,7 +245,7 @@ const Dashboard = () => {
                 className="group cursor-pointer bg-slate-800 rounded-2xl overflow-hidden border border-slate-700 hover:border-blue-500 transition-all transform hover:-translate-y-2 shadow-lg flex flex-col justify-between"
               >
                 {/* Top Half: Original Colorful Gradient Header Block */}
-                <div className={`h-32 bg-gradient-to-br ${course.color} flex items-center justify-center relative`}>
+                <div className={`h-32 bg-gradient-to-br ${course.colorDark} flex items-center justify-center relative`}>
                   <course.icon size={48} className="text-white drop-shadow-md" />
                   
                   {/* Dynamic Status Badge overlay */}
@@ -310,10 +270,10 @@ const Dashboard = () => {
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                   <div className="space-y-2">
                     <h3 className="text-lg font-bold group-hover:text-blue-400 transition tracking-tight">
-                      {course.title}
+                      {course.titleShort}
                     </h3>
                     <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
-                      {course.desc}
+                      {course.descShort}
                     </p>
                   </div>
 

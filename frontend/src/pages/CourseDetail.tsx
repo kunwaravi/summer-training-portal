@@ -5,11 +5,12 @@ import { useAuth } from '../context/AuthContext';
 import { 
   CheckCircle, Lock, BookOpen, Play, ArrowLeft, Clipboard, 
   CheckCircle2, ChevronRight, GraduationCap, Zap, Award, 
-  Sparkles, CreditCard, ShieldAlert, Check, Eye, QrCode 
+  Sparkles, ShieldAlert, Check, Eye 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { QRCodeSVG } from 'qrcode.react';
+import { CheckoutModal } from '../components/course/CheckoutModal';
+import { ModuleBlueprintSVG } from '../components/course/ModuleBlueprintSVG';
 
 const CourseDetail = () => {
   const { id } = useParams(); // Course ID: e.g., 'C', 'C++', 'IoT', 'Embedded'
@@ -154,6 +155,20 @@ const CourseDetail = () => {
     setShowCheckoutModal(true);
   };
 
+  const loadRazorpay = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleMockCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (currentPrice > 0 && paymentMethod === 'card' && (!cardNumber || !cardExpiry || !cardCvv)) {
@@ -169,13 +184,69 @@ const CourseDetail = () => {
         amount: currentPrice
       });
 
-      const { orderId, mockSignature } = orderRes.data;
+      const { realPayment, orderId, razorpayOrderId, razorpayKeyId, mockSignature } = orderRes.data;
 
+      if (realPayment && razorpayOrderId) {
+        // Implement official Razorpay Checkout Flow
+        const isSDKLoaded = await loadRazorpay();
+        if (!isSDKLoaded) {
+          alert('Failed to load Razorpay payment SDK. Please verify your internet connection.');
+          setProcessingCheckout(false);
+          return;
+        }
+
+        const options = {
+          key: razorpayKeyId,
+          amount: currentPrice * 100, // paise
+          currency: 'INR',
+          name: 'Nexus Institute of Technology',
+          description: `Certified Specialization: ${id}`,
+          order_id: razorpayOrderId,
+          handler: async (response: any) => {
+            setProcessingCheckout(true);
+            try {
+              const verifyRes = await api.post('/payments/verify', {
+                orderId,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              });
+
+              if (verifyRes.data.success) {
+                setIsPaid(true);
+                setShowCheckoutModal(false);
+                confetti({
+                  particleCount: 150,
+                  spread: 80,
+                  origin: { y: 0.6 }
+                });
+              }
+            } catch (err: any) {
+              console.error(err);
+              alert(err.response?.data?.message || 'Razorpay payment verification failed.');
+            } finally {
+              setProcessingCheckout(false);
+            }
+          },
+          prefill: {
+            name: user?.name || '',
+            email: user?.email || ''
+          },
+          theme: {
+            color: '#4f46e5'
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+        setProcessingCheckout(false);
+        return;
+      }
+
+      // Fallback: Secure Cryptographic Simulated Checkout Flow
       // Simulate a small network latency
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1200));
 
-      // 2. Backend: Secure cryptographic webhook signature verification (Issue #3, #4)
-      // eslint-disable-next-line react-hooks/purity
       const randomSuffix = Math.random().toString(36).substring(2, 9).toUpperCase();
       let gatewayRef = '';
       if (currentPrice === 0) {
@@ -189,7 +260,13 @@ const CourseDetail = () => {
       const verifyRes = await api.post('/payments/verify', {
         orderId,
         mockSignature,
-        gatewayReference: gatewayRef
+        gatewayReference: gatewayRef,
+        paymentDetails: {
+          paymentMethod,
+          cardNumber,
+          cardExpiry,
+          cardCvv
+        }
       });
 
       if (verifyRes.data.success) {
@@ -210,123 +287,7 @@ const CourseDetail = () => {
   };
 
   // Concept Infographic Blueprint Renderer (Issue #13)
-  const renderWeeklyDiagram = (courseKey: string, weekNum: number) => {
-    const strokeColor = "#22d3ee"; // cyan-400
-    const accentColor = "#3b82f6"; // blue-500
-    const textTheme = "fill-slate-300 font-sans text-[11px] font-bold text-center";
-    
-    // C Programming Track SVG Blueprints
-    if (courseKey === "C") {
-      if (weekNum === 1) {
-        return (
-          <svg viewBox="0 0 320 200" className="w-full h-auto max-h-[160px]">
-            <rect x="10" y="10" width="80" height="30" rx="6" fill="#1e293b" stroke={accentColor} strokeWidth="1.5" />
-            <text x="50" y="28" textAnchor="middle" className={textTheme}>Source (.c)</text>
-            
-            <path d="M 50 40 L 50 65" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#arrow)" />
-            
-            <rect x="10" y="65" width="80" height="30" rx="6" fill="#1e293b" stroke={accentColor} strokeWidth="1.5" />
-            <text x="50" y="83" textAnchor="middle" className={textTheme}>Compiler</text>
-            
-            <path d="M 90 80 L 140 80" stroke={strokeColor} strokeWidth="1.5" />
-            <text x="115" y="73" textAnchor="middle" className="fill-cyan-400 text-[9px] font-extrabold">Assembly</text>
-            
-            <rect x="140" y="65" width="80" height="30" rx="6" fill="#1e293b" stroke={accentColor} strokeWidth="1.5" />
-            <text x="180" y="83" textAnchor="middle" className={textTheme}>Linker</text>
-            
-            <path d="M 180 95 L 180 120" stroke={strokeColor} strokeWidth="1.5" />
-            
-            <rect x="140" y="120" width="80" height="35" rx="6" fill="#0f172a" stroke="#10b981" strokeWidth="2" />
-            <text x="180" y="141" textAnchor="middle" className="fill-emerald-400 font-sans text-xs font-black">Binary (.exe)</text>
-            <defs>
-              <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill={strokeColor} />
-              </marker>
-            </defs>
-          </svg>
-        );
-      }
-      if (weekNum === 2) {
-        return (
-          <svg viewBox="0 0 320 200" className="w-full h-auto max-h-[160px]">
-            <polygon points="160,20 240,60 160,100 80,60" fill="#1e293b" stroke={accentColor} strokeWidth="1.5" />
-            <text x="160" y="64" textAnchor="middle" className={textTheme}>if (Score &gt;= 60)</text>
-            
-            <path d="M 240 60 L 270 60 L 270 120" stroke="#10b981" strokeWidth="1.5" />
-            <text x="285" y="85" textAnchor="middle" className="fill-emerald-400 text-[10px] font-black">TRUE</text>
-            <rect x="230" y="120" width="80" height="30" rx="6" fill="#065f46" stroke="#10b981" strokeWidth="1" />
-            <text x="270" y="138" textAnchor="middle" className="fill-white text-[9px] font-black">PASS EXAM</text>
-            
-            <path d="M 80 60 L 50 60 L 50 120" stroke="#ef4444" strokeWidth="1.5" />
-            <text x="35" y="85" textAnchor="middle" className="fill-red-400 text-[10px] font-black">FALSE</text>
-            <rect x="10" y="120" width="80" height="30" rx="6" fill="#991b1b" stroke="#ef4444" strokeWidth="1" />
-            <text x="50" y="138" textAnchor="middle" className="fill-white text-[9px] font-black">FAIL RETRY</text>
-          </svg>
-        );
-      }
-      if (weekNum === 3) {
-        return (
-          <svg viewBox="0 0 320 200" className="w-full h-auto max-h-[160px]">
-            <g transform="translate(10, 50)">
-              <rect x="0" y="20" width="50" height="40" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
-              <text x="25" y="45" textAnchor="middle" className="fill-white font-mono text-sm font-bold">10</text>
-              <text x="25" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[9px]">Idx 0</text>
-              
-              <rect x="50" y="20" width="50" height="40" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
-              <text x="75" y="45" textAnchor="middle" className="fill-white font-mono text-sm font-bold">20</text>
-              <text x="75" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[9px]">Idx 1</text>
-              
-              <rect x="100" y="20" width="50" height="40" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
-              <text x="125" y="45" textAnchor="middle" className="fill-white font-mono text-sm font-bold">30</text>
-              <text x="125" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[9px]">Idx 2</text>
-              
-              <rect x="150" y="20" width="50" height="40" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
-              <text x="175" y="45" textAnchor="middle" className="fill-white font-mono text-sm font-bold">40</text>
-              <text x="175" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[9px]">Idx 3</text>
-            </g>
-            <text x="110" y="30" textAnchor="middle" className="fill-cyan-400 text-xs font-black">Contiguous Array Layout</text>
-          </svg>
-        );
-      }
-      if (weekNum === 4) {
-        return (
-          <svg viewBox="0 0 320 200" className="w-full h-auto max-h-[160px]">
-            <rect x="20" y="50" width="80" height="40" rx="6" fill="#1e293b" stroke={strokeColor} strokeWidth="1.5" />
-            <text x="60" y="70" textAnchor="middle" className="fill-cyan-400 font-mono text-xs font-extrabold">int *ptr</text>
-            <text x="60" y="82" textAnchor="middle" className="fill-slate-500 font-mono text-[8px]">Holds: 0x7FFA</text>
-            
-            <path d="M 100 70 L 180 70" stroke="#f59e0b" strokeWidth="2" strokeDasharray="3 3" markerEnd="url(#goldArrow)" />
-            <text x="140" y="60" textAnchor="middle" className="fill-amber-400 text-[8px] font-bold">Points To</text>
-            
-            <rect x="190" y="50" width="100" height="45" rx="6" fill="#0f172a" stroke="#10b981" strokeWidth="2" />
-            <text x="240" y="72" textAnchor="middle" className="fill-emerald-400 font-mono text-sm font-black">100</text>
-            <text x="240" y="86" textAnchor="middle" className="fill-slate-400 font-mono text-[8px]">Address: 0x7FFA</text>
-            <defs>
-              <marker id="goldArrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
-              </marker>
-            </defs>
-          </svg>
-        );
-      }
-    }
-    
-    // Fallback vector outline for other weeks/courses (Sleek generic architecture circuit map)
-    return (
-      <svg viewBox="0 0 320 200" className="w-full h-auto max-h-[160px]">
-        <circle cx="60" cy="100" r="30" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
-        <text x="60" y="104" textAnchor="middle" className="fill-white text-[9px] font-black">{courseKey} Micro</text>
-        
-        <path d="M 90 100 L 150 100" stroke={strokeColor} strokeWidth="2" />
-        <rect x="150" y="75" width="80" height="50" rx="8" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
-        <text x="190" y="104" textAnchor="middle" className="fill-cyan-400 text-[10px] font-bold">Registers</text>
-        
-        <path d="M 230 100 L 280 100" stroke={strokeColor} strokeWidth="2" />
-        <circle cx="290" cy="100" r="10" fill="#10b981" />
-        <text x="190" y="50" textAnchor="middle" className="fill-amber-400 text-[9px] font-black">Week {weekNum} Logic Flow</text>
-      </svg>
-    );
-  };
+  // Extracted to ModuleBlueprintSVG component
 
   if (loadingSyllabus) {
     return (
@@ -561,18 +522,18 @@ const CourseDetail = () => {
                       <p className="font-bold text-slate-200">Interactive Blueprint Visualization</p>
                       <p>Study this visual schematic representation of the concepts introduced this week. Click on the infographic mapping diagram to zoom in for detailed viewing.</p>
                       <button 
-                        onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek.week))}
+                        onClick={() => setLightboxImage(<ModuleBlueprintSVG courseKey={id as string} weekNum={selectedWeek.week} />)}
                         className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-white font-extrabold uppercase rounded text-[9px] border border-slate-700/60 transition active:scale-[0.98]"
                       >
                         <Eye size={12} /> Click Diagram to Expand
                       </button>
                     </div>
                     <div 
-                      onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek.week))}
+                      onClick={() => setLightboxImage(<ModuleBlueprintSVG courseKey={id as string} weekNum={selectedWeek.week} />)}
                       className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/80 hover:bg-slate-950/20 hover:border-slate-700 transition duration-300 cursor-pointer flex justify-center items-center group shadow-md"
                     >
                       <div className="transform group-hover:scale-[1.02] transition duration-300 w-full max-w-[280px]">
-                        {renderWeeklyDiagram(id as string, selectedWeek.week)}
+                        <ModuleBlueprintSVG courseKey={id as string} weekNum={selectedWeek.week} />
                       </div>
                     </div>
                   </div>
@@ -816,202 +777,29 @@ const CourseDetail = () => {
       </AnimatePresence>
 
       {/* Stripe/Razorpay Sleek Mock Checkout Modal (Issue #7 & #3) */}
-      <AnimatePresence>
-        {showCheckoutModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              className="bg-slate-950 border border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-6 relative"
-            >
-              <button 
-                onClick={() => setShowCheckoutModal(false)}
-                className="absolute right-4 top-4 text-slate-500 hover:text-white transition"
-              >
-                ✕
-              </button>
-
-              <div className="text-center space-y-1">
-                <div className="flex items-center justify-center gap-1.5 text-cyan-400 text-sm font-extrabold uppercase tracking-widest">
-                  <CreditCard size={18} /> Nexus Billing checkout
-                </div>
-                <h3 className="text-lg font-black text-white">Complete Certificate Payment</h3>
-                <p className="text-xs text-slate-400">Mock Stripe-Razorpay Sandbox Payment Portal</p>
-              </div>
-
-              <form onSubmit={handleMockCheckoutSubmit} className="space-y-4">
-                
-                {/* Amount Box */}
-                <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                  <span className="text-slate-400 font-bold uppercase">Acceridatión Fee</span>
-                  <div className="flex flex-col items-end">
-                    {discount > 0 && (
-                      <span className="text-slate-500 line-through text-[10px]">₹499.00</span>
-                    )}
-                    <span className="text-cyan-400 font-black text-sm">₹{currentPrice.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                {/* Coupon Code Section */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Discount Coupon</label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Enter 6-digit code"
-                      maxLength={6}
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono uppercase"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleApplyCoupon}
-                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-[10px] font-bold uppercase rounded-xl border border-slate-700 transition"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                  {couponError && <p className="text-[9px] text-red-500 font-bold ml-1">{couponError}</p>}
-                  {isCouponApplied && <p className="text-[9px] text-green-500 font-bold ml-1">Coupon Applied: {Math.round(discount * 100)}% OFF!</p>}
-                </div>
-
-                {currentPrice > 0 ? (
-                  <>
-                    {/* Payment Method Selector */}
-                    <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('card')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${paymentMethod === 'card' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
-                      >
-                        <CreditCard size={14} /> Card
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('upi')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${paymentMethod === 'upi' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
-                      >
-                        <QrCode size={14} /> UPI / QR
-                      </button>
-                    </div>
-
-                    {paymentMethod === 'card' ? (
-                      <div className="space-y-4 animate-in fade-in duration-300">
-                        <div className="space-y-1 text-left">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">Card Number (Mock Input)</label>
-                          <div className="relative">
-                            <input 
-                              type="text" 
-                              required
-                              placeholder="4111 2222 3333 4444"
-                              value={cardNumber}
-                              onChange={(e) => setCardNumber(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
-                            />
-                            <CreditCard size={16} className="absolute right-3.5 top-3 text-slate-500" />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1 text-left">
-                            <label className="text-[10px] uppercase font-bold text-slate-400">Expiry Date</label>
-                            <input 
-                              type="text" 
-                              required
-                              placeholder="MM/YY"
-                              value={cardExpiry}
-                              onChange={(e) => setCardExpiry(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
-                            />
-                          </div>
-                          <div className="space-y-1 text-left">
-                            <label className="text-[10px] uppercase font-bold text-slate-400">CVV / CVC</label>
-                            <input 
-                              type="password" 
-                              required
-                              placeholder="•••"
-                              maxLength={3}
-                              value={cardCvv}
-                              onChange={(e) => setCardCvv(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl">
-                          <QRCodeSVG 
-                            value={`upi://pay?pa=avinashkunwar07@ptyes&pn=Gaurav%20Singh&am=${currentPrice}&cu=INR`} 
-                            size={160}
-                            level="H"
-                            includeMargin={true}
-                          />
-                          <p className="text-slate-900 text-[10px] font-black uppercase tracking-tighter mt-2">Scan to pay ₹{currentPrice} with UPI</p>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">Payee Name</label>
-                          <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-bold">
-                            Gaurav Singh
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">UPI ID</label>
-                          <div className="relative">
-                            <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono">
-                              avinashkunwar07@ptyes
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => copyToClipboard('avinashkunwar07@ptyes')}
-                              className="absolute right-2 top-1.5 p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-cyan-400 transition"
-                            >
-                              {upiCopied ? <Check size={14} /> : <Clipboard size={14} />}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex flex-col items-center justify-center space-y-3 animate-in zoom-in-95 duration-300">
-                    <Sparkles className="text-cyan-400 animate-pulse" size={32} />
-                    <div className="text-center">
-                      <p className="text-white font-black uppercase text-sm">Full Discount Applied!</p>
-                      <p className="text-slate-400 text-[10px] font-bold uppercase mt-1">Your certificate is now completely free.</p>
-                    </div>
-                  </div>
-                )}
-
-                <button 
-                  type="submit"
-                  disabled={processingCheckout}
-                  className="w-full mt-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-slate-800 disabled:to-slate-800 text-white font-extrabold rounded-xl shadow-lg shadow-cyan-500/10 transition duration-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2 active:scale-[0.99]"
-                >
-                  {processingCheckout ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>{currentPrice === 0 ? 'Applying Free Clearance...' : (paymentMethod === 'card' ? 'Authorizing Sandbox Charge...' : 'Verifying UPI Transaction...')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>{currentPrice === 0 ? 'Claim Free Certificate' : (paymentMethod === 'card' ? `Pay ₹${currentPrice} Clearance Fee` : 'I have completed the payment')}</span>
-                    </>
-                  )}
-                </button>
-              </form>
-
-              <div className="text-center text-[9px] text-slate-500 font-bold uppercase tracking-wider pt-2 border-t border-slate-900">
-                🔒 Secured with 256-bit TLS Webhook Verification
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <CheckoutModal
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onSubmit={handleMockCheckoutSubmit}
+        currentPrice={currentPrice}
+        discount={discount}
+        couponCode={couponCode}
+        onChangeCouponCode={setCouponCode}
+        onApplyCoupon={handleApplyCoupon}
+        couponError={couponError}
+        isCouponApplied={isCouponApplied}
+        paymentMethod={paymentMethod}
+        onChangePaymentMethod={setPaymentMethod}
+        cardNumber={cardNumber}
+        onChangeCardNumber={setCardNumber}
+        cardExpiry={cardExpiry}
+        onChangeCardExpiry={setCardExpiry}
+        cardCvv={cardCvv}
+        onChangeCardCvv={setCardCvv}
+        processingCheckout={processingCheckout}
+        upiCopied={upiCopied}
+        onCopyToClipboard={copyToClipboard}
+      />
 
     </div>
   );
