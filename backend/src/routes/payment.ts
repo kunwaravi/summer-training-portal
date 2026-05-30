@@ -69,7 +69,7 @@ router.post('/create-order', authenticateToken, async (req: any, res: any) => {
     const userId = req.user.id;
     const { courseId, amount } = req.body;
 
-    if (!courseId || !amount) {
+    if (!courseId || amount === undefined || amount === null) {
       return res.status(400).json({ message: 'Course ID and amount are required.' });
     }
 

@@ -34,7 +34,10 @@ router.get('/questions/:courseId/:week', async (req: any, res: any) => {
     }
 
     // Map questions to omit correct answers for safe transfer
-    const safeQuestions = moduleRecord.quizQuestions.map(({ correctAnswer, ...q }) => q);
+    const safeQuestions = moduleRecord.quizQuestions.map(({ correctAnswer, ...q }) => ({
+      ...q,
+      options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+    }));
 
     res.json({
       courseId,
@@ -170,11 +173,14 @@ router.post('/module/:moduleId/question', authenticateToken, isAdmin, async (req
       data: {
         moduleId,
         text,
-        options,
+        options: Array.isArray(options) ? JSON.stringify(options) : options,
         correctAnswer
       }
     });
-    res.status(201).json(newQuestion);
+    res.status(201).json({
+      ...newQuestion,
+      options: typeof newQuestion.options === 'string' ? JSON.parse(newQuestion.options) : newQuestion.options
+    });
   } catch (error) {
     console.error('Create quiz question error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -191,11 +197,14 @@ router.put('/question/:questionId', authenticateToken, isAdmin, async (req: any,
       where: { id: questionId },
       data: {
         text,
-        options,
+        options: Array.isArray(options) ? JSON.stringify(options) : options,
         correctAnswer
       }
     });
-    res.json(updatedQuestion);
+    res.json({
+      ...updatedQuestion,
+      options: typeof updatedQuestion.options === 'string' ? JSON.parse(updatedQuestion.options) : updatedQuestion.options
+    });
   } catch (error) {
     console.error('Update quiz question error:', error);
     res.status(500).json({ message: 'Internal server error' });

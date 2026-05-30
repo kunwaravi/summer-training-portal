@@ -5,10 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { 
   CheckCircle, Lock, BookOpen, Play, ArrowLeft, Clipboard, 
   CheckCircle2, ChevronRight, GraduationCap, Zap, Award, 
-  Sparkles, CreditCard, ShieldAlert, Check, Eye 
+  Sparkles, CreditCard, ShieldAlert, Check, Eye, QrCode 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { QRCodeSVG } from 'qrcode.react';
 
 const CourseDetail = () => {
   const { id } = useParams(); // Course ID: e.g., 'C', 'C++', 'IoT', 'Embedded'
@@ -32,6 +33,12 @@ const CourseDetail = () => {
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
+  const [upiCopied, setUpiCopied] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0); // 0 to 1 (e.g., 0.5 for 50%)
+  const [couponError, setCouponError] = useState('');
+  const [isCouponApplied, setIsCouponApplied] = useState(false);
   
   // Image Lightbox zoom state (Issue #13)
   const [lightboxImage, setLightboxImage] = useState<React.ReactNode | null>(null);
@@ -113,6 +120,35 @@ const CourseDetail = () => {
     setTimeout(() => setCopiedText(null), 2000);
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setUpiCopied(true);
+    setTimeout(() => setUpiCopied(false), 2000);
+  };
+
+  const BASE_PRICE = 499;
+  const currentPrice = Math.round(BASE_PRICE * (1 - discount));
+
+  const handleApplyCoupon = () => {
+    setCouponError('');
+    const code = couponCode.toUpperCase();
+    
+    if (code === 'SAVI10') {
+      setDiscount(1);
+      setIsCouponApplied(true);
+    } else if (code === 'AVI050') {
+      setDiscount(0.5);
+      setIsCouponApplied(true);
+    } else if (code === 'AVI030') {
+      setDiscount(0.3);
+      setIsCouponApplied(true);
+    } else {
+      setCouponError('Invalid coupon code');
+      setDiscount(0);
+      setIsCouponApplied(false);
+    }
+  };
+
   // Mock Payment triggers
   const handleInitiatePayment = () => {
     setShowCheckoutModal(true);
@@ -120,7 +156,7 @@ const CourseDetail = () => {
 
   const handleMockCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cardNumber || !cardExpiry || !cardCvv) {
+    if (currentPrice > 0 && paymentMethod === 'card' && (!cardNumber || !cardExpiry || !cardCvv)) {
       alert('Please fill out all credentials to capture mock payment!');
       return;
     }
@@ -130,7 +166,7 @@ const CourseDetail = () => {
       // 1. Backend: Initialize order (Issue #3)
       const orderRes = await api.post('/payments/create-order', {
         courseId: id,
-        amount: 499
+        amount: currentPrice
       });
 
       const { orderId, mockSignature } = orderRes.data;
@@ -139,10 +175,21 @@ const CourseDetail = () => {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // 2. Backend: Secure cryptographic webhook signature verification (Issue #3, #4)
+      // eslint-disable-next-line react-hooks/purity
+      const randomSuffix = Math.random().toString(36).substring(2, 9).toUpperCase();
+      let gatewayRef = '';
+      if (currentPrice === 0) {
+        gatewayRef = `REF_COUPON_FREE_${randomSuffix}`;
+      } else {
+        gatewayRef = paymentMethod === 'card' 
+          ? `REF_MOCK_CARD_${randomSuffix}`
+          : `REF_MOCK_UPI_${randomSuffix}`;
+      }
+
       const verifyRes = await api.post('/payments/verify', {
         orderId,
         mockSignature,
-        gatewayReference: `REF_MOCK_${Math.random().toString(36).substring(2, 9).toUpperCase()}`
+        gatewayReference: gatewayRef
       });
 
       if (verifyRes.data.success) {
@@ -797,50 +844,148 @@ const CourseDetail = () => {
                 
                 {/* Amount Box */}
                 <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                  <span className="text-slate-400 font-bold">ACCERIDATION CERTIFICATION FEE</span>
-                  <span className="text-cyan-400 font-black text-sm">₹499.00</span>
-                </div>
-
-                <div className="space-y-1 text-left">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Card Number (Mock Input)</label>
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="4111 2222 3333 4444"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
-                    />
-                    <CreditCard size={16} className="absolute right-3.5 top-3 text-slate-500" />
+                  <span className="text-slate-400 font-bold uppercase">Acceridatión Fee</span>
+                  <div className="flex flex-col items-end">
+                    {discount > 0 && (
+                      <span className="text-slate-500 line-through text-[10px]">₹499.00</span>
+                    )}
+                    <span className="text-cyan-400 font-black text-sm">₹{currentPrice.toFixed(2)}</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1 text-left">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Expiry Date</label>
+                {/* Coupon Code Section */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Discount Coupon</label>
+                  <div className="flex gap-2">
                     <input 
                       type="text" 
-                      required
-                      placeholder="MM/YY"
-                      value={cardExpiry}
-                      onChange={(e) => setCardExpiry(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
+                      placeholder="Enter 6-digit code"
+                      maxLength={6}
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono uppercase"
                     />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-[10px] font-bold uppercase rounded-xl border border-slate-700 transition"
+                    >
+                      Apply
+                    </button>
                   </div>
-                  <div className="space-y-1 text-left">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">CVV / CVC</label>
-                    <input 
-                      type="password" 
-                      required
-                      placeholder="•••"
-                      maxLength={3}
-                      value={cardCvv}
-                      onChange={(e) => setCardCvv(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
-                    />
-                  </div>
+                  {couponError && <p className="text-[9px] text-red-500 font-bold ml-1">{couponError}</p>}
+                  {isCouponApplied && <p className="text-[9px] text-green-500 font-bold ml-1">Coupon Applied: {Math.round(discount * 100)}% OFF!</p>}
                 </div>
+
+                {currentPrice > 0 ? (
+                  <>
+                    {/* Payment Method Selector */}
+                    <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('card')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${paymentMethod === 'card' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
+                      >
+                        <CreditCard size={14} /> Card
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('upi')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${paymentMethod === 'upi' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
+                      >
+                        <QrCode size={14} /> UPI / QR
+                      </button>
+                    </div>
+
+                    {paymentMethod === 'card' ? (
+                      <div className="space-y-4 animate-in fade-in duration-300">
+                        <div className="space-y-1 text-left">
+                          <label className="text-[10px] uppercase font-bold text-slate-400">Card Number (Mock Input)</label>
+                          <div className="relative">
+                            <input 
+                              type="text" 
+                              required
+                              placeholder="4111 2222 3333 4444"
+                              value={cardNumber}
+                              onChange={(e) => setCardNumber(e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
+                            />
+                            <CreditCard size={16} className="absolute right-3.5 top-3 text-slate-500" />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1 text-left">
+                            <label className="text-[10px] uppercase font-bold text-slate-400">Expiry Date</label>
+                            <input 
+                              type="text" 
+                              required
+                              placeholder="MM/YY"
+                              value={cardExpiry}
+                              onChange={(e) => setCardExpiry(e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1 text-left">
+                            <label className="text-[10px] uppercase font-bold text-slate-400">CVV / CVC</label>
+                            <input 
+                              type="password" 
+                              required
+                              placeholder="•••"
+                              maxLength={3}
+                              value={cardCvv}
+                              onChange={(e) => setCardCvv(e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl">
+                          <QRCodeSVG 
+                            value={`upi://pay?pa=avinashkunwar07@ptyes&pn=Gaurav%20Singh&am=${currentPrice}&cu=INR`} 
+                            size={160}
+                            level="H"
+                            includeMargin={true}
+                          />
+                          <p className="text-slate-900 text-[10px] font-black uppercase tracking-tighter mt-2">Scan to pay ₹{currentPrice} with UPI</p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-bold text-slate-400">Payee Name</label>
+                          <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-bold">
+                            Gaurav Singh
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-bold text-slate-400">UPI ID</label>
+                          <div className="relative">
+                            <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono">
+                              avinashkunwar07@ptyes
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard('avinashkunwar07@ptyes')}
+                              className="absolute right-2 top-1.5 p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-cyan-400 transition"
+                            >
+                              {upiCopied ? <Check size={14} /> : <Clipboard size={14} />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex flex-col items-center justify-center space-y-3 animate-in zoom-in-95 duration-300">
+                    <Sparkles className="text-cyan-400 animate-pulse" size={32} />
+                    <div className="text-center">
+                      <p className="text-white font-black uppercase text-sm">Full Discount Applied!</p>
+                      <p className="text-slate-400 text-[10px] font-bold uppercase mt-1">Your certificate is now completely free.</p>
+                    </div>
+                  </div>
+                )}
 
                 <button 
                   type="submit"
@@ -850,11 +995,11 @@ const CourseDetail = () => {
                   {processingCheckout ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Authorizing Sandbox Charge...</span>
+                      <span>{currentPrice === 0 ? 'Applying Free Clearance...' : (paymentMethod === 'card' ? 'Authorizing Sandbox Charge...' : 'Verifying UPI Transaction...')}</span>
                     </>
                   ) : (
                     <>
-                      <span>Pay ₹499.00 Clearance Fee</span>
+                      <span>{currentPrice === 0 ? 'Claim Free Certificate' : (paymentMethod === 'card' ? `Pay ₹${currentPrice} Clearance Fee` : 'I have completed the payment')}</span>
                     </>
                   )}
                 </button>

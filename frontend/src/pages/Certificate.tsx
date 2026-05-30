@@ -60,37 +60,60 @@ const Certificate = () => {
       
       {/* High-fidelity CSS themes, grid mesh patterns, and landscape print overrides */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@300;400;600;800&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
         
-        .font-serif-nexus {
-          font-family: 'Cinzel', Georgia, serif;
-        }
-        .font-sans-nexus {
-          font-family: 'Montserrat', sans-serif;
-        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-playfair { font-family: 'Playfair Display', serif; }
+        .font-garamond { font-family: 'EB Garamond', serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
 
-        .cert-mesh-grid-premium {
-          background-color: #060a16;
+        .cert-premium-bg {
+          background-color: #fdfcf7; /* Ivory Parchment */
           background-image: 
-            linear-gradient(to right, rgba(245, 158, 11, 0.015) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(245, 158, 11, 0.015) 1px, transparent 1px),
-            radial-gradient(circle at 50% 50%, #0d1a36 0%, #050812 100%);
-          background-size: 28px 28px, 100% 100%;
+            radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+            url("https://www.transparenttextures.com/patterns/pinstriped-suit.png");
+          color: #1a2a44;
         }
 
-        .gold-glow-border {
-          filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.25));
+        .luxury-border-outer {
+          border: 2px solid #b8860b;
+          padding: 8px;
+          position: relative;
+        }
+
+        .luxury-border-inner {
+          border: 8px double #b8860b;
+          padding: 40px;
+          height: 100%;
+          position: relative;
+        }
+
+        .gold-gradient-text {
+          background: linear-gradient(to bottom, #b8860b 0%, #8b6508 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .embossed-seal {
+          filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.15));
+          transition: all 0.3s ease;
         }
 
         /* Landscape A4 Print Optimization */
         @media print {
+          @page {
+            size: A4 landscape;
+            margin: 0;
+          }
           body, html {
-            background: #050a15 !important;
-            color: white !important;
+            background: white !important;
             margin: 0 !important;
             padding: 0 !important;
-            height: 100% !important;
-            width: 100% !important;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           nav, button, .no-print {
             display: none !important;
@@ -98,23 +121,34 @@ const Certificate = () => {
           .print-container {
             padding: 0 !important;
             margin: 0 !important;
-            max-width: 100% !important;
-            height: 100vh !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            background: #050a15 !important;
+            background: white !important;
+            overflow: hidden !important;
           }
           .nexus-cert-frame {
             box-shadow: none !important;
-            transform: scale(1.0) !important;
-            border-width: 16px !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
+            transform: scale(0.96) !important;
+            transform-origin: center center !important;
+            margin: auto !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            page-break-after: avoid !important;
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 1.414 / 1 !important;
+            background-color: #fdfcf7 !important;
+            border: 20px solid #1a2a44 !important;
           }
-          @page {
-            size: landscape;
-            margin: 0;
+          h1, h2, h3, h4, p {
+            white-space: nowrap !important;
+          }
+          .signature-box {
+            width: 25% !important;
           }
         }
       `}</style>
@@ -125,184 +159,156 @@ const Certificate = () => {
           onClick={() => navigate(`/course/${courseId}`)}
           className="flex items-center gap-2 text-slate-400 hover:text-white transition text-xs font-bold uppercase tracking-wider"
         >
-          ← Return to Study Console
+          ← Return to Console
         </button>
-        <span className="text-xs uppercase text-amber-500 font-bold bg-slate-900 px-3 py-1 rounded-full border border-slate-800 flex items-center gap-1.5 shadow">
-          <ShieldCheck size={14} /> Official Corporate Accreditation
+        <span className="text-xs uppercase text-amber-600 font-bold bg-slate-900 px-3 py-1 rounded-full border border-slate-800 flex items-center gap-1.5 shadow">
+          <ShieldCheck size={14} /> Academic Excellence Verification
         </span>
       </div>
 
-      {/* Ultra-Premium & Highly Attractive Certificate Frame */}
+      {/* Ultra-Premium Institutional Certificate Frame */}
       <motion.div 
         ref={certRef}
-        initial={{ opacity: 0, scale: 0.96, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="nexus-cert-frame cert-mesh-grid-premium text-white p-12 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] w-full max-w-[850px] aspect-[1.414] relative border-[15px] border-slate-950 select-none overflow-hidden"
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="nexus-cert-frame cert-premium-bg rounded-sm shadow-2xl w-full max-w-[950px] aspect-[1.414] relative border-[20px] border-[#1a2a44] p-4 select-none overflow-hidden"
       >
-        {/* Subtle glowing amber ambient spots */}
-        <div className="absolute top-0 left-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
-        
-        {/* Glowing Gold Corner Framings & Connecting Border Lines */}
-        <div className="absolute top-6 left-6 w-12 h-12 border-t-[5px] border-l-[5px] border-amber-500 rounded-tl-[4px] gold-glow-border"></div>
-        <div className="absolute top-6 right-6 w-12 h-12 border-t-[5px] border-r-[5px] border-amber-500 rounded-tr-[4px] gold-glow-border"></div>
-        <div className="absolute bottom-6 left-6 w-12 h-12 border-b-[5px] border-l-[5px] border-amber-500 rounded-bl-[4px] gold-glow-border"></div>
-        <div className="absolute bottom-6 right-6 w-12 h-12 border-b-[5px] border-r-[5px] border-amber-500 rounded-br-[4px] gold-glow-border"></div>
-
-        <div className="absolute top-6 left-16 right-16 h-[1.5px] bg-gradient-to-r from-amber-500/40 via-amber-500 to-amber-500/40 gold-glow-border"></div>
-        <div className="absolute bottom-6 left-16 right-16 h-[1.5px] bg-gradient-to-r from-amber-500/40 via-amber-500 to-amber-500/40 gold-glow-border"></div>
-        <div className="absolute left-6 top-16 bottom-16 w-[1.5px] bg-gradient-to-b from-amber-500/40 via-amber-500 to-amber-500/40 gold-glow-border"></div>
-        <div className="absolute right-6 top-16 bottom-16 w-[1.5px] bg-gradient-to-b from-amber-500/40 via-amber-500 to-amber-500/40 gold-glow-border"></div>
-
-        {/* Certificate Text & Graphical Layout */}
-        <div className="flex flex-col items-center justify-between h-full relative z-10 text-center font-sans-nexus">
-          
-          {/* Header block with elegant Cinzel font */}
-          <div className="space-y-1">
-            <h1 className="text-amber-500 text-2xl sm:text-3xl font-serif-nexus font-black uppercase tracking-[0.12em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-              NEXUS EMBEDDED SYSTEMS & IoT SOLUTIONS
-            </h1>
-            <p className="text-indigo-400 font-extrabold uppercase text-[9px] sm:text-[11px] tracking-[0.25em] drop-shadow">
-              INDUSTRIAL TRAINING & CORE ELECTRONICS INNOVATION PORTAL
-            </p>
-            <div className="h-[2px] w-24 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto mt-2.5"></div>
-          </div>
-
-          {/* Specialization copy */}
-          <div className="space-y-1.5 mt-2">
-            <h4 className="text-slate-400 font-extrabold uppercase text-[9px] sm:text-[10px] tracking-[0.3em]">
-              SUMMER TRAINING COMPLETION CREDENTIALS
-            </h4>
-            <p className="text-slate-500 text-[10px] sm:text-[11px] uppercase tracking-[0.15em] font-semibold">
-              THIS IS PROUDLY CONFERRED UPON THE DEVELOPER
-            </p>
-          </div>
-
-          {/* Student name styled in massive gold type */}
-          <div className="py-1">
-            <h2 className="text-amber-500 text-4xl sm:text-5xl font-serif-nexus font-black tracking-wide uppercase drop-shadow-[0_3px_5px_rgba(0,0,0,0.6)]">
-              {data.name}
-            </h2>
-          </div>
-
-          {/* Institutional description */}
-          <div className="space-y-2 text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
-            <p className="font-semibold text-slate-200">
-              Son / Daughter of Sh. <span className="uppercase text-white font-bold">{data.fatherName}</span>
-            </p>
-            <p className="text-slate-400 text-xs">
-              representing institution: <span className="text-slate-200 font-semibold uppercase tracking-wide">{data.collegeName}</span>
-            </p>
-            <p className="text-slate-400 text-xs">
-              pursuing branch: <span className="text-slate-200 font-semibold">{data.branchName} Engineering</span>
-            </p>
-            <p className="text-slate-400 text-xs pt-0.5">
-              for successfully executing specialized summer training curriculum in
-            </p>
+        <div className="luxury-border-outer h-full w-full">
+          <div className="luxury-border-inner h-full w-full flex flex-col items-center justify-between text-center relative">
             
-            {/* accredited specialization */}
-            <h3 className="text-amber-500 text-lg sm:text-xl font-black tracking-wider uppercase drop-shadow">
-              {data.courseName}
-            </h3>
-            
-            <p className="text-slate-450 text-[10px] sm:text-[11px] italic font-semibold mt-1">
-              Training Duration: From June 1, 2026 To June 28, 2026
-            </p>
-          </div>
+            {/* Elegant Corner Motifs */}
+            <div className="absolute top-[-15px] left-[-15px] w-24 h-24 pointer-events-none opacity-80">
+              <svg viewBox="0 0 100 100" fill="none" stroke="#b8860b" strokeWidth="1.5">
+                <path d="M0,50 Q0,0 50,0 M10,50 Q10,10 50,10 M20,50 Q20,20 50,20" />
+              </svg>
+            </div>
+            <div className="absolute top-[-15px] right-[-15px] w-24 h-24 rotate-90 pointer-events-none opacity-80">
+              <svg viewBox="0 0 100 100" fill="none" stroke="#b8860b" strokeWidth="1.5">
+                <path d="M0,50 Q0,0 50,0 M10,50 Q10,10 50,10 M20,50 Q20,20 50,20" />
+              </svg>
+            </div>
+            <div className="absolute bottom-[-15px] left-[-15px] w-24 h-24 -rotate-90 pointer-events-none opacity-80">
+              <svg viewBox="0 0 100 100" fill="none" stroke="#b8860b" strokeWidth="1.5">
+                <path d="M0,50 Q0,0 50,0 M10,50 Q10,10 50,10 M20,50 Q20,20 50,20" />
+              </svg>
+            </div>
+            <div className="absolute bottom-[-15px] right-[-15px] w-24 h-24 rotate-180 pointer-events-none opacity-80">
+              <svg viewBox="0 0 100 100" fill="none" stroke="#b8860b" strokeWidth="1.5">
+                <path d="M0,50 Q0,0 50,0 M10,50 Q10,10 50,10 M20,50 Q20,20 50,20" />
+              </svg>
+            </div>
 
-          {/* Performance Review Translucent Glass Box */}
-          <div className="mt-2.5 border border-indigo-500/30 bg-indigo-500/5 px-6 py-2.5 rounded-xl text-cyan-400 font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[inset_0_1px_8px_rgba(56,189,248,0.05)]">
-            PERFORMANCE REVIEW: OUTSTANDING (GRADE {data.grade})
-          </div>
-
-          {/* Signatures & Seal Row */}
-          <div className="w-full flex justify-between items-end px-4 sm:px-8 mt-5 shrink-0">
-            
-            {/* Technical Director Signature - Left (Gaurav's Real Vector Signature) */}
-            <div className="text-center w-36 sm:w-44 space-y-1.5">
-              <div className="h-10 flex items-center justify-center">
-                {/* Traced vector version of Gaurav's real signature */}
-                <svg width="120" height="42" viewBox="0 0 120 75" className="text-cyan-400 select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(56,189,248,0.25)]">
-                  {/* Long vertical loop */}
-                  <path d="M48,12 C48,4 45,4 45,12 L43,62 C43,69 40,75 39,75" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                  {/* Oval loop on the left */}
-                  <path d="M43,42 C28,32 25,56 43,51" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
-                  {/* Large sweep loop to the top right and back */}
-                  <path d="M43,51 C43,36 55,16 78,11 C90,8 95,16 85,28 C75,40 58,46 48,52" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
-                  {/* Cursive text 'Gaurav' body inside loop */}
-                  <path d="M50,38 Q60,31 68,44 T78,38 T82,42" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                  {/* Cursive text 'Singh' body below */}
-                  <path d="M56,54 C52,61 56,68 58,68 Q62,68 65,61 Q68,56 70,64 T78,61 Q82,60 88,60" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
+            {/* Header: Institutional Branding */}
+            <div className="space-y-3 pt-4">
+              <h1 className="text-[#1a2a44] text-3xl sm:text-4xl font-cinzel font-black uppercase tracking-[0.15em]">
+                Nexus Institute of Technology
+              </h1>
+              <div className="flex items-center justify-center gap-4">
+                <div className="h-[1px] w-20 bg-[#b8860b]"></div>
+                <p className="text-[#b8860b] font-montserrat font-extrabold uppercase text-[10px] tracking-[0.4em]">
+                  Accredited by Nexus Embedded Systems Labs
+                </p>
+                <div className="h-[1px] w-20 bg-[#b8860b]"></div>
               </div>
-              <div className="h-[1px] bg-slate-800 w-full"></div>
-              <p className="text-xs font-bold text-white leading-tight">
-                {data.signatures.technicalDirector}
-              </p>
-              <p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">
-                Technical Director, Nexus Automation
+            </div>
+
+            {/* Title Section */}
+            <div className="space-y-4">
+              <h2 className="text-[#1a2a44] text-4xl sm:text-5xl font-garamond italic font-semibold">
+                Certificate of Achievement
+              </h2>
+              <p className="font-montserrat text-[11px] text-[#555] uppercase tracking-[0.2em] font-medium">
+                This credential is formally awarded to
               </p>
             </div>
-            
-            {/* Red stamp seal - Center Left */}
-            <div className="flex flex-col items-center gap-1 shrink-0">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center relative select-none">
-                <svg width="56" height="56" viewBox="0 0 64 64" className="text-red-500/90 filter drop-shadow-[0_0_5px_rgba(239,68,68,0.35)]">
-                  {/* Dashed circular frame */}
-                  <circle cx="32" cy="32" r="29" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                  <circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 2" />
-                  {/* Centered star */}
-                  <path d="M32 20l2.5 5.5 6 .5-4.5 4 1.5 6-5.5-3.5-5.5 3.5 1.5-6-4.5-4 6-.5z" fill="currentColor" />
-                  {/* Circular Text */}
-                  <path id="nexus-seal-path" d="M 32,32 m -24,0 a 24,24 0 1,1 48,0 a 24,24 0 1,1 -48,0" fill="none" />
-                  <text fill="currentColor" fontSize="4.2" fontWeight="bold" letterSpacing="0.9">
-                    <textPath href="#nexus-seal-path" startOffset="0%">
-                      * NEXUS EMBEDDED SYSTEMS LABS * OFFICIAL CERTIFIED SEAL
+
+            {/* Name Section: The Main Focus */}
+            <div className="py-2 border-b border-[#b8860b]/30 w-[80%]">
+              <h3 className="text-[#1a2a44] text-5xl sm:text-6xl font-playfair font-black tracking-tight uppercase">
+                {data.name}
+              </h3>
+            </div>
+
+            {/* Accomplishment Details */}
+            <div className="space-y-3 font-garamond text-lg sm:text-xl text-[#333]">
+              <p>
+                Son / Daughter of <span className="font-bold text-[#1a2a44]">{data.fatherName}</span>
+              </p>
+              <p className="text-sm font-montserrat text-[#666] uppercase tracking-wider">
+                For successful completion of advanced industrial training in
+              </p>
+              <h4 className="text-2xl sm:text-3xl font-cinzel font-bold text-[#1a2a44] gold-gradient-text">
+                {data.courseName}
+              </h4>
+              <p className="text-sm italic text-[#777]">
+                Conducted from June 1, 2026 to June 28, 2026
+              </p>
+            </div>
+
+            {/* Grade Badge */}
+            <div className="bg-[#1a2a44] text-[#fdfcf7] px-8 py-2 rounded-full font-montserrat font-bold text-xs uppercase tracking-[0.2em]">
+              Performance Grade: {data.grade}
+            </div>
+
+            {/* Signatures & Seal Row */}
+            <div className="w-full flex justify-between items-end px-12 mt-4">
+              
+              <div className="signature-box flex flex-col items-center space-y-2">
+                <div className="h-12 flex items-end">
+                   <svg width="120" height="40" viewBox="0 0 120 40" className="text-[#1a2a44] opacity-90">
+                    <path d="M10,30 Q30,10 50,25 T90,15 T110,30" fill="none" stroke="currentColor" strokeWidth="2.5" />
+                  </svg>
+                </div>
+                <div className="h-[1px] w-full bg-[#1a2a44]/30"></div>
+                <p className="text-[10px] font-cinzel font-bold text-[#1a2a44]">{data.signatures.technicalDirector}</p>
+                <p className="text-[8px] font-montserrat font-bold uppercase text-[#888]">Director of Technology</p>
+              </div>
+
+              {/* Embossed Luxury Seal */}
+              <div className="relative embossed-seal">
+                <svg width="80" height="80" viewBox="0 0 100 100" className="text-[#b8860b]">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="1" />
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
+                  <path d="M50 20 L58 38 L78 38 L62 50 L68 70 L50 58 L32 70 L38 50 L22 38 L42 38 Z" fill="currentColor" opacity="0.9" />
+                  <path id="sealText" d="M 50,50 m -35,0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="none" />
+                  <text fill="currentColor" fontSize="5.5" fontWeight="900" letterSpacing="1">
+                    <textPath href="#sealText" startOffset="0%">
+                      • NEXUS INSTITUTE • OFFICIAL SEAL • EXCELLENCE •
                     </textPath>
                   </text>
                 </svg>
               </div>
-            </div>
 
-            {/* Dynamic Verification QR Code - Center Right */}
-            <div className="flex flex-col items-center gap-1 shrink-0 bg-white p-1 rounded-lg shadow-md border border-slate-200/95 gold-glow-border">
-              <QRCodeSVG 
-                value={`${window.location.origin}/verify?id=${data.credentialId}`} 
-                size={48}
-                bgColor={"#ffffff"} 
-                fgColor={"#060a16"} 
-                level={"M"}
-                includeMargin={true}
-              />
-              <span className="text-[6px] font-mono text-slate-800 uppercase font-black tracking-tight leading-none">Scan to Verify</span>
-            </div>
-
-            {/* CAO Signature - Right */}
-            <div className="text-center w-36 sm:w-44 space-y-1.5">
-              <div className="h-10 flex items-center justify-center">
-                <svg width="110" height="28" viewBox="0 0 110 28" className="text-purple-450/85 select-none pointer-events-none">
-                  <path d="M12,14 C22,25 35,6 48,15 C60,24 72,4 82,12 C92,20 98,22 104,10" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
+              <div className="signature-box flex flex-col items-center space-y-2">
+                <div className="h-12 flex items-end">
+                  <svg width="120" height="40" viewBox="0 0 120 40" className="text-[#1a2a44] opacity-90">
+                    <path d="M15,25 C30,10 45,35 60,15 S90,25 105,10" fill="none" stroke="currentColor" strokeWidth="2.5" />
+                  </svg>
+                </div>
+                <div className="h-[1px] w-full bg-[#1a2a44]/30"></div>
+                <p className="text-[10px] font-cinzel font-bold text-[#1a2a44]">{data.signatures.chiefAcademicOfficer}</p>
+                <p className="text-[8px] font-montserrat font-bold uppercase text-[#888]">Academic Officer</p>
               </div>
-              <div className="h-[1px] bg-slate-800 w-full"></div>
-              <p className="text-xs font-bold text-white leading-tight">
-                {data.signatures.chiefAcademicOfficer}
-              </p>
-              <p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">
-                Chief Academic Officer, Nexus Labs
-              </p>
+
             </div>
-          </div>
-          
-          {/* Footer Credentials Registry Block */}
-          <div className="w-full flex flex-col items-center space-y-1 mt-4 shrink-0 text-center">
-            <p className="text-indigo-400 font-mono text-[9px] font-bold tracking-[0.15em]">
-              Credential ID: {data.credentialId}
-            </p>
-            <p className="text-[7px] text-slate-500 uppercase tracking-widest font-semibold">
-              Verify credentials authenticity online at: {window.location.origin}/verify?id={data.credentialId}
-            </p>
+
+            {/* ID & Verification Block */}
+            <div className="w-full flex justify-between items-center px-4 pt-4 border-t border-[#b8860b]/20 mt-2">
+              <p className="text-[8px] font-montserrat font-bold text-[#888] uppercase tracking-widest">
+                Credential ID: {data.credentialId}
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-[7px] font-montserrat font-bold text-[#aaa] uppercase italic">Scan to Verify Authenticity</span>
+                <div className="bg-white p-0.5 border border-[#b8860b]/30">
+                  <QRCodeSVG 
+                    value={`${window.location.origin}/verify?id=${data.credentialId}`} 
+                    size={32}
+                    level="H"
+                  />
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </motion.div>

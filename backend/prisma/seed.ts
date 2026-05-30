@@ -69,7 +69,7 @@ async function main() {
             data: {
               moduleId: module.id,
               text: q.text,
-              options: q.options,
+              options: JSON.stringify(q.options),
               correctAnswer: q.correctAnswer,
             },
           });
@@ -101,7 +101,7 @@ async function main() {
 main()
   .catch((e) => {
     console.error('Error during seeding:', e);
-    process.exit(1);
+    throw e;
   })
   .finally(async () => {
     await prisma.$disconnect();
