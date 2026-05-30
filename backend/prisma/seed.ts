@@ -86,7 +86,7 @@ async function main() {
                 data: {
                   moduleId: module.id,
                   text: question.text,
-                  options: question.options,
+                  options: JSON.stringify(question.options),
                   correctAnswer: question.correctAnswer
                 }
               });
