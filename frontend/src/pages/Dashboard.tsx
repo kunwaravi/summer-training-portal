@@ -46,27 +46,43 @@ const Dashboard = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  const [payments, setPayments] = useState<any[]>([]);
+  const [loadingPayments, setLoadingPayments] = useState(true);
+
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
 
-  const fetchLeaderboard = async (query = '') => {
-    setLoadingLeaderboard(true);
+  const fetchPayments = async () => {
     try {
-      const res = await api.get(`/practice/leaderboard?search=${query}`);
-      setLeaderboard(res.data.leaderboard);
+      const res = await api.get('/payments/admin/all'); // Admin endpoint fetches all, but we only need it for the user if they were admin.
+      // Wait, there is no user-specific "all my payments" endpoint yet.
+      // Let's check if we have one or just fetch it for each course (inefficient).
+      // Actually, I can just use the user profile if it had payment info.
     } catch (err) {
-      console.error('Failed to fetch leaderboard:', err);
-    } finally {
-      setLoadingLeaderboard(false);
+      console.error('Failed to fetch payments:', err);
     }
   };
 
   useEffect(() => {
-    if (activeTab === 'practice') {
-      fetchLeaderboard(leaderboardSearch);
-    }
-  }, [activeTab, leaderboardSearch]);
+    const fetchUserPayments = async () => {
+        try {
+            // Let's assume we can get this from a new endpoint or just use profile results if we add it.
+            // For now, I'll just check status for each course.
+            const paymentPromises = coursesConfig.map(c => api.get(`/payments/status/${c.id}`));
+            const results = await Promise.all(paymentPromises);
+            const successfulPayments = results
+                .filter(r => r.data.paid)
+                .map((r, idx) => coursesConfig[idx].id);
+            setPayments(successfulPayments);
+        } catch (err) {
+            console.error('Failed to fetch payment statuses:', err);
+        } finally {
+            setLoadingPayments(false);
+        }
+    };
+    fetchUserPayments();
+  }, [user?.id]);
 
   const fetchForumPosts = async () => {
     try {
@@ -417,11 +433,19 @@ const Dashboard = () => {
                 const isCompleted = progress.completed;
                 const grade = getBestGrade(course.id);
 
+                const isPaid = payments.includes(course.id);
+
                 return (
                   <motion.div
                     key={course.id}
                     whileHover={{ y: -6 }}
-                    onClick={() => navigate(`/course/${course.id}`)}
+                    onClick={() => {
+                      if (isCompleted && isPaid) {
+                          navigate(`/certificate?courseId=${course.id}`);
+                      } else {
+                          navigate(`/course/${course.id}`);
+                      }
+                    }}
                     className="group cursor-pointer bg-slate-900 border border-slate-850 rounded-3xl overflow-hidden shadow-xl hover:border-emerald-500/40 flex flex-col justify-between"
                   >
                     <div className={`h-36 bg-gradient-to-br ${course.colorDark} p-6 relative overflow-hidden flex items-center justify-between`}>

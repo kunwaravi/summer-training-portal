@@ -15,7 +15,7 @@ interface Question {
 const Quiz = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+  const { refreshUser } = useAuth();
   
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -64,9 +64,7 @@ const Quiz = () => {
       setResult(res.data);
       
       // Update global user context with new results/progress
-      if (res.data.updatedUser) {
-          // fetchUser();
-      }
+      await refreshUser();
 
       if (res.data.passed) {
         confetti({

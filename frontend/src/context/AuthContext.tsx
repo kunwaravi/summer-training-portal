@@ -5,6 +5,7 @@ interface AuthContextType {
   user: any;
   login: (token: string, userData: any) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   loading: boolean;
 }
 
@@ -14,26 +15,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    try {
+      const response = await api.get('/auth/me');
+      setUser(response.data);
+      localStorage.setItem('user', JSON.stringify(response.data));
+    } catch (error) {
+      console.error('Session refresh failed:', error);
+      localStorage.removeItem('user');
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
     const syncAuth = async () => {
       const storedUser = localStorage.getItem('user');
       
-      // Seed with local storage immediately if available
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
 
-      try {
-        // Fetch fresh user profile from backend (includes complete course progress)
-        const response = await api.get('/auth/me');
-        setUser(response.data);
-        localStorage.setItem('user', JSON.stringify(response.data));
-      } catch (error) {
-        console.error('Session sync failed:', error);
-        // Session cookie is likely invalid or expired, clear auth state
-        localStorage.removeItem('user');
-        setUser(null);
-      }
+      await refreshUser();
       setLoading(false);
     };
     
@@ -56,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, refreshUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

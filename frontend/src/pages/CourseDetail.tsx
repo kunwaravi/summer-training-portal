@@ -14,7 +14,7 @@ import { coursesConfig } from '../config/courses';
 
 const CourseDetail = () => {
   const { id } = useParams();
-  const { user, login } = useAuth();
+  const { user, login, refreshUser } = useAuth();
   const navigate = useNavigate();
 
   const [modules, setModules] = useState<any[]>([]);
@@ -142,6 +142,15 @@ const CourseDetail = () => {
       fetchPaymentStatus();
     }
   }, [id, user]);
+
+  useEffect(() => {
+    if (isCourseCompleted && !checkingPayment) {
+        setTimeout(() => {
+            const el = document.getElementById('certification-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 800);
+    }
+  }, [isCourseCompleted, checkingPayment]);
 
   useEffect(() => {
     if (modules.length === 0) return;
@@ -307,6 +316,7 @@ const CourseDetail = () => {
               if (verifyRes.data.success) {
                 setIsPaid(true);
                 setShowCheckoutModal(false);
+                await refreshUser();
                 confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
               }
             } catch (err: any) {
@@ -339,6 +349,7 @@ const CourseDetail = () => {
       if (verifyRes.data.success) {
         setIsPaid(true);
         setShowCheckoutModal(false);
+        await refreshUser();
         confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
       }
     } catch (err: any) {
@@ -874,6 +885,7 @@ const CourseDetail = () => {
       {/* Certification Paywall Overlay */}
       {isCourseCompleted && !checkingPayment && (
         <motion.div 
+          id="certification-section"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-12 p-10 rounded-3xl relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-emerald-500/20 shadow-2xl text-center"
