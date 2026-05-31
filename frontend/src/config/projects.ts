@@ -1,7 +1,7 @@
 export interface ProjectItem {
   id: string;
   title: string;
-  category: 'Arduino' | 'IoT' | 'Embedded' | 'Robotics';
+  category: 'Arduino' | 'IoT' | 'Embedded';
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   description: string;
   schematic: string;

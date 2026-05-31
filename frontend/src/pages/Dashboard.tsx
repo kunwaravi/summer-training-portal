@@ -20,7 +20,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'courses' | 'practice' | 'projects' | 'forum' | 'credentials' | 'settings'>('courses');
 
   // Filter & Search states for Courses
-  const [courseCategory, setCourseCategory] = useState<'All' | 'Programming' | 'Electronics' | 'AI & Emerging Technologies'>('All');
+  const [courseCategory, setCourseCategory] = useState<'All' | 'Programming' | 'Electronics'>('All');
   const [courseSearch, setCourseSearch] = useState('');
 
   // Project catalog states
@@ -402,7 +402,7 @@ const Dashboard = () => {
             {/* Search & Category Filter Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-slate-850">
               <div className="flex flex-wrap gap-1.5 bg-slate-950/60 p-1 border border-slate-850 rounded-2xl">
-                {(['All', 'Programming', 'Electronics', 'AI & Emerging Technologies'] as const).map(cat => (
+                {(['All', 'Programming', 'Electronics'] as const).map(cat => (
                   <button
                     key={cat}
                     onClick={() => setCourseCategory(cat)}

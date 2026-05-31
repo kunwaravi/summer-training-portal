@@ -17,28 +17,8 @@ const courseMetadata: Record<string, { title: string, description: string }> = {
     title: "C++ & OOP for Embedded Systems",
     description: "Migrate to object-oriented paradigms, generic templates, and RAII guidelines."
   },
-  "Python": {
-    title: "Python for Automation & Systems",
-    description: "Learn scripting, text-parsing, file automation, and USB serial communications."
-  },
-  "Java": {
-    title: "Java Enterprise Foundations & OOP",
-    description: "Master Java JVM models, multi-threading, concurrency locks, and enterprise structures."
-  },
-  "WebDev": {
-    title: "Modern Full-Stack Web Development",
-    description: "Build premium responsive UIs with React and Express backend APIs."
-  },
-  "DSA": {
-    title: "Data Structures & Algorithms",
-    description: "Analyze time complexities, trees, graphs, sorting paths, and dynamic programming."
-  },
 
   // Electronics Category
-  "Arduino": {
-    title: "Arduino Prototyping & C++ Firmware",
-    description: "Interface analog/digital sensors and program AVR Atmega microcontrollers."
-  },
   "IoT": {
     title: "IoT & Smart Interfacing Solutions",
     description: "Connect physical systems with ESP microcontrollers, MQTT protocols, and cloud services."
@@ -46,52 +26,6 @@ const courseMetadata: Record<string, { title: string, description: string }> = {
   "Embedded": {
     title: "Embedded Systems & Real-Time OS",
     description: "Architect microcontroller interfaces, serial communication buses, and RTOS kernels."
-  },
-  "M8085": {
-    title: "Microprocessor 8085 Assembly & Hardware",
-    description: "Study 8085 microarchitecture, execution timings, and 8-bit Assembly."
-  },
-  "M8051": {
-    title: "Microcontroller 8051 Embedded Architecture",
-    description: "Program 8051 microcontrollers, Keil C compilers, and hardware registers."
-  },
-  "STM32": {
-    title: "STM32 ARM Cortex-M Firmware Development",
-    description: "Write STM32 bare-metal drivers, DMA channels, and peripheral configurations."
-  },
-  "RaspberryPi": {
-    title: "Raspberry Pi Single-Board Computing & Linux",
-    description: "Host Linux servers, script hardware GPIOs, and compile systems using Raspberry Pi."
-  },
-  "DigitalElec": {
-    title: "Digital Electronics & Combinational Logic",
-    description: "Design logic gate circuits, K-maps, multiplexers, and digital counters."
-  },
-  "AnalogElec": {
-    title: "Analog Electronics & Active Circuit Design",
-    description: "Analyze active semiconductor circuits, transistor amplifiers, and Op-Amps."
-  },
-  "PCBDesign": {
-    title: "PCB Design & Board Schematics Layout",
-    description: "Design custom PCB schematics, route trace paths, and export Gerber packages."
-  },
-
-  // AI & Emerging Technologies Category
-  "AI": {
-    title: "Artificial Intelligence Foundations",
-    description: "Explore state searches, heuristic patterns, minimax paths, and AI basics."
-  },
-  "ML": {
-    title: "Machine Learning & Statistical Models",
-    description: "Build regressions, classification models, decision forests, and k-means clustering."
-  },
-  "Robotics": {
-    title: "Robotics Kinematics & ROS Kernels",
-    description: "Analyze mechanical kinematics, PID control loops, and build ROS nodes."
-  },
-  "ComputerVision": {
-    title: "Computer Vision & OpenCV Processing",
-    description: "Apply convolution filters, edge detection, camera calibration, and object trackers."
   }
 };
 
@@ -279,12 +213,17 @@ async function main() {
     },
     {
       category: "Programming",
-      topic: "Python Structures",
-      difficulty: "Easy",
-      text: "Which of the following is NOT a primitive data type in Python?",
-      options: JSON.stringify(["int", "float", "str", "list"]),
-      correctAnswer: "list",
-      explanation: "Lists in Python are dynamic, mutable arrays, which are object types rather than raw primitives."
+      topic: "C Pointers",
+      difficulty: "Medium",
+      text: "What does the dereference operator (*) do in C?",
+      options: JSON.stringify([
+        "Declares a variable as constant",
+        "Obtains the memory address of a variable",
+        "Accesses the value stored at a pointer's memory address",
+        "Multiplies two pointer addresses together"
+      ]),
+      correctAnswer: "Accesses the value stored at a pointer's memory address",
+      explanation: "The dereference operator (*) allows a programmer to access or modify the value located at the memory address currently stored in a pointer."
     },
     {
       category: "Electronics",
