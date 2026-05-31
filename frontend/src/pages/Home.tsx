@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -411,298 +411,58 @@ const Home = () => {
           </div>
         </div>
 
-        {/* 7. Enrollment Portal (Login/Register Form Section) */}
-        <div id="enrollment-section" className="flex flex-col lg:flex-row items-center gap-16 pt-16 border-t border-slate-100">
-          <div className="flex-1 space-y-6 text-center lg:text-left">
-            <h2 className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em]">Get Started</h2>
-            <h3 className="text-4xl sm:text-5xl font-black text-indigo-950 tracking-tight leading-tight">
+        {/* 7. Enrollment CTA Section */}
+        <div id="enrollment-section" className="relative rounded-[3rem] bg-gradient-to-r from-slate-900 to-slate-950 border border-slate-800 p-8 sm:p-16 overflow-hidden shadow-2xl text-center">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px] -ml-32 -mt-32"></div>
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-[100px] -mr-32 -mb-32"></div>
+
+          <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+            <h2 className="text-xs font-black text-emerald-400 uppercase tracking-[0.3em]">Start Today</h2>
+            <h3 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase">
               Ready to Accelerate <br />
-              <span className="text-blue-600">Your Future?</span>
+              <span className="text-emerald-400">Your Engineering Career?</span>
             </h3>
-            <p className="text-slate-600 text-base font-medium leading-relaxed max-w-lg">
-              Enroll now to access the full training modules, interactive quizzes, and claim your industrial certification.
+            <p className="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
+              Join thousands of students learning C/C++, Embedded Systems, IoT, and AI. Get certified with industry-recognized verifiable credentials.
             </p>
-            <div className="flex flex-col gap-4 pt-4 max-w-sm mx-auto lg:mx-0">
-              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <CheckCircle2 className="text-emerald-500 shrink-0" />
-                <p className="text-xs font-bold text-indigo-950 uppercase tracking-tight">Instant LMS Access</p>
-              </div>
-              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <CheckCircle2 className="text-emerald-500 shrink-0" />
-                <p className="text-xs font-bold text-indigo-950 uppercase tracking-tight">Verified Digital Credentials</p>
-              </div>
+
+            <div className="flex flex-wrap gap-4 justify-center pt-4">
+              <Link 
+                to="/register"
+                className="group px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-2xl text-xs uppercase tracking-widest hover:opacity-95 transition-all transform active:scale-95 shadow-xl shadow-emerald-500/10 flex items-center gap-2"
+              >
+                Create Account <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link 
+                to="/login"
+                className="px-8 py-4 bg-slate-950 border-2 border-slate-800 hover:border-emerald-500 hover:text-emerald-400 text-slate-350 font-black rounded-2xl text-xs uppercase tracking-widest transition-all"
+              >
+                Sign In
+              </Link>
             </div>
           </div>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="w-full max-w-md"
-          >
-            <div className="relative bg-white p-8 sm:p-10 rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(30,27,75,0.15)] border border-slate-100 overflow-hidden">
-              
-              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl mb-8">
-                <button 
-                  onClick={() => setIsLogin(true)}
-                  className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${isLogin ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-500 hover:text-indigo-600'}`}
-                >
-                  Login
-                </button>
-                <button 
-                  onClick={() => setIsLogin(false)}
-                  className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${!isLogin ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-500 hover:text-indigo-600'}`}
-                >
-                  Register
-                </button>
-              </div>
-
-              <h2 className="text-2xl font-black text-indigo-950 mb-2 tracking-tight uppercase text-center">
-                {isLogin ? 'Welcome Back' : 'Create Account'}
-              </h2>
-              <p className="text-slate-500 text-xs font-medium text-center mb-8">
-                {isLogin ? 'Enter your credentials to continue' : 'Join the elite engineering community'}
-              </p>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <AnimatePresence mode="wait">
-                  {!isLogin && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-4 overflow-hidden"
-                    >
-                      <div className="relative">
-                        <User className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                        <input 
-                          type="text" 
-                          placeholder="Full Name" 
-                          value={name} 
-                          onChange={(e) => setName(e.target.value)} 
-                          required 
-                          className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <GraduationCap className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                        <input 
-                          type="text" 
-                          placeholder="College Name" 
-                          value={collegeName} 
-                          onChange={(e) => setCollegeName(e.target.value)} 
-                          required 
-                          className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
-                        />
-                      </div>
-                      <div className="relative">
-                        <Target className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                        <input 
-                          type="text" 
-                          placeholder="Branch (e.g. ECE, EEE, CSE)" 
-                          value={branchName} 
-                          onChange={(e) => setBranchName(e.target.value)} 
-                          required 
-                          className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div className="relative">
-                  <Mail className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                  <input 
-                    type="email" 
-                    placeholder="Email Address" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                    required 
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
-                  />
-                </div>
-                
-                <div className="relative">
-                  <Lock className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                  <input 
-                    type="password" 
-                    placeholder="Password" 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
-                    required 
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 rounded-2xl border-2 border-slate-50 text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
-                  />
-                </div>
-
-                {isLogin && (
-                  <div className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setForgotPasswordEmail('');
-                        setForgotPasswordError('');
-                        setForgotPasswordSuccess(false);
-                        setShowForgotPassword(true);
-                      }}
-                      className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 hover:text-indigo-800 transition"
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
-                )}
-
-                {!isLogin && password.length > 0 && (
-                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-2 text-left text-[10px] animate-in fade-in duration-200">
-                    <p className="font-extrabold uppercase text-slate-500 tracking-wider">Password Complexity Checklist</p>
-                    <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-slate-600 font-bold">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-1.5 h-1.5 rounded-full transition ${password.length >= 8 ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                        <span>Min 8 characters</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-1.5 h-1.5 rounded-full transition ${/[A-Z]/.test(password) ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                        <span>One uppercase (A-Z)</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-1.5 h-1.5 rounded-full transition ${/[a-z]/.test(password) ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                        <span>One lowercase (a-z)</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-1.5 h-1.5 rounded-full transition ${/\d/.test(password) ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                        <span>One number (0-9)</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 col-span-2">
-                        <span className={`w-1.5 h-1.5 rounded-full transition ${/[@$!%*?&]/.test(password) ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                        <span>One special symbol (@$!%*?&)</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {error && (
-                  <motion.p 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    className="text-red-500 text-[10px] font-black uppercase tracking-tight text-center"
-                  >
-                    ⚠ {error}
-                  </motion.p>
-                )}
-                
-                <button 
-                  type="submit" 
-                  disabled={isLoading}
-                  className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 text-white shadow-xl shadow-indigo-600/20 active:scale-[0.98] disabled:opacity-75 text-xs uppercase tracking-[0.2em]"
-                >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  ) : isLogin ? (
-                    <><LogIn size={18} /> Sign In</>
-                  ) : (
-                    <><UserPlus size={18} /> Create Account</>
-                  )}
-                </button>
-              </form>
-            </div>
-          </motion.div>
         </div>
 
         {/* 8. Footer */}
-        <div className="pt-24 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+        <div className="pt-24 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
           <div className="space-y-4">
-            <h4 className="text-xl font-black text-indigo-950 uppercase tracking-widest">Nexus Institute of Technology</h4>
+            <h4 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
+              <Zap size={18} className="text-emerald-400 fill-emerald-400/15" /> Edunexus Labs
+            </h4>
             <p className="text-slate-500 text-xs font-medium max-w-sm">
-              Empowering the next generation of engineers with industrial hardware expertise and accredited certifications.
+              Empowering the next generation of engineers with high-fidelity hardware expertise, computer science logic, and accredited certifications.
             </p>
           </div>
           <div className="flex flex-col items-center md:items-end gap-2">
-            <p className="text-indigo-600 font-black uppercase tracking-[0.2em] text-[10px]">ISO 9001:2015 Accredited Organization</p>
-            <p className="text-slate-400 text-[10px] font-bold">© 2026 Nexus Automation Labs • Ghaziabad, UP</p>
+            <p className="text-emerald-400 font-black uppercase tracking-[0.2em] text-[10px]">ISO 9001:2015 Accredited Organization</p>
+            <p className="text-slate-500 text-[10px] font-bold">© 2026 Edunexus Automation Labs • Ghaziabad, UP</p>
           </div>
         </div>
 
       </div>
-
-      {/* Forgot Password Modal (Issue #39 M14) */}
-      <AnimatePresence>
-        {showForgotPassword && (
-          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              className="bg-white border border-slate-200 p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-6 relative text-left font-sans"
-            >
-              <button 
-                onClick={() => setShowForgotPassword(false)}
-                className="absolute right-4 top-4 text-slate-400 hover:text-slate-900 transition font-bold"
-              >
-                ✕
-              </button>
-
-              <div className="text-center space-y-1">
-                <h3 className="text-lg font-black text-indigo-950 uppercase tracking-tight">Forgot Password</h3>
-                <p className="text-xs text-slate-500 font-medium">Request a cryptographic password reset link</p>
-              </div>
-
-              {forgotPasswordSuccess ? (
-                <div className="space-y-4 text-center py-4">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600 text-lg font-black">
-                    ✓
-                  </div>
-                  <p className="text-xs text-slate-600 font-bold leading-relaxed">
-                    If that email address exists in our registry, a password reset link has been dispatched. Please check system logs for the simulated link.
-                  </p>
-                  <button
-                    onClick={() => setShowForgotPassword(false)}
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition"
-                  >
-                    Close Modal
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                    <input 
-                      type="email" 
-                      placeholder="Registered Email Address" 
-                      required
-                      value={forgotPasswordEmail}
-                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-50 rounded-2xl text-indigo-950 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all text-xs font-bold" 
-                    />
-                  </div>
-
-                  {forgotPasswordError && (
-                    <p className="text-[10px] text-red-500 font-black uppercase tracking-tight text-center">⚠ {forgotPasswordError}</p>
-                  )}
-
-                  <button 
-                    type="submit"
-                    disabled={forgotPasswordLoading}
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-350 text-white font-extrabold rounded-2xl transition duration-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2 active:scale-[0.99] shadow shadow-indigo-600/10"
-                  >
-                    {forgotPasswordLoading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>Processing Dispatch...</span>
-                      </>
-                    ) : (
-                      <span>Request Reset Link</span>
-                    )}
-                  </button>
-                </form>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
     </div>
   );
 };
 
 export default Home;
+

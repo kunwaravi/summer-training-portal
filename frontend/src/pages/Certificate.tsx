@@ -186,7 +186,7 @@ const Certificate = () => {
         <span className="text-xs uppercase text-amber-600 font-bold bg-slate-900 px-3 py-1 rounded-full border border-slate-800 flex items-center gap-1.5 shadow">
           <ShieldCheck size={14} /> Academic Excellence Verification
         </span>
-      </div>      {/* Ultra-Premium Institutional Certificate Frame (SkillsMint Dark Theme) */}
+      </div>      {/* Ultra-Premium Institutional Certificate Frame (Edunexus Dark Theme) */}
       <motion.div 
         ref={certRef}
         initial={{ opacity: 0, scale: 0.96 }}
@@ -200,7 +200,7 @@ const Certificate = () => {
         {/* Elegant Translucent Watermark in Center Background */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none select-none">
           <svg viewBox="0 0 100 100" className="w-[50%] h-[50%] text-[#00e5ff] fill-current">
-            <path d="M30 25 C30 15, 70 15, 70 30 C70 42, 30 45, 30 60 C30 75, 70 75, 70 65 L60 65 C60 70, 40 70, 40 60 C40 50, 80 48, 80 30 C80 10, 20 10, 20 25 Z" />
+            <path d="M20 20 H80 V32 H35 V44 H70 V56 H35 V68 H80 V80 H20 Z" />
           </svg>
         </div>
 
@@ -212,11 +212,11 @@ const Certificate = () => {
             {/* Logo Left */}
             <div className="flex items-center gap-2 select-none">
               <svg viewBox="0 0 100 100" className="w-9 h-9 text-[#00e5ff] fill-current filter drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]">
-                <path d="M30 25 C30 15, 70 15, 70 30 C70 42, 30 45, 30 60 C30 75, 70 75, 70 65 L60 65 C60 70, 40 70, 40 60 C40 50, 80 48, 80 30 C80 10, 20 10, 20 25 Z" />
+                <path d="M20 20 H80 V32 H35 V44 H70 V56 H35 V68 H80 V80 H20 Z" />
               </svg>
               <div className="flex items-baseline font-montserrat">
-                <span className="text-[25px] font-black text-[#00e5ff] tracking-tight drop-shadow-[0_0_12px_rgba(0,229,255,0.4)]">Skills</span>
-                <span className="text-[25px] font-bold text-white tracking-tight">Mint</span>
+                <span className="text-[25px] font-black text-[#00e5ff] tracking-tight drop-shadow-[0_0_12px_rgba(0,229,255,0.4)]">Edu</span>
+                <span className="text-[25px] font-bold text-white tracking-tight">nexus</span>
               </div>
             </div>
 

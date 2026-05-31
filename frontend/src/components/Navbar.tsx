@@ -1,10 +1,28 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react';
+import { LogOut, LayoutDashboard, ShieldCheck, Sun, Moon } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('edunexus_theme');
+    return saved === 'light' ? 'light' : 'dark';
+  });
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+    localStorage.setItem('edunexus_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(t => t === 'light' ? 'dark' : 'light');
+  };
 
   const handleLogout = () => {
     logout();
@@ -19,12 +37,13 @@ const Navbar = () => {
       <div className="container mx-auto px-4 flex justify-between items-center">
         
         {/* Brand logo - NEXUS LABS */}
+        {/* Brand logo - EDUNEXUS */}
         <Link 
           to={user ? "/dashboard" : "/"} 
-          className="text-2xl font-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 bg-clip-text text-transparent flex items-center gap-2 tracking-tight hover:scale-[1.01] transition-transform"
+          className="text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 tracking-tight hover:scale-[1.01] transition-transform"
         >
-          <ShieldCheck className="text-amber-500 fill-amber-500/10" size={24} />
-          <span>NEXUS LABS</span>
+          <ShieldCheck className="text-emerald-400 fill-emerald-400/10" size={24} />
+          <span>EDUNEXUS</span>
         </Link>
         
         {user ? (
@@ -50,8 +69,8 @@ const Navbar = () => {
             )}
 
             {hasCompletedAny && (
-              <span className="animate-pulse flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-[10px] text-amber-450 font-bold uppercase tracking-wider">
-                ★ NEXUS Certified
+              <span className="animate-pulse flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                ★ EDUNEXUS Certified
               </span>
             )}
             
@@ -69,9 +88,17 @@ const Navbar = () => {
               </div>
               
               {/* Initials Avatar */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-md select-none">
-                {user.name ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'NX'}
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-md select-none">
+                {user.name ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'EN'}
               </div>
+
+              <button 
+                onClick={toggleTheme}
+                className="p-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 rounded-xl text-slate-400 hover:text-white transition"
+                title="Toggle Light/Dark Theme"
+              >
+                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+              </button>
 
               <button 
                 onClick={handleLogout}
@@ -83,9 +110,28 @@ const Navbar = () => {
             </div>
           </div>
         ) : (
-          /* Logged Out status label */
-          <div className="hidden sm:block text-slate-400 text-xs font-semibold uppercase tracking-wider bg-slate-900/60 border border-slate-850 px-3 py-1.5 rounded-xl">
-             NEXUS Embedded & IoT training portal
+          /* Logged Out status buttons */
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={toggleTheme}
+              className="p-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 rounded-xl text-slate-400 hover:text-white transition"
+              title="Toggle Light/Dark Theme"
+            >
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+            
+            <Link 
+              to="/login"
+              className="text-xs font-black uppercase tracking-widest text-slate-300 hover:text-emerald-400 transition"
+            >
+              Sign In
+            </Link>
+            <Link 
+              to="/register"
+              className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:opacity-90 transition active:scale-95"
+            >
+              Sign Up
+            </Link>
           </div>
         )}
       </div>

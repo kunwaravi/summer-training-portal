@@ -1,0 +1,248 @@
+import { Router, Response } from 'express';
+import prisma from '../lib/prisma';
+import { authenticateToken } from '../middleware/auth';
+import { logger } from '../lib/logger';
+import { validateBody } from '../middleware/validate';
+
+const router = Router();
+
+// GET /api/forum - Fetch all discussion forum threads
+router.get('/', authenticateToken, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { courseId, search } = req.query;
+
+    const whereClause: any = {};
+    if (courseId) {
+      whereClause.courseId = courseId;
+    }
+    if (search && typeof search === 'string') {
+      whereClause.OR = [
+        { title: { contains: search } },
+        { content: { contains: search } },
+      ];
+    }
+
+    const discussions = await prisma.discussion.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+            role: true,
+          },
+        },
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+                role: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    res.json({
+      discussions,
+    });
+  } catch (error: any) {
+    logger.error('Fetch forum threads error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// GET /api/forum/:postId - Fetch a single discussion post with comments
+router.get('/:postId', authenticateToken, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { postId } = req.params;
+    const postIdNum = parseInt(postId);
+
+    if (isNaN(postIdNum)) {
+      return res.status(400).json({ message: 'Invalid discussion post ID.' });
+    }
+
+    const discussion = await prisma.discussion.findUnique({
+      where: { id: postIdNum },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+            role: true,
+          },
+        },
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+                role: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!discussion) {
+      return res.status(404).json({ message: 'Discussion post not found.' });
+    }
+
+    res.json({
+      discussion,
+    });
+  } catch (error: any) {
+    logger.error('Fetch single thread error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST /api/forum - Create a new discussion post
+router.post(
+  '/',
+  authenticateToken,
+  validateBody(['title', 'content']),
+  async (req: any, res: Response): Promise<any> => {
+    try {
+      const { title, content, courseId } = req.body;
+      const userId = req.user.id;
+
+      const newPost = await prisma.discussion.create({
+        data: {
+          title,
+          content,
+          userId,
+          courseId: courseId || null,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+              role: true,
+            },
+          },
+          comments: true,
+        },
+      });
+
+      logger.info(`User ${userId} created discussion post: "${title}"`);
+
+      res.status(201).json(newPost);
+    } catch (error: any) {
+      logger.error('Create forum post error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+);
+
+// POST /api/forum/:postId/comment - Add a comment/reply to a discussion thread
+router.post(
+  '/:postId/comment',
+  authenticateToken,
+  validateBody(['content']),
+  async (req: any, res: Response): Promise<any> => {
+    try {
+      const { postId } = req.params;
+      const postIdNum = parseInt(postId);
+      const { content } = req.body;
+      const userId = req.user.id;
+
+      if (isNaN(postIdNum)) {
+        return res.status(400).json({ message: 'Invalid discussion post ID.' });
+      }
+
+      // Verify that discussion post exists
+      const discussion = await prisma.discussion.findUnique({
+        where: { id: postIdNum },
+      });
+
+      if (!discussion) {
+        return res.status(404).json({ message: 'Discussion post not found.' });
+      }
+
+      const comment = await prisma.forumComment.create({
+        data: {
+          content,
+          postId: postIdNum,
+          userId,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+              role: true,
+            },
+          },
+        },
+      });
+
+      logger.info(`User ${userId} replied to discussion post ID ${postIdNum}`);
+
+      res.status(201).json(comment);
+    } catch (error: any) {
+      logger.error('Create forum reply error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+);
+
+// ADMIN CRUD - DELETE /api/forum/:postId (Delete post)
+router.delete('/:postId', authenticateToken, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { postId } = req.params;
+    const postIdNum = parseInt(postId);
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    if (isNaN(postIdNum)) {
+      return res.status(400).json({ message: 'Invalid ID.' });
+    }
+
+    const post = await prisma.discussion.findUnique({
+      where: { id: postIdNum },
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found.' });
+    }
+
+    // Only Admin or the post creator can delete
+    if (userRole !== 'ADMIN' && post.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
+    await prisma.discussion.delete({
+      where: { id: postIdNum },
+    });
+
+    logger.info(`Discussion post ID ${postIdNum} successfully deleted.`);
+    res.json({ message: 'Discussion post deleted successfully.' });
+  } catch (error: any) {
+    logger.error('Delete forum post error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+export default router;

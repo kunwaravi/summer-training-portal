@@ -4,25 +4,37 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { 
   CheckCircle, Lock, BookOpen, Play, ArrowLeft, Clipboard, 
-  CheckCircle2, ChevronRight, Zap, Award, 
-  Sparkles, ShieldAlert, Check, Eye, TestTube
+  CheckCircle2, ChevronRight, Zap, Award, ChevronDown, ChevronUp,
+  Sparkles, ShieldAlert, Check, Eye, TestTube, FileText, UploadCloud, MessageSquare, Cpu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { CheckoutModal } from '../components/course/CheckoutModal';
-import { ModuleBlueprintSVG } from '../components/course/ModuleBlueprintSVG';
+import { coursesConfig } from '../config/courses';
 
 const CourseDetail = () => {
   const { id } = useParams();
+  const { user, login } = useAuth();
+  const navigate = useNavigate();
+
   const [modules, setModules] = useState<any[]>([]);
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
-  const [readModules, setReadModules] = useState<number[]>([]);
+  const [activeTopicIndex, setActiveTopicIndex] = useState(0);
+  
+  // Accordion state (expanded modules)
+  const [expandedModules, setExpandedModules] = useState<Record<number, boolean>>({ 0: true });
+  
+  // Navigation tabs in Right area
+  const [activeContentTab, setActiveContentTab] = useState<'notes' | 'pdfs' | 'assignment' | 'discussion'>('notes');
+
+  const [readTopics, setReadTopics] = useState<string[]>([]); // Track completed topic IDs: "moduleOrder-topicIndex"
   const [copiedText, setCopiedText] = useState<string | null>(null);
   
   const [loadingSyllabus, setLoadingSyllabus] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(true);
   const [activeModuleDetail, setActiveModuleDetail] = useState<any>(null);
 
+  // Payments / Paywall states
   const [isPaid, setIsPaid] = useState(false);
   const [checkingPayment, setCheckingPayment] = useState(true);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -37,11 +49,59 @@ const CourseDetail = () => {
   const [discount, setDiscount] = useState(0);
   const [couponError, setCouponError] = useState('');
   const [isCouponApplied, setIsCouponApplied] = useState(false);
-  
-  const [lightboxImage, setLightboxImage] = useState<React.ReactNode | null>(null);
 
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  // Hardware Sandbox states
+  const [sandboxTab, setSandboxTab] = useState<'pinout' | 'console' | 'register'>('pinout');
+  const [registerVal, setRegisterVal] = useState<number[]>([0,0,1,0,1,0,0,0]);
+  const [serialLogs, setSerialLogs] = useState<string[]>([
+    "[SYSTEM] Booting ARM Cortex-M4 Core...",
+    "[SYSTEM] Clock configuration SCLK = 84MHz",
+    "[INFO] Direct Register Masking Engine initialized."
+  ]);
+
+  const toggleRegisterBit = (bitIndex: number) => {
+    setRegisterVal(prev => {
+      const updated = [...prev];
+      updated[bitIndex] = updated[bitIndex] === 0 ? 1 : 0;
+      const binaryStr = updated.join('');
+      const hexVal = parseInt(binaryStr, 2).toString(16).toUpperCase();
+      setSerialLogs(logs => [
+        ...logs,
+        `[REGISTER] Bit ${7 - bitIndex} toggled to ${updated[bitIndex]}. PORTA set to 0b${binaryStr} (0x${hexVal}).`
+      ]);
+      return updated;
+    });
+  };
+
+  const clearSerialLogs = () => {
+    setSerialLogs([
+      `[SYSTEM] Terminal buffer cleared. Monitor active.`
+    ]);
+  };
+
+  const triggerMockInterrupt = () => {
+    setSerialLogs(logs => [
+      ...logs,
+      `[INTERRUPT] Asynchronous NVIC NEG_EDGE trigger detected on Pin 4.`,
+      `[ISR] Suspending main loop task context...`,
+      `[ISR] ISR handler PB_4_Callback completed in 12 T-states.`,
+      `[SYSTEM] Restoring main execution thread.`
+    ]);
+  };
+
+  // Video playback simulation state
+  const [videoPlaying, setVideoPlaying] = useState(false);
+
+  // Assignment states
+  const [assignmentSubmitted, setAssignmentSubmitted] = useState(false);
+  const [uploadingAssignment, setUploadingAssignment] = useState(false);
+
+  // Q&A / Topic Discussion states
+  const [comments, setComments] = useState<any[]>([
+    { author: "Rahul Sharma", role: "STUDENT", text: "Is this compile-time optimization compatible with ARM Cortex-M0 systems?", date: "2 hours ago" },
+    { author: "Amit Verma", role: "MENTOR", text: "Yes, but ensure you enable appropriate float-point compiler settings in your toolchain.", date: "1 hour ago" }
+  ]);
+  const [newCommentText, setNewCommentText] = useState('');
 
   const progressInfo = user?.progresses?.find((p: any) => p.courseId === id);
   const isCourseCompleted = progressInfo?.completed || false;
@@ -103,9 +163,16 @@ const CourseDetail = () => {
     fetchModuleDetails();
   }, [id, modules, activeModuleIndex]);
 
-  const handleCopyCode = (code: string, idx: number) => {
+  const toggleModuleAccordion = (idx: number) => {
+    setExpandedModules(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
+  };
+
+  const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    setCopiedText(`${idx}`);
+    setCopiedText("Copied!");
     setTimeout(() => setCopiedText(null), 2000);
   };
 
@@ -115,17 +182,53 @@ const CourseDetail = () => {
     setTimeout(() => setUpiCopied(false), 2000);
   };
 
-  const handleMarkModuleRead = () => {
-    if (!readModules.includes(activeModuleIndex)) {
-        setReadModules([...readModules, activeModuleIndex]);
+  const handleMarkTopicCompleted = async () => {
+    const currentTopicId = `${activeModuleIndex}-${activeTopicIndex}`;
+    if (!readTopics.includes(currentTopicId)) {
+      const newReadTopics = [...readTopics, currentTopicId];
+      setReadTopics(newReadTopics);
+
+      // Compute total topics seeded in modules
+      let totalTopicsCount = 0;
+      modules.forEach(m => {
+        totalTopicsCount += m.topics?.length || 3; // Fallback to 3 if not loaded
+      });
+
+      // Calculate progress percentage
+      const progressPercent = Math.min(Math.round((newReadTopics.length / totalTopicsCount) * 100), 100);
+      
+      try {
+        // Sync course progress with backend
+        await api.post(`/courses/progress`, {
+          courseId: id,
+          progress: progressPercent,
+          completed: progressPercent === 100
+        });
+
+        // Trigger session profile update
+        const meRes = await api.get('/auth/me');
+        login("", meRes.data);
+
+        if (progressPercent === 100) {
+          confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+        }
+      } catch (err) {
+        console.error('Failed to sync course progress:', err);
+      }
     }
-    if (activeModuleIndex < modules.length - 1) {
-        setActiveModuleIndex(activeModuleIndex + 1);
+
+    // Auto-advance to next topic or module
+    const currentModule = activeModuleDetail || selectedModule;
+    const currentTopicsLength = currentModule?.topics?.length || 3;
+
+    if (activeTopicIndex < currentTopicsLength - 1) {
+      setActiveTopicIndex(activeTopicIndex + 1);
+    } else if (activeModuleIndex < modules.length - 1) {
+      setActiveModuleIndex(activeModuleIndex + 1);
+      setActiveTopicIndex(0);
+      setExpandedModules(prev => ({ ...prev, [activeModuleIndex + 1]: true }));
     }
   };
-
-  const BASE_PRICE = 499;
-  const currentPrice = Math.round(BASE_PRICE * (1 - discount));
 
   const handleApplyCoupon = () => {
     setCouponError('');
@@ -167,11 +270,6 @@ const CourseDetail = () => {
 
   const handleMockCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentPrice > 0 && paymentMethod === 'card' && (!cardNumber || !cardExpiry || !cardCvv)) {
-      alert('Please fill out all credentials to capture mock payment!');
-      return;
-    }
-
     setProcessingCheckout(true);
     try {
       const orderRes = await api.post('/payments/create-order', {
@@ -184,16 +282,16 @@ const CourseDetail = () => {
       if (realPayment && razorpayOrderId) {
         const isSDKLoaded = await loadRazorpay();
         if (!isSDKLoaded) {
-          alert('Failed to load Razorpay payment SDK. Please verify your internet connection.');
+          alert('Failed to load Razorpay payment SDK.');
           setProcessingCheckout(false);
           return;
         }
 
         const options = {
           key: razorpayKeyId,
-          amount: currentPrice * 100, // paise
+          amount: currentPrice * 100,
           currency: 'INR',
-          name: 'Nexus Institute of Technology',
+          name: 'Edunexus Labs',
           description: `Certified Specialization: ${id}`,
           order_id: razorpayOrderId,
           handler: async (response: any) => {
@@ -212,8 +310,7 @@ const CourseDetail = () => {
                 confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
               }
             } catch (err: any) {
-              console.error(err);
-              alert(err.response?.data?.message || 'Razorpay payment verification failed.');
+              alert(err.response?.data?.message || 'Razorpay verification failed.');
             } finally {
               setProcessingCheckout(false);
             }
@@ -222,7 +319,7 @@ const CourseDetail = () => {
             name: user?.name || '',
             email: user?.email || ''
           },
-          theme: { color: '#4f46e5' }
+          theme: { color: '#10b981' }
         };
 
         const rzp = new (window as any).Razorpay(options);
@@ -231,22 +328,11 @@ const CourseDetail = () => {
         return;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-
-      let randomSuffix = Math.random().toString(36).substring(2, 9).toUpperCase();
-      let gatewayRef = '';
-      if (currentPrice === 0) {
-        gatewayRef = `REF_COUPON_FREE_${randomSuffix}`;
-      } else {
-        gatewayRef = paymentMethod === 'card' 
-          ? `REF_MOCK_CARD_${randomSuffix}`
-          : `REF_MOCK_UPI_${randomSuffix}`;
-      }
-
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       const verifyRes = await api.post('/payments/verify', {
         orderId,
         mockSignature,
-        gatewayReference: gatewayRef,
+        gatewayReference: `REF_EDUNEXUS_MOCK_${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
         paymentDetails: { paymentMethod, cardNumber, cardExpiry, cardCvv }
       });
 
@@ -256,323 +342,554 @@ const CourseDetail = () => {
         confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
       }
     } catch (err: any) {
-      console.error('Checkout verification failed:', err);
-      alert(err.response?.data?.message || 'Payment system clearance failed. Please try again.');
+      alert(err.response?.data?.message || 'Payment system clearance failed.');
     } finally {
       setProcessingCheckout(false);
     }
   };
 
+  const handleUploadAssignment = async () => {
+    setUploadingAssignment(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setAssignmentSubmitted(true);
+    setUploadingAssignment(false);
+    confetti({ particleCount: 50, spread: 40 });
+  };
+
+  const handleAddComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCommentText.trim()) return;
+    setComments([
+      ...comments,
+      { author: user?.name || "Student", role: user?.role || "STUDENT", text: newCommentText, date: "Just now" }
+    ]);
+    setNewCommentText('');
+  };
+
   if (loadingSyllabus) {
     return (
-      <div className="py-20 text-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-        <p className="text-slate-400 text-sm font-semibold">Loading deep curriculum structure...</p>
+      <div className="py-20 text-center space-y-4 bg-slate-950 min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
+        <p className="text-slate-400 text-sm font-semibold uppercase tracking-widest">Loading dynamic curriculum console...</p>
       </div>
     );
   }
 
   const selectedModule = modules[activeModuleIndex];
-  const allModulesRead = readModules.length === modules.length || isCourseCompleted;
-  const completedPercentage = isCourseCompleted ? 100 : Math.min(Math.round((readModules.length / (modules.length || 1)) * 100), 100);
-  const radius = 20;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (completedPercentage / 100) * circumference;
+  const activeTopic = activeModuleDetail?.topics?.[activeTopicIndex] || selectedModule?.topics?.[activeTopicIndex] || {
+    title: "Core Concept Primer",
+    text: "Select a topic from the curriculum sidebar to continue your learning deep dive.",
+    code: null,
+    note: null
+  };
 
-  const wordCount = selectedModule?.description?.split(/\s+/).length + (activeModuleDetail?.topics?.reduce((acc: number, t: any) => acc + (t.text?.split(/\s+/).length || 0), 0) || 0);
-  const readingTime = Math.max(Math.ceil(wordCount / 180), 1);
+  // Aggregated progress calculations
+  let totalTopics = 0;
+  modules.forEach(m => totalTopics += m.topics?.length || 3);
+  const completedPercentage = isCourseCompleted ? 100 : Math.min(Math.round((readTopics.length / totalTopics) * 100), 100);
+
+  const BASE_PRICE = 999;
+  const currentPrice = Math.round(BASE_PRICE * (1 - discount));
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="py-6 max-w-7xl mx-auto px-4 space-y-6"
+      className="py-6 max-w-7xl mx-auto px-4 space-y-6 bg-slate-950 text-white min-h-screen font-sans"
     >
-      
-      {/* Top Navigation Row */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      {/* Top Header Navigation */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-850 pb-4 gap-4">
         <button 
           onClick={() => navigate('/dashboard')} 
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition text-sm font-bold"
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition text-xs font-black uppercase tracking-widest"
         >
-          <ArrowLeft size={16} /> Back to Dashboard
+          <ArrowLeft size={16} /> Dashboard
         </button>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {isCourseCompleted && (
-            <span className="text-xs uppercase tracking-widest text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full flex items-center gap-1.5">
+            <span className="text-xs uppercase tracking-widest text-emerald-450 font-black bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
               <CheckCircle size={14} /> Passed: {bestGrade}
             </span>
           )}
-          <span className="text-xs uppercase tracking-widest text-slate-350 font-black bg-slate-800 px-3 py-1 rounded-full border border-slate-700/60">
-            {id}
+          <span className="text-xs uppercase tracking-widest text-slate-200 font-black bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl shadow">
+            Course ID: {id}
           </span>
         </div>
       </div>
 
-      {/* Main Split-Screen Layout */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+      {/* Main Grid: Left Syllabus Accordion Tree & Right GFG Interactive Console */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: Modules Sidebar */}
-        <div className="w-full lg:w-1/3 bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-3xl p-5 space-y-5 shrink-0 shadow-2xl">
-          <h2 className="text-lg font-black tracking-widest uppercase text-slate-200 px-2 border-b border-slate-800 pb-3">Curriculum</h2>
-          
-          {/* Circular Progress Widget in Sidebar */}
-          <div className="flex items-center gap-4 p-4 bg-slate-950/50 border border-slate-800 rounded-2xl shadow-inner">
-            <div className="relative flex items-center justify-center shrink-0">
-              <svg className="w-14 h-14 transform -rotate-90">
-                <circle cx="28" cy="28" r={radius} className="text-slate-800" strokeWidth="4" stroke="currentColor" fill="transparent" />
-                <circle
-                  cx="28" cy="28" r={radius}
-                  className="text-blue-500 transition-all duration-1000 ease-out"
-                  strokeWidth="4" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" stroke="currentColor" fill="transparent"
-                />
-              </svg>
-              <span className="absolute text-[10px] font-black text-white">{completedPercentage}%</span>
-            </div>
-            <div>
-              <h3 className="text-xs font-black text-slate-200 uppercase tracking-widest">Study Progress</h3>
-              <p className="text-[10px] font-bold text-slate-500 mt-1">{readModules.length} of {modules.length} Modules Read</p>
-            </div>
+        {/* Left Side: Accordion Tree Sidebar (4 Columns) */}
+        <div className="lg:col-span-4 bg-slate-900 border border-slate-850 rounded-3xl p-5 space-y-5 shadow-2xl shrink-0">
+          <div className="flex items-center justify-between border-b border-slate-850 pb-3 px-2">
+            <h2 className="text-sm font-black tracking-widest uppercase text-slate-200">Syllabus Accordion</h2>
+            <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">{completedPercentage}% Completed</span>
           </div>
-          
-          <div className="space-y-3">
-            {modules.map((mod, index) => {
-              const isRead = readModules.includes(index) || isCourseCompleted;
-              let isActive = index === activeModuleIndex;
+
+          {/* Collapsible Syllabus Accordion */}
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+            {modules.map((mod, modIdx) => {
+              const isExpanded = expandedModules[modIdx] || false;
               
               return (
-                <button
-                  key={index}
-                  onClick={() => setActiveModuleIndex(index)}
-                  className={`w-full text-left p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group ${
-                    isActive 
-                      ? 'bg-blue-600/10 border-blue-500/50 text-white shadow-lg shadow-blue-900/20' 
-                      : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:border-slate-600 hover:text-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className={`p-2.5 rounded-xl transition-colors ${
-                      isActive ? 'bg-blue-500/20 text-blue-400' : isRead ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-900 text-slate-500'
-                     }`}>
-                      {isRead ? <CheckCircle size={18} /> : <BookOpen size={18} />}
+                <div key={modIdx} className="border border-slate-850 rounded-2xl overflow-hidden bg-slate-950/40">
+                  {/* Module Accordion Trigger */}
+                  <button
+                    onClick={() => toggleModuleAccordion(modIdx)}
+                    className={`w-full flex items-center justify-between p-4 text-left transition-all ${isExpanded ? 'bg-slate-900/60 text-emerald-400' : 'text-slate-350 hover:bg-slate-900/30'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <BookOpen size={16} className={isExpanded ? 'text-emerald-400' : 'text-slate-500'} />
+                      <div>
+                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Module {mod.order}</p>
+                        <h4 className="text-xs font-black truncate max-w-[180px] mt-0.5">{mod.title}</h4>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Module {mod.order}</p>
-                      <h4 className="text-sm font-bold truncate max-w-[150px] mt-0.5">{mod.title}</h4>
-                    </div>
-                  </div>
-                </button>
+                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
+
+                  {/* Expanded Nested Topics list */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: 'auto' }}
+                        exit={{ height: 0 }}
+                        className="overflow-hidden bg-slate-950/60 border-t border-slate-900"
+                      >
+                        <div className="p-2 space-y-1">
+                          {/* If dynamic topics don't exist yet, we list placeholders mapped to module order */}
+                          {(mod.topics || Array.from({ length: 3 })).map((topic: any, topIdx: number) => {
+                            const topicTitle = topic?.title || `Topic ${mod.order}.${topIdx + 1}: Foundations`;
+                            const isTopicRead = readTopics.includes(`${modIdx}-${topIdx}`) || isCourseCompleted;
+                            const isTopicActive = modIdx === activeModuleIndex && topIdx === activeTopicIndex;
+
+                            return (
+                              <button
+                                key={topIdx}
+                                onClick={() => {
+                                  setActiveModuleIndex(modIdx);
+                                  setActiveTopicIndex(topIdx);
+                                }}
+                                className={`w-full text-left px-3 py-2.5 rounded-xl text-[11px] font-bold flex items-center justify-between transition-all ${
+                                  isTopicActive 
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' 
+                                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50 border border-transparent'
+                                }`}
+                              >
+                                <span className="truncate max-w-[200px] flex items-center gap-2">
+                                  <span className={`w-1.5 h-1.5 rounded-full ${isTopicRead ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+                                  {topicTitle}
+                                </span>
+                                {isTopicRead && <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               );
             })}
           </div>
 
-          {/* Final Exam Section Button */}
-          <div className="pt-4 border-t border-slate-800">
-             <button
-                onClick={() => navigate(`/quiz/${id}`)}
-                disabled={!allModulesRead && !isCourseCompleted}
-                className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group ${
-                  allModulesRead || isCourseCompleted
-                    ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/50 text-white hover:from-amber-500/20 hover:to-orange-500/20 shadow-lg shadow-amber-900/20' 
-                    : 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed'
-                }`}
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className={`p-2.5 rounded-xl transition-colors ${
-                    allModulesRead || isCourseCompleted ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-900 text-slate-700'
-                   }`}>
-                    {isCourseCompleted ? <Award size={18} /> : allModulesRead ? <TestTube size={18} /> : <Lock size={18} />}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black uppercase tracking-wide">Final Examination</h4>
-                    <p className="text-[9px] font-bold text-slate-500 mt-0.5">{isCourseCompleted ? "Re-attempt Available" : allModulesRead ? "Unlocked" : "Read all modules to unlock"}</p>
-                  </div>
+          {/* Timed Examination Entry */}
+          <div className="pt-4 border-t border-slate-850">
+            <button
+              onClick={() => navigate(`/quiz/${id}`)}
+              disabled={completedPercentage < 100 && !isCourseCompleted}
+              className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group ${
+                completedPercentage === 100 || isCourseCompleted
+                  ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/50 text-white hover:opacity-90 shadow shadow-emerald-500/10' 
+                  : 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <div className={`p-2.5 rounded-xl ${completedPercentage === 100 || isCourseCompleted ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-900 text-slate-800'}`}>
+                  {isCourseCompleted ? <Award size={18} /> : <TestTube size={18} />}
                 </div>
-                {(allModulesRead || isCourseCompleted) && <Play size={16} className="text-amber-400" />}
-             </button>
+                <div className="text-left">
+                  <h4 className="text-xs font-black uppercase tracking-wide">Final Examination</h4>
+                  <p className="text-[9px] font-bold text-slate-500 mt-0.5">{isCourseCompleted ? "Re-attempt Available" : "Score >70% to unlock Cert"}</p>
+                </div>
+              </div>
+              {(completedPercentage === 100 || isCourseCompleted) && <Play size={14} className="text-emerald-400" />}
+            </button>
           </div>
         </div>
 
-        {/* Right Column: E-Learning Viewer Console */}
-        <div className="flex-1 w-full bg-slate-900/40 backdrop-blur-sm border border-slate-800 rounded-3xl p-6 lg:p-10 shadow-2xl relative overflow-hidden">
+        {/* Right Side: GFG Split Content Cockpit (8 Columns) */}
+        <div className="lg:col-span-8 space-y-6">
           
-          {loadingDetails ? (
-            <div className="space-y-6 animate-pulse py-4">
-              <div className="h-8 w-1/3 bg-slate-800 rounded-lg"></div>
-              <div className="h-12 w-3/4 bg-slate-800 rounded-xl"></div>
-              <div className="space-y-4 pt-10">
-                {[1, 2].map((i) => (
-                  <div key={i} className="space-y-3">
-                    <div className="h-6 w-40 bg-slate-800 rounded-lg"></div>
-                    <div className="h-24 w-full bg-slate-800/50 rounded-xl"></div>
-                  </div>
-                ))}
+          {/* A. Premium Video Tutorial Player */}
+          <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-850 aspect-video shadow-2xl flex flex-col justify-center items-center group">
+            {videoPlaying ? (
+              // Simulated Interactive Video Playing Screen
+              <div className="w-full h-full bg-slate-950 relative flex items-center justify-center">
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                  title="Video Player"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+                <button
+                  onClick={() => setVideoPlaying(false)}
+                  className="absolute top-4 right-4 bg-slate-900/80 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white border border-slate-800"
+                >
+                  Close Player
+                </button>
               </div>
-            </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeModuleIndex}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-8"
-              >
-                {/* Header block */}
-                <div>
-                  <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <div className="inline-block text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg">
-                      Module {selectedModule?.order}
-                    </div>
-                    <div className="text-[10px] font-black text-slate-400 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-lg uppercase tracking-wider flex items-center gap-1.5">
-                      ⏱ {readingTime} Min Read
-                    </div>
-                  </div>
-                  <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                    {selectedModule?.title}
-                  </h2>
-                  <p className="text-slate-400 text-sm md:text-base mt-4 leading-relaxed max-w-3xl">
-                    {selectedModule?.description}
-                  </p>
+            ) : (
+              // Stunning placeholder GFG-style poster
+              <>
+                <div className="absolute inset-0 bg-cover bg-center opacity-45 filter blur-[1px]" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?q=80&w=2066')` }}></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                
+                <div className="relative z-10 text-center space-y-4 px-6">
+                  <motion.button 
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setVideoPlaying(true)}
+                    className="w-16 h-16 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-lg shadow-emerald-500/25 mx-auto hover:bg-emerald-450 transition-all duration-300"
+                  >
+                    <Play size={28} className="fill-slate-950 ml-1" />
+                  </motion.button>
+                  <p className="text-xs font-black uppercase tracking-widest text-emerald-400">Play Video Tutorial</p>
+                  <h3 className="text-xl font-bold text-white max-w-lg mx-auto">{activeTopic.title}</h3>
                 </div>
+              </>
+            )}
+          </div>
 
-                {/* Curriculum Topics List */}
-                <div className="space-y-12 pt-8 border-t border-slate-800/80">
-                  {activeModuleDetail?.topics?.map((topic: any, idx: number) => (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: "-50px" }}
-                      key={idx} 
-                      className="space-y-4 group"
-                    >
-                      <div className="flex items-start gap-4">
-                        <span className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-sm font-black shrink-0 mt-1">
-                          {idx + 1}
-                        </span>
-                        <div className="space-y-2 flex-1">
-                          <h3 className="text-xl font-bold text-slate-100 tracking-tight group-hover:text-blue-400 transition-colors">
-                            {topic.title}
-                          </h3>
-                          <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
-                            {topic.text}
-                          </p>
+          {/* B. Tabbed E-learning Content Console */}
+          <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-2xl space-y-6">
+            {/* Tab switch navigation */}
+            <div className="flex gap-2 border-b border-slate-850 pb-2">
+              {[
+                { id: 'notes', label: 'Article / Notes', icon: FileText },
+                { id: 'pdfs', label: 'PDF Handouts', icon: Award },
+                { id: 'assignment', label: 'Assignment', icon: UploadCloud },
+                { id: 'discussion', label: 'QA / Discussion', icon: MessageSquare }
+              ].map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeContentTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveContentTab(tab.id as any)}
+                    className={`px-4 py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all ${
+                      isActive 
+                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/10' 
+                        : 'text-slate-400 hover:text-white bg-slate-950/40'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Content view based on active tab */}
+            <div className="min-h-[30vh]">
+              {activeContentTab === 'notes' && (
+                <div className="space-y-6 animate-in fade-in duration-200">
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-black text-slate-100">{activeTopic.title}</h3>
+                    <p className="text-[10px] font-mono text-slate-500 uppercase">Edunexus Verified Syllabus Handbook</p>
+                  </div>
+                  <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                    {activeTopic.text}
+                  </p>
+
+                  {/* Render topic code snippet if present */}
+                  {activeTopic.code && (
+                    <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 relative group shadow-2xl">
+                      <button
+                        onClick={() => handleCopyCode(activeTopic.code)}
+                        className="absolute right-3 top-3 p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-350 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      >
+                        <Clipboard size={14} />
+                        {copiedText ? copiedText : 'Copy'}
+                      </button>
+                      <pre className="p-5 text-xs sm:text-sm font-mono text-cyan-300 overflow-x-auto select-all leading-relaxed">
+                        <code>{activeTopic.code}</code>
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* Render topic note if present */}
+                  {activeTopic.note && (
+                    <div className="p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-amber-200/90 text-sm leading-relaxed flex items-start gap-4">
+                      <span className="text-2xl leading-none">💡</span>
+                      <div>
+                        <strong className="text-amber-400 block mb-1 font-black tracking-wide uppercase text-[10px]">Takeaway Note</strong>
+                        {activeTopic.note}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Interactive Edunexus Hardware Sandbox & Simulation Workbench (Electronics Category Only) */}
+                  {coursesConfig.find(c => c.id === id)?.category === 'Electronics' && (
+                    <div className="p-6 rounded-3xl bg-slate-950 border border-slate-850 space-y-6 shadow-2xl relative overflow-hidden mt-8">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-850 pb-3 gap-2">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <Cpu size={18} className="animate-pulse" />
+                          <h4 className="text-xs font-black uppercase tracking-widest">Edunexus Hardware Sandbox</h4>
+                        </div>
+                        
+                        <div className="flex gap-1.5 bg-slate-900 p-1 border border-slate-800 rounded-xl">
+                          {(['pinout', 'console', 'register'] as const).map(tab => (
+                            <button
+                              key={tab}
+                              type="button"
+                              onClick={() => setSandboxTab(tab)}
+                              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition ${
+                                sandboxTab === tab ? 'bg-slate-950 text-white' : 'text-slate-450 hover:text-white'
+                              }`}
+                            >
+                              {tab}
+                            </button>
+                          ))}
                         </div>
                       </div>
 
-                      {topic.code && (
-                        <div className="ml-12 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/80 relative group/code shadow-2xl">
-                          <button
-                            onClick={() => handleCopyCode(topic.code, idx)}
-                            className="absolute right-3 top-3 p-2 rounded-xl bg-slate-800/80 backdrop-blur border border-slate-700 text-slate-300 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5 opacity-0 group-hover/code:opacity-100 focus:opacity-100 hover:scale-105"
-                          >
-                            <Clipboard size={14} />
-                            {copiedText === `${idx}` ? 'Copied!' : 'Copy'}
-                          </button>
-                          <pre className="p-5 text-sm font-mono text-blue-300 overflow-x-auto select-all leading-relaxed">
-                            <code>{topic.code}</code>
-                          </pre>
-                        </div>
-                      )}
-
-                      {topic.note && (
-                        <div className="ml-12 p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-amber-200/90 text-sm leading-relaxed flex items-start gap-4 shadow-inner">
-                          <span className="text-2xl leading-none select-none">💡</span>
-                          <div>
-                            <strong className="text-amber-400 block mb-1 font-black tracking-wide uppercase text-[10px]">Core Takeaway</strong>
-                            {topic.note}
+                      {/* View Pinout Diagrams */}
+                      {sandboxTab === 'pinout' && (
+                        <div className="space-y-4 animate-in fade-in duration-250">
+                          <p className="text-slate-450 text-xs">Hover or click on microchip pins to inspect physical alternate functions and register bindings.</p>
+                          <div className="p-4 bg-slate-900 border border-slate-850 rounded-2xl flex justify-center items-center">
+                            <div className="w-full max-w-sm border border-slate-800 p-4 rounded-xl bg-slate-950/60 font-mono text-[9px] text-slate-350 text-center space-y-2">
+                              <p className="text-slate-500 border-b border-slate-900 pb-1.5 font-bold uppercase tracking-wider">▲ Microcontroller Core Pinout Map ▲</p>
+                              <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-left pt-2 font-black">
+                                <div className="p-1 hover:bg-slate-900 rounded border border-transparent hover:border-emerald-500/20 cursor-pointer">1. [ VCC ] 5V Power Supply</div>
+                                <div className="p-1 hover:bg-slate-900 rounded border border-transparent hover:border-emerald-500/20 cursor-pointer text-right">8. [ GND ] System Ground</div>
+                                <div className="p-1 hover:bg-slate-900 rounded border border-transparent hover:border-emerald-500/20 cursor-pointer">2. [ A0  ] Analog Input 0 (ADC)</div>
+                                <div className="p-1 hover:bg-slate-900 rounded border border-transparent hover:border-emerald-500/20 cursor-pointer text-right">7. [ D13 ] Onboard Pin 13 LED</div>
+                                <div className="p-1 hover:bg-slate-900 rounded border border-transparent hover:border-emerald-500/20 cursor-pointer">3. [ PB8 ] I2C1 Serial Clock (SCL)</div>
+                                <div className="p-1 hover:bg-slate-900 rounded border border-transparent hover:border-emerald-500/20 cursor-pointer text-right">6. [ PB9 ] I2C1 Serial Data (SDA)</div>
+                                <div className="p-1 hover:bg-slate-900 rounded border border-transparent hover:border-emerald-500/20 cursor-pointer">4. [ PA0 ] Hardware PWM Timer 2</div>
+                                <div className="p-1 hover:bg-slate-900 rounded border border-transparent hover:border-emerald-500/20 cursor-pointer text-right">5. [ PB4 ] NVIC External Interrupt</div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
-                    </motion.div>
-                  ))}
-                </div>
 
-                {/* Concept Visualized Blueprint */}
-                <div className="p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 space-y-6 shadow-2xl relative overflow-hidden mt-12">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl"></div>
-                  <div className="flex items-center gap-3 text-blue-400 relative z-10">
-                    <Zap size={20} className="animate-pulse" />
-                    <h4 className="text-xs font-black uppercase tracking-widest">Concept Architecture</h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative z-10">
-                    <div className="space-y-4 text-slate-300 text-sm leading-relaxed">
-                      <p className="font-bold text-white text-base">Interactive Visualization</p>
-                      <p>Study this schematic representation of the concepts introduced in this module. Visualizing the architecture solidifies your deep understanding.</p>
-                      <button 
-                        onClick={() => setLightboxImage(<ModuleBlueprintSVG courseKey={id as string} weekNum={selectedModule?.order || 1} />)}
-                        className="flex items-center gap-2 mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase rounded-xl text-[10px] tracking-wider transition-transform active:scale-95 shadow-lg shadow-blue-900/50"
-                      >
-                        <Eye size={14} /> Expand Diagram
-                      </button>
-                    </div>
-                    <div 
-                      onClick={() => setLightboxImage(<ModuleBlueprintSVG courseKey={id as string} weekNum={selectedModule?.order || 1} />)}
-                      className="p-4 rounded-2xl border border-slate-800 bg-slate-950/50 hover:bg-slate-900 hover:border-blue-500/30 transition-all duration-300 cursor-zoom-in flex justify-center items-center group shadow-xl"
-                    >
-                      <div className="transform group-hover:scale-105 transition duration-500 w-full max-w-[280px]">
-                        <ModuleBlueprintSVG courseKey={id as string} weekNum={selectedModule?.order || 1} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                      {/* View Hardware simulated console logs */}
+                      {sandboxTab === 'console' && (
+                        <div className="space-y-4 animate-in fade-in duration-250">
+                          <div className="flex justify-between items-center text-xs">
+                            <p className="text-slate-450 text-[10px]">Real-time serial feedback monitor streamed from hardware core.</p>
+                            <div className="flex gap-2">
+                              <button type="button" onClick={triggerMockInterrupt} className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase rounded-lg border border-emerald-500/20">Trigger ISR</button>
+                              <button type="button" onClick={clearSerialLogs} className="px-2.5 py-1 bg-slate-900 border border-slate-800 text-[9px] font-black uppercase rounded-lg text-slate-305">Clear</button>
+                            </div>
+                          </div>
+                          
+                          <div className="p-4 bg-slate-950 border border-slate-850 rounded-2xl font-mono text-[10px] text-emerald-400 min-h-[120px] max-h-[160px] overflow-y-auto space-y-1.5 shadow-inner">
+                            {serialLogs.map((log, lIdx) => (
+                              <div key={lIdx} className="leading-relaxed">
+                                <span className="text-slate-700 shrink-0 mr-1.5">&gt;</span>
+                                {log}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                {/* Progress Control */}
-                <div className="flex justify-between items-center pt-8 border-t border-slate-800/80 mt-12">
-                  {!readModules.includes(activeModuleIndex) && !isCourseCompleted ? (
+                      {/* View Bitwise Register Configurator */}
+                      {sandboxTab === 'register' && (
+                        <div className="space-y-4 animate-in fade-in duration-250">
+                          <p className="text-slate-450 text-xs">Configure an 8-bit output register (PORTA). Click bits to toggle state and compute HEX mask values.</p>
+                          <div className="p-5 bg-slate-900 border border-slate-850 rounded-2xl space-y-4">
+                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-500">
+                              <span>8-Bit Grid Output (PORTA)</span>
+                              <span className="text-emerald-400 font-mono">Hex Mask: 0x{parseInt(registerVal.join(''), 2).toString(16).toUpperCase()}</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-8 gap-2">
+                              {registerVal.map((bit, bIdx) => (
+                                <button
+                                  key={bIdx}
+                                  type="button"
+                                  onClick={() => toggleRegisterBit(bIdx)}
+                                  className={`aspect-square border rounded-xl flex flex-col justify-center items-center transition active:scale-95 ${
+                                    bit === 1 
+                                      ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow shadow-emerald-500/20' 
+                                      : 'bg-slate-950 border-slate-800 text-slate-455 hover:border-slate-600'
+                                  }`}
+                                >
+                                  <span className="text-[8px] font-black uppercase text-slate-500">B{7 - bIdx}</span>
+                                  <span className="text-sm font-black mt-0.5">{bit}</span>
+                                </button>
+                              ))}
+                            </div>
+
+                            <div className="p-3 bg-slate-950 border border-slate-850 rounded-xl text-[10px] text-slate-400 leading-relaxed font-bold">
+                              {registerVal[5] === 1 ? (
+                                <span className="text-emerald-400">💡 [LED ACTIVE] Bit 2 (PORTA2) is set to 1! The system drives Digital Pin 13 HIGH, successfully powering the onboard status LED.</span>
+                              ) : (
+                                <span>ℹ Set Bit 2 (PORTA2) to 1 to activate the simulated status LED on Pin 13. Toggling other bits adjusts alternate function configurations.</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mark completed checklist button */}
+                  <div className="pt-6 border-t border-slate-850 flex justify-end">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={handleMarkModuleRead}
-                      className="ml-auto px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-900/50 flex items-center gap-3"
+                      onClick={handleMarkTopicCompleted}
+                      className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center gap-2 hover:opacity-95 shadow active:scale-95"
                     >
-                      Mark as Read & Continue <ChevronRight size={18} />
+                      <CheckCircle2 size={16} /> Mark Completed & Continue
                     </motion.button>
-                  ) : (
-                    <div className="w-full flex justify-between items-center">
-                       <span className="text-emerald-400 font-black text-xs uppercase tracking-widest flex items-center gap-2 bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20">
-                          <CheckCircle2 size={16} /> Module Completed
-                       </span>
-                       {activeModuleIndex < modules.length - 1 && (
-                         <button
-                           onClick={() => setActiveModuleIndex(activeModuleIndex + 1)}
-                           className="px-6 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white font-bold text-xs uppercase tracking-widest hover:bg-slate-700 transition flex items-center gap-2"
-                         >
-                           Next Module <ChevronRight size={14} />
-                         </button>
-                       )}
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </motion.div>
-            </AnimatePresence>
-          )}
+              )}
+
+              {activeContentTab === 'pdfs' && (
+                <div className="space-y-6 animate-in fade-in duration-200">
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-black text-slate-100 uppercase tracking-tight">Accredited Reference Materials</h3>
+                    <p className="text-slate-400 text-xs">Download professional reference sheets, notes, and handbook segments for {activeTopic.title}.</p>
+                  </div>
+
+                  <div className="p-6 rounded-2xl border border-slate-800 bg-slate-950/40 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <FileText className="text-emerald-400" size={32} />
+                      <div>
+                        <h4 className="text-xs font-black text-white uppercase tracking-wider">{activeTopic.title} Segment.pdf</h4>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Accredited handbook guide • 2.4 MB</p>
+                      </div>
+                    </div>
+                    <a 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); alert('Simulated PDF Download triggered!'); }}
+                      className="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-emerald-500 hover:text-emerald-400 text-slate-300 text-xs font-black uppercase rounded-xl transition"
+                    >
+                      Download PDF
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {activeContentTab === 'assignment' && (
+                <div className="space-y-6 animate-in fade-in duration-200">
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-black text-slate-100 uppercase tracking-tight">Module Tasks & Homework</h3>
+                    <p className="text-slate-400 text-xs">Complete the practical tasks below and upload your solution package (PDF, zip, or source file).</p>
+                  </div>
+
+                  <div className="p-6 rounded-2xl border border-slate-800 bg-slate-950/40 space-y-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full tracking-wider">Required Task</span>
+                      <h4 className="text-sm font-bold text-white pt-2">Task 1: Design and verify a modular loop framework for {activeTopic.title}.</h4>
+                      <p className="text-xs text-slate-400 leading-relaxed pt-1">
+                        Implement the procedural structures detailed in this module. Verify clock cycles, optimize variables mappings, and test dynamic outputs.
+                      </p>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-850 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      {assignmentSubmitted ? (
+                        <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase">
+                          <CheckCircle2 size={16} /> Assignment Submitted Successfully!
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-[10px] text-slate-500 font-bold">Files supported: .zip, .c, .cpp, .pdf • Max 5MB</p>
+                          <button
+                            onClick={handleUploadAssignment}
+                            disabled={uploadingAssignment}
+                            className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:opacity-90 transition flex items-center justify-center gap-2"
+                          >
+                            <UploadCloud size={14} /> 
+                            {uploadingAssignment ? 'Uploading...' : 'Upload Solution'}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeContentTab === 'discussion' && (
+                <div className="space-y-6 animate-in fade-in duration-200">
+                  <div className="space-y-2 border-b border-slate-850 pb-3">
+                    <h3 className="text-xl font-black text-slate-100 uppercase tracking-tight">Module Discussion Board</h3>
+                    <p className="text-slate-400 text-xs">Clear doubts, discuss implementations, and review feedbacks with experts.</p>
+                  </div>
+
+                  {/* Comment list */}
+                  <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-1">
+                    {comments.map((comment, cIdx) => (
+                      <div key={cIdx} className="p-4 rounded-2xl bg-slate-950/40 border border-slate-850 text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-slate-300 flex items-center gap-2">
+                            {comment.author}
+                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${comment.role === 'MENTOR' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>{comment.role}</span>
+                          </span>
+                          <span className="text-[9px] text-slate-650">{comment.date}</span>
+                        </div>
+                        <p className="text-slate-400 leading-relaxed font-medium pt-1">{comment.text}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* New comment input */}
+                  <form onSubmit={handleAddComment} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={newCommentText}
+                      onChange={(e) => setNewCommentText(e.target.value)}
+                      placeholder="Ask a question or share your comment..."
+                      className="flex-1 px-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-xs font-bold focus:outline-none focus:border-emerald-500 text-white"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-3 bg-emerald-500 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-90 transition"
+                    >
+                      Post
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
+
       </div>
 
-      {/* Certification Paywall */}
+      {/* Certification Paywall Overlay */}
       {isCourseCompleted && !checkingPayment && (
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-12 p-10 rounded-3xl relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-yellow-500/20 shadow-2xl shadow-yellow-900/10"
+          className="mt-12 p-10 rounded-3xl relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-emerald-500/20 shadow-2xl text-center"
         >
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-yellow-500/5 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
           {!isPaid ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center text-left relative z-10">
               
-              <div className="relative group/cert select-none perspective-1000">
-                <div className="absolute -inset-4 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-2xl blur-xl opacity-50 group-hover/cert:opacity-80 transition duration-700"></div>
+              <div className="relative group/cert perspective-1000">
+                <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur-xl opacity-50 pointer-events-none"></div>
                 
-                <motion.div 
-                  whileHover={{ rotateY: 5, rotateX: 5 }}
-                  className="relative border-2 border-yellow-500/30 p-6 rounded-2xl bg-slate-950 aspect-[1.41/1] overflow-hidden flex flex-col justify-between items-center text-center filter blur-[2px] contrast-75 brightness-75 select-none pointer-events-none shadow-2xl"
-                >
-                  <div className="text-[9px] tracking-widest text-slate-500 font-black uppercase">Nexus Academic Registry</div>
+                <div className="relative border-2 border-emerald-500/30 p-6 rounded-2xl bg-slate-950 aspect-[1.41/1] overflow-hidden flex flex-col justify-between items-center text-center filter blur-[2px] contrast-75 brightness-75 select-none pointer-events-none shadow-2xl">
+                  <div className="text-[9px] tracking-widest text-slate-500 font-black uppercase">Edunexus Registry</div>
                   <div className="my-auto space-y-2 w-full px-8">
-                    <h3 className="text-yellow-500/80 font-serif font-black text-lg uppercase tracking-widest border-b border-yellow-500/20 pb-2">Certificate of Accomplishment</h3>
+                    <h3 className="text-emerald-500 font-black text-lg uppercase tracking-widest border-b border-emerald-500/20 pb-2">Certificate of Accomplishment</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pt-2">Awarded to</p>
                     <p className="text-2xl font-black text-white tracking-tight">{user?.name || "STUDENT NAME"}</p>
                     <p className="text-[9px] text-slate-400 max-w-[280px] leading-relaxed mx-auto font-medium">for demonstrating outstanding expertise and passing the rigorous final examination in deep technical domains.</p>
@@ -581,17 +898,17 @@ const CourseDetail = () => {
                     <div>VERIFIED ID: HIDDEN</div>
                     <div>GRADE: {bestGrade}</div>
                   </div>
-                </motion.div>
+                </div>
 
                 <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-                  <div className="px-6 py-3 bg-slate-950/80 backdrop-blur text-yellow-500 border border-yellow-500/50 rounded-2xl text-xs font-black tracking-widest uppercase rotate-[-8deg] shadow-2xl flex items-center gap-2">
+                  <div className="px-6 py-3 bg-slate-950/80 backdrop-blur text-emerald-400 border border-emerald-500/50 rounded-2xl text-xs font-black tracking-widest uppercase rotate-[-8deg] shadow-2xl flex items-center gap-2">
                     <Lock size={16} /> Locked
                   </div>
                 </div>
               </div>
 
               <div className="space-y-6 text-left relative z-10">
-                <div className="inline-block bg-yellow-500/10 border border-yellow-500/20 px-4 py-1.5 rounded-full text-yellow-500 text-[10px] font-black uppercase tracking-widest mb-2">
+                <div className="inline-block bg-emerald-500/10 border border-emerald-500/20 px-4 py-1.5 rounded-full text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-2">
                   Examination Passed
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">Claim Your Verified <br/>Credentials 🎓</h2>
@@ -607,8 +924,8 @@ const CourseDetail = () => {
                     "LinkedIn Shareable", 
                     "High-Res Printable"
                   ].map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                      <Check size={16} className="text-yellow-500 shrink-0" />
+                    <div key={idx} className="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-850">
+                      <Check size={16} className="text-emerald-400 shrink-0" />
                       <span>{feature}</span>
                     </div>
                   ))}
@@ -619,11 +936,11 @@ const CourseDetail = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleInitiatePayment}
-                    className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 font-black rounded-2xl shadow-xl shadow-yellow-600/20 text-xs uppercase tracking-widest"
+                    className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-2xl shadow-xl shadow-emerald-500/10 text-xs uppercase tracking-widest"
                   >
                     Unlock Certificate (₹499)
                   </motion.button>
-                  <div className="flex items-center gap-2 text-slate-500 text-[10px] uppercase font-black tracking-widest bg-slate-900/50 px-4 py-2 rounded-xl">
+                  <div className="flex items-center gap-2 text-slate-500 text-[10px] uppercase font-black tracking-widest bg-slate-950 px-4 py-2 rounded-xl">
                     <ShieldAlert size={14} /> SSL Secured
                   </div>
                 </div>
@@ -650,39 +967,6 @@ const CourseDetail = () => {
           )}
         </motion.div>
       )}
-
-      {/* Lightbox Modal */}
-      <AnimatePresence>
-        {lightboxImage && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setLightboxImage(null)}
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
-          >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-slate-950 border border-slate-800 p-10 rounded-3xl w-full max-w-3xl aspect-[1.5/1] relative shadow-2xl flex flex-col justify-center items-center"
-            >
-              <button 
-                onClick={() => setLightboxImage(null)}
-                className="absolute right-6 top-6 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 px-4 py-2 rounded-xl transition-all"
-              >
-                Close ✕
-              </button>
-              
-              <div className="w-full h-full flex items-center justify-center">
-                {lightboxImage}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <CheckoutModal
         isOpen={showCheckoutModal}

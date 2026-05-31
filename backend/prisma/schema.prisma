@@ -3,35 +3,37 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 model User {
-  id                Int              @id @default(autoincrement())
-  email             String           @unique
+  id                Int                 @id @default(autoincrement())
+  email             String              @unique
   password          String
   name              String
   fatherName        String?
   collegeName       String?
   branchName        String?
-  grade             String?          @default("N/A")
-  progress          Int              @default(0) // legacy global progress
-  courseType        String           @default("Electronics")
-  role              Role             @default(USER)
-  isVerified        Boolean          @default(false)
+  bio               String?
+  avatarUrl         String?
+  points            Int                 @default(0)
+  grade             String?             @default("N/A")
+  progress          Int                 @default(0) // legacy global progress
+  courseType        String              @default("Electronics")
+  role              String              @default("USER")
+  isVerified        Boolean             @default(false)
   verificationToken String?
   resetToken        String?
   resetTokenExpires DateTime?
   progresses        CourseProgress[]
   results           QuizResult[]
   payments          Payment[]
-  createdAt         DateTime         @default(now())
+  discussions       Discussion[]
+  comments          ForumComment[]
+  practiceAttempts  PracticeAttempt[]
+  certificates      CertificateRecord[]
+  createdAt         DateTime            @default(now())
 }
 
 model CourseProgress {
@@ -121,24 +123,95 @@ model QuizQuestion {
   @@index([moduleId])
 }
 
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-}
-
 model Payment {
-  id            String        @id @default(uuid())
+  id            String   @id @default(uuid())
   userId        Int
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId      String
-  course        Course        @relation(fields: [courseId], references: [id])
-  transactionId String?       @unique
+  course        Course   @relation(fields: [courseId], references: [id])
+  transactionId String?  @unique
   amount        Int
-  status        PaymentStatus @default(PENDING)
+  status        String   @default("PENDING")
   reference     String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([userId, courseId])
 }
+
+model Project {
+  id            Int      @id @default(autoincrement())
+  title         String
+  category      String   // "Arduino", "IoT", "Embedded", "Robotics"
+  difficulty    String   // "Beginner", "Intermediate", "Advanced"
+  description   String
+  documentation String   // markdown text
+  codeSnippet   String?
+  schematicUrl  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Discussion {
+  id        Int            @id @default(autoincrement())
+  title     String
+  content   String
+  userId    Int
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String?        // optional course binding
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  comments  ForumComment[]
+
+  @@index([userId])
+}
+
+model ForumComment {
+  id         Int        @id @default(autoincrement())
+  content    String
+  postId     Int
+  post       Discussion @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId     Int
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([postId])
+  @@index([userId])
+}
+
+model PracticeQuestion {
+  id            Int      @id @default(autoincrement())
+  category      String   // "Programming", "Electronics"
+  topic         String   // "C Pointers", "STM32 Timers", etc.
+  difficulty    String   // "Easy", "Medium", "Hard"
+  text          String
+  options       String   // JSON stringified array of options
+  correctAnswer String
+  explanation   String?
+  createdAt     DateTime @default(now())
+}
+
+model PracticeAttempt {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score          Int
+  totalQuestions Int
+  category       String
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+}
+
+model CertificateRecord {
+  id               String   @id @default(uuid())
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId         String
+  verificationCode String   @unique
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+}
+

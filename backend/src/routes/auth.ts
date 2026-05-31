@@ -144,6 +144,46 @@ router.get('/me', authenticateToken, async (req: any, res: Response): Promise<an
   }
 });
 
+// PUT /api/auth/profile - Update currently logged in student profile
+router.put('/profile', authenticateToken, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { name, collegeName, branchName, password } = req.body;
+    const userId = req.user.id;
+
+    const dataToUpdate: any = {};
+    if (name) dataToUpdate.name = name;
+    if (collegeName) dataToUpdate.collegeName = collegeName;
+    if (branchName) dataToUpdate.branchName = branchName;
+    
+    if (password) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({ 
+          message: 'Password must be at least 8 characters long, and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).' 
+        });
+      }
+      dataToUpdate.password = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: dataToUpdate,
+      include: {
+        progresses: true,
+        results: true
+      }
+    });
+
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    logger.info(`User profile updated successfully: ${updatedUser.email}`);
+    res.json({ success: true, user: userWithoutPassword, message: 'Profile updated successfully!' });
+  } catch (error: any) {
+    logger.error('Update profile error caught in handler:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 // GET /api/auth/verify - Verify student account via cryptographically secure token (Issue #39 M13)
 router.get('/verify', async (req: Request, res: Response): Promise<any> => {
   try {
@@ -259,4 +299,168 @@ router.post('/reset-password', async (req: Request, res: Response): Promise<any>
   }
 });
 
+// POST /api/auth/google - Authenticate using Google credentials
+router.post(
+  '/google',
+  rateLimiter(10, 60 * 1000),
+  validateBody(['email', 'name']),
+  async (req: Request, res: Response): Promise<any> => {
+    try {
+      const { email, name } = req.body;
+
+      let user = await prisma.user.findUnique({
+        where: { email },
+        include: {
+          progresses: true,
+          results: true
+        }
+      });
+
+      if (!user) {
+        const tempPassword = crypto.randomBytes(32).toString('hex');
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        
+        user = await prisma.user.create({
+          data: {
+            email,
+            password: hashedPassword,
+            name,
+            collegeName: 'Google Linked Account',
+            branchName: 'N/A',
+            isVerified: true,
+          },
+          include: {
+            progresses: true,
+            results: true
+          }
+        });
+        logger.info(`Google Authentication: Registered new user: ${email}`);
+      } else {
+        if (!user.isVerified) {
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: { isVerified: true, verificationToken: null },
+            include: { progresses: true, results: true }
+          });
+          logger.info(`Google Authentication: Verified existing user: ${email}`);
+        }
+        logger.info(`Google Authentication: User logged in: ${email}`);
+      }
+
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
+      
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      logger.error('Google Auth error caught in handler:', error);
+      res.status(500).json({ message: 'Internal server error during Google Authentication' });
+    }
+  }
+);
+
+// Admin User Manager Endpoints
+const isAdmin = (req: any, res: Response, next: NextFunction): any => {
+  if (req.user && req.user.role === 'ADMIN') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Access denied: Admin permissions required' });
+  }
+};
+
+// GET /api/auth/admin/users - List all users
+router.get('/admin/users', authenticateToken, isAdmin, async (req: any, res: Response): Promise<any> => {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { id: 'asc' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        collegeName: true,
+        branchName: true,
+        points: true,
+        role: true,
+        isVerified: true,
+        createdAt: true
+      }
+    });
+    res.json({ users });
+  } catch (error: any) {
+    logger.error('Fetch all users error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// PUT /api/auth/admin/user/:userId/role - Update user role
+router.put('/admin/user/:userId/role', authenticateToken, isAdmin, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+    const userIdNum = parseInt(userId);
+
+    if (role !== 'USER' && role !== 'ADMIN') {
+      return res.status(400).json({ message: 'Invalid role.' });
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userIdNum },
+      data: { role },
+      select: { id: true, name: true, role: true }
+    });
+
+    logger.info(`Admin successfully updated role of user ${userIdNum} to ${role}`);
+    res.json(updated);
+  } catch (error: any) {
+    logger.error('Update user role error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// PUT /api/auth/admin/user/:userId/verify - Update user verification
+router.put('/admin/user/:userId/verify', authenticateToken, isAdmin, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { userId } = req.params;
+    const { isVerified } = req.body;
+    const userIdNum = parseInt(userId);
+
+    const updated = await prisma.user.update({
+      where: { id: userIdNum },
+      data: { isVerified },
+      select: { id: true, name: true, isVerified: true }
+    });
+
+    logger.info(`Admin successfully updated verification status of user ${userIdNum} to ${isVerified}`);
+    res.json(updated);
+  } catch (error: any) {
+    logger.error('Update user verification error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// DELETE /api/auth/admin/user/:userId - Delete user
+router.delete('/admin/user/:userId', authenticateToken, isAdmin, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { userId } = req.params;
+    const userIdNum = parseInt(userId);
+
+    await prisma.user.delete({
+      where: { id: userIdNum }
+    });
+
+    logger.info(`Admin successfully deleted user account ID ${userIdNum}`);
+    res.json({ message: 'User deleted successfully.' });
+  } catch (error: any) {
+    logger.error('Delete user error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 export default router;
+

@@ -7,8 +7,96 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #0f172a; /* Slate 900 */
-  color: #f8fafc; /* Slate 50 */
+  background-color: #060709;
+  color: #f8fafc;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Premium Light Mode Styles Overrides */
+.light body {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.light nav {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light nav span,
+.light nav Link,
+.light nav a {
+  color: #1e293b !important;
+}
+
+.light .bg-slate-950,
+.light .bg-slate-950/40,
+.light .bg-slate-950/50,
+.light .bg-slate-950/60,
+.light .bg-slate-900,
+.light .bg-slate-900/20,
+.light .bg-slate-900/40,
+.light .bg-slate-900/60 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+}
+
+.light .border-slate-850,
+.light .border-slate-800,
+.light .border-slate-900,
+.light .border-slate-700 {
+  border-color: #e2e8f0 !important;
+}
+
+.light .text-slate-400,
+.light .text-slate-500,
+.light .text-slate-450 {
+  color: #475569 !important;
+}
+
+.light .text-white,
+.light h1,
+.light h2,
+.light h3,
+.light h4,
+.light h5,
+.light h6 {
+  color: #0f172a !important;
+}
+
+.light .text-slate-200,
+.light .text-slate-300,
+.light .text-slate-350,
+.light .text-slate-100 {
+  color: #334155 !important;
+}
+
+.light input,
+.light select,
+.light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.light button.bg-slate-950,
+.light button.bg-slate-900 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+.light button.bg-slate-950:hover,
+.light button.bg-slate-900:hover {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.light .bg-slate-800,
+.light .bg-slate-850 {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
 }

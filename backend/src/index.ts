@@ -9,6 +9,8 @@ import courseRoutes from './routes/course';
 import quizRoutes from './routes/quiz';
 import certificateRoutes from './routes/certificate';
 import paymentRoutes from './routes/payment';
+import practiceRoutes from './routes/practice';
+import forumRoutes from './routes/forum';
 
 dotenv.config();
 
@@ -53,6 +55,8 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/certificate', certificateRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/practice', practiceRoutes);
+app.use('/api/forum', forumRoutes);
 
 // Health Check Instrumentation Endpoint (Issue #8)
 app.get('/health', async (req, res) => {
