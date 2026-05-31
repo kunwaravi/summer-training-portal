@@ -52,14 +52,25 @@ router.post(
         }
       });
 
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
+      
+      // Set secure HTTP-Only cookie (Issue #1)
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+      });
+
       // Omit password from return
       const { password: _, ...userWithoutPassword } = user;
 
       logger.info(`User successfully registered (auto-verified): ${email}`);
       
       res.status(201).json({ 
+        token,
         user: userWithoutPassword,
-        message: 'Registration successful! You can now log in.' 
+        message: 'Registration successful!' 
       });
     } catch (error: any) {
       logger.error('Registration error caught in handler:', error);
@@ -351,7 +362,10 @@ router.post(
       });
 
       const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
+      res.json({ 
+        token,
+        user: userWithoutPassword 
+      });
     } catch (error: any) {
       logger.error('Google Auth error caught in handler:', error);
       res.status(500).json({ message: 'Internal server error during Google Authentication' });

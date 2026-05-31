@@ -41,16 +41,10 @@ const RegisterPage = () => {
         password
       });
 
-      setSuccess('Registration successful! A simulated verification link has been printed to the system logs. Click continue below to simulate verification and log in.');
-      
-      // Auto login simulator helper
-      setTimeout(() => {
-        // Automatically verify token simulated for test environment
-        if (response.data.user) {
-          // We redirect to a simulated verification action or simply provide a quick bypass for the candidate.
-        }
-      }, 1000);
-    } catch (err: any) {
+      // Auto login after successful registration
+      login(response.data.token, response.data.user);
+      navigate('/dashboard');
+      } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Check network or email constraints.');
     } finally {
       setIsLoading(false);
