@@ -510,23 +510,23 @@ const CourseDetail = () => {
           <div className="pt-4 border-t border-slate-850">
             <button
               onClick={() => navigate(`/quiz/${id}`)}
-              disabled={completedPercentage < 100 && !isCourseCompleted}
+              disabled={completedPercentage < 100 && !isCourseCompleted && user?.role !== 'ADMIN'}
               className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group ${
-                completedPercentage === 100 || isCourseCompleted
+                completedPercentage === 100 || isCourseCompleted || user?.role === 'ADMIN'
                   ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/50 text-white hover:opacity-90 shadow shadow-emerald-500/10' 
                   : 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed'
               }`}
             >
               <div className="flex items-center gap-3.5">
-                <div className={`p-2.5 rounded-xl ${completedPercentage === 100 || isCourseCompleted ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-900 text-slate-800'}`}>
+                <div className={`p-2.5 rounded-xl ${completedPercentage === 100 || isCourseCompleted || user?.role === 'ADMIN' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-900 text-slate-800'}`}>
                   {isCourseCompleted ? <Award size={18} /> : <TestTube size={18} />}
                 </div>
                 <div className="text-left">
                   <h4 className="text-xs font-black uppercase tracking-wide">Final Examination</h4>
-                  <p className="text-[9px] font-bold text-slate-500 mt-0.5">{isCourseCompleted ? "Re-attempt Available" : "Score >70% to unlock Cert"}</p>
+                  <p className="text-[9px] font-bold text-slate-500 mt-0.5">{user?.role === 'ADMIN' ? "Admin Access: Unlocked" : isCourseCompleted ? "Re-attempt Available" : "Score >70% to unlock Cert"}</p>
                 </div>
               </div>
-              {(completedPercentage === 100 || isCourseCompleted) && <Play size={14} className="text-emerald-400" />}
+              {(completedPercentage === 100 || isCourseCompleted || user?.role === 'ADMIN') && <Play size={14} className="text-emerald-400" />}
             </button>
           </div>
         </div>
@@ -883,7 +883,7 @@ const CourseDetail = () => {
       </div>
 
       {/* Certification Paywall Overlay */}
-      {isCourseCompleted && !checkingPayment && (
+      {(isCourseCompleted || user?.role === 'ADMIN') && !checkingPayment && (
         <motion.div 
           id="certification-section"
           initial={{ opacity: 0, y: 30 }}
@@ -892,7 +892,7 @@ const CourseDetail = () => {
         >
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-          {!isPaid ? (
+          {!isPaid && user?.role !== 'ADMIN' ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center text-left relative z-10">
               
               <div className="relative group/cert perspective-1000">

@@ -15,16 +15,16 @@ const Certificate = () => {
   const certRef = useRef<HTMLDivElement>(null);
 
   const getFormattedDate = () => {
-    if (!data || !data.completionDate) return '30-05-2026';
+    if (!displayData || !displayData.completionDate) return '30-05-2026';
     try {
-      const d = new Date(data.completionDate);
-      if (isNaN(d.getTime())) return data.completionDate;
+      const d = new Date(displayData.completionDate);
+      if (isNaN(d.getTime())) return displayData.completionDate;
       const day = String(d.getDate()).padStart(2, '0');
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const year = d.getFullYear();
       return `${day}-${month}-${year}`;
     } catch (e) {
-      return data.completionDate;
+      return displayData.completionDate;
     }
   };
 
@@ -53,7 +53,7 @@ const Certificate = () => {
     return <div className="text-center py-20 text-slate-400">Verifying qualifications and rendering certified NEXUS credentials...</div>;
   }
 
-  if (error || !data) {
+  if ((error || !data) && user?.role !== 'ADMIN') {
     return (
       <div className="max-w-md mx-auto text-center py-16 space-y-4">
         <Award className="text-red-500 mx-auto" size={48} />
@@ -68,6 +68,14 @@ const Certificate = () => {
       </div>
     );
   }
+
+  // Handle fallback data for admin preview if actual data is missing
+  const displayData = data || {
+    name: user?.name || "ADMIN PREVIEW",
+    courseName: "Specialized Engineering Track",
+    credentialId: "NEX-PREVIEW-ADMIN-VERIFIED",
+    completionDate: new Date().toISOString()
+  };
 
   return (
     <div className="py-6 flex flex-col items-center max-w-5xl mx-auto px-4 space-y-6 print-container animate-fade-in">
@@ -279,13 +287,13 @@ const Certificate = () => {
               This certificate is proudly presented to
             </p>
             <h3 className="text-[#00e5ff] text-5xl sm:text-6xl font-montserrat font-black tracking-wide uppercase neon-cyan-text-shadow pt-2">
-              {data.name}
+              {displayData.name}
             </h3>
             <p className="text-slate-200 font-montserrat text-xs uppercase tracking-[0.25em] pt-1">
               For Successfully Completing the Assessment of
             </p>
             <h4 className="text-white text-3xl sm:text-4xl font-montserrat font-black tracking-[0.05em] uppercase drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]">
-              {data.courseName}
+              {displayData.courseName}
             </h4>
           </div>
 
@@ -301,14 +309,14 @@ const Certificate = () => {
                 <div className="flex items-center gap-3">
                   <div className="bg-white p-1 rounded border border-cyan-500/30 shadow-[0_0_10px_rgba(0,229,255,0.15)] flex items-center justify-center">
                     <QRCodeSVG 
-                      value={`${window.location.origin}/verify?id=${data.credentialId}`} 
+                      value={`${window.location.origin}/verify?id=${displayData.credentialId}`} 
                       size={54}
                       level="H"
                     />
                   </div>
                   <div className="flex flex-col justify-end text-[10px] font-montserrat text-slate-300 font-medium space-y-0.5">
                     <div>DATE : {getFormattedDate()}</div>
-                    <div className="uppercase">CERTIFICATE NO : {data.credentialId}</div>
+                    <div className="uppercase">CERTIFICATE NO : {displayData.credentialId}</div>
                   </div>
                 </div>
               </div>

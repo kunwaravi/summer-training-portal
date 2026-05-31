@@ -440,11 +440,11 @@ const Dashboard = () => {
                     key={course.id}
                     whileHover={{ y: -6 }}
                     onClick={() => {
-                      if (isCompleted && isPaid) {
-                          navigate(`/certificate?courseId=${course.id}`);
-                      } else {
-                          navigate(`/course/${course.id}`);
-                      }
+                        if ((isCompleted && isPaid) || user?.role === 'ADMIN') {
+                            navigate(`/certificate?courseId=${course.id}`);
+                        } else {
+                            navigate(`/course/${course.id}`);
+                        }
                     }}
                     className="group cursor-pointer bg-slate-900 border border-slate-850 rounded-3xl overflow-hidden shadow-xl hover:border-emerald-500/40 flex flex-col justify-between"
                   >
@@ -476,7 +476,7 @@ const Dashboard = () => {
                       </div>
 
                       <div className={`flex items-center justify-between font-black text-[11px] uppercase ${course.textColor} pt-2`}>
-                        <span>{isCompleted ? 'View Certificate' : hasStarted ? 'Resume Next Module' : 'Explore Track'}</span>
+                        <span>{(isCompleted || user?.role === 'ADMIN') ? 'View Certificate' : hasStarted ? 'Resume Next Module' : 'Explore Track'}</span>
                         <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>

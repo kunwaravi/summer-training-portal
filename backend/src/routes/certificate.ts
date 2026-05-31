@@ -35,8 +35,10 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
     // Check course-specific progress in DB
     const progress = user.progresses.find(p => p.courseId === courseId);
     if (!progress || !progress.completed) {
-      logger.error(`Certificate fetch denied: Track ${courseId} is uncompleted for user ${userId}.`);
-      return res.status(403).json({ message: `Training track '${courseId}' not completed yet. Pass the final exam to unlock.` });
+      if (req.user.role !== 'ADMIN') {
+        logger.error(`Certificate fetch denied: Track ${courseId} is uncompleted for user ${userId}.`);
+        return res.status(403).json({ message: `Training track '${courseId}' not completed yet. Pass the final exam to unlock.` });
+      }
     }
 
     // Secure Certificate Generation: Ensure successful payment record exists in DB
@@ -48,7 +50,7 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
       }
     });
 
-    if (!successPayment) {
+    if (!successPayment && req.user.role !== 'ADMIN') {
       logger.error(`Certificate fetch blocked: Payment clearance outstanding for track ${courseId} / user ${userId}.`);
       return res.status(402).json({ 
         message: `Payment clearance required to generate certified credentials for '${courseId}'.`,
@@ -58,13 +60,13 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
 
     // Get the best quiz result for this course
     const coursePassingResults = user.results.filter(r => r.courseId === courseId && r.passed);
-    if (coursePassingResults.length === 0) {
+    if (coursePassingResults.length === 0 && req.user.role !== 'ADMIN') {
       return res.status(403).json({ message: `Final exam for '${courseId}' has not been passed.` });
     }
 
-    const bestResult = coursePassingResults.reduce((prev, current) => 
-        (prev.accuracy > current.accuracy) ? prev : current
-    );
+    const bestResult = coursePassingResults.length > 0 
+        ? coursePassingResults.reduce((prev, current) => (prev.accuracy > current.accuracy) ? prev : current)
+        : { grade: 'Outstanding', accuracy: 100 };
 
     const grade = bestResult.grade || "Good";
 
@@ -77,7 +79,7 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
 
     const credentialId = generateCredentialId(user.id, user.name, courseId);
 
-    logger.info(`Certificate generated successfully for user ${userId} on track ${courseId}. Grade: ${grade}`);
+    logger.info(`Certificate generated successfully for user ${userId} on track ${courseId}. Grade: ${grade} (Admin bypass: ${req.user.role === 'ADMIN'})`);
 
     res.json({
       name: user.name,
@@ -88,7 +90,7 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
       courseName: displayCourseName,
       grade: grade,
       credentialId,
-      completionDate: new Date(progress.updatedAt).toLocaleDateString('en-US', {
+      completionDate: new Date(progress?.updatedAt || new Date()).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
