@@ -43,8 +43,8 @@ router.post(
           name,
           collegeName,
           branchName,
-          isVerified: false,
-          verificationToken
+          isVerified: true, // Auto-verify for frictionless onboarding
+          verificationToken: null
         },
         include: {
           progresses: true,
@@ -55,12 +55,11 @@ router.post(
       // Omit password from return
       const { password: _, ...userWithoutPassword } = user;
 
-      logger.info(`[SIMULATION] Verification link generated for ${email}: http://localhost:8080/verify?token=${verificationToken}`);
-      logger.info(`User successfully registered: ${email}`);
+      logger.info(`User successfully registered (auto-verified): ${email}`);
       
       res.status(201).json({ 
         user: userWithoutPassword,
-        message: 'Registration successful! Please check your verification link.' 
+        message: 'Registration successful! You can now log in.' 
       });
     } catch (error: any) {
       logger.error('Registration error caught in handler:', error);
@@ -93,11 +92,6 @@ router.post(
       if (!isMatch) {
         logger.error(`Login failed: Invalid password attempt for ${email}`);
         return res.status(400).json({ message: 'Invalid credentials' });
-      }
-
-      if (!user.isVerified) {
-        logger.error(`Login failed: Unverified email attempt for ${email}`);
-        return res.status(403).json({ message: 'Please verify your email address before logging in.' });
       }
 
       const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
