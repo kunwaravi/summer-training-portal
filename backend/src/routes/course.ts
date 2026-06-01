@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
 import { authenticateToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
+import { getCurriculumMap, getModuleWithTopics } from '../services/courseService';
 
 const router = Router();
 
@@ -15,84 +16,32 @@ const isAdmin = (req: any, res: Response, next: NextFunction): any => {
 };
 
 // GET /api/courses - List all courses with lightweight module lists (LAZY LOAD)
-router.get('/', async (req: Request, res: Response): Promise<any> => {
+router.get('/', async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
-    const courses = await prisma.course.findMany({
-      include: {
-        modules: {
-          select: {
-            id: true,
-            order: true,
-            title: true,
-            description: true
-          },
-          orderBy: {
-            order: 'asc'
-          }
-        }
-      }
-    });
-
-    // Re-format into key-value map to preserve compatibility with existing frontend expectations
-    const curriculumMap: Record<string, any[]> = {};
-    for (const c of courses) {
-      curriculumMap[c.id] = c.modules;
-    }
-
+    const curriculumMap = await getCurriculumMap();
     res.json(curriculumMap);
   } catch (error: any) {
     logger.error('Fetch courses error caught in handler:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 });
 
 // GET /api/courses/:courseId/module/:order - Dynamic fetch for ONE module's full topics (Lazy loading detail view)
-router.get('/:courseId/module/:order', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/:courseId/module/:order', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { courseId, order } = req.params as any;
     const orderNum = parseInt(order);
     const userId = req.user.id;
+    const userRole = req.user.role;
 
-    // Check if the user is an Admin OR has made a successful payment for this course
-    const successPayment = await prisma.payment.findFirst({
-      where: {
-        userId,
-        courseId,
-        status: 'SUCCESS'
-      }
-    });
-
-    if (!successPayment && req.user.role !== 'ADMIN') {
-      logger.error(`Syllabus detail access blocked: User ${userId} has not purchased course ${courseId}`);
-      return res.status(402).json({ 
-        message: 'Payment required: Please purchase this course track to unlock full syllabus topics.',
-        paymentRequired: true 
-      });
-    }
-
-    const moduleRecord = await prisma.module.findFirst({
-      where: {
-        courseId,
-        order: orderNum
-      },
-      include: {
-        topics: {
-          orderBy: {
-            order: 'asc'
-          }
-        }
-      }
-    });
-
-    if (!moduleRecord) {
-      logger.error(`Fetch module details failure: Order ${order} for course ${courseId} not found.`);
-      return res.status(404).json({ message: `Module at order ${order} for course ${courseId} not found.` });
-    }
-
+    const moduleRecord = await getModuleWithTopics(courseId, orderNum, userId, userRole);
     res.json(moduleRecord);
   } catch (error: any) {
     logger.error('Fetch module detail error caught in handler:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    if (error.paymentRequired) {
+      return res.status(error.statusCode).json({ message: error.message, paymentRequired: true });
+    }
+    next(error);
   }
 });
 

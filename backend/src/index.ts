@@ -11,6 +11,7 @@ import certificateRoutes from './routes/certificate';
 import paymentRoutes from './routes/payment';
 import practiceRoutes from './routes/practice';
 import forumRoutes from './routes/forum';
+import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -81,6 +82,9 @@ app.get('/health', async (req, res) => {
 app.get('/', (req, res) => {
   res.send('Summer Training Portal API is running');
 });
+
+// Centralized error handling
+app.use(errorHandler);
 
 const server = app.listen(PORT, () => {
   logger.info(`Server successfully started and listening on port ${PORT}`);

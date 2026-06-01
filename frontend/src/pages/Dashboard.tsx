@@ -30,6 +30,8 @@ const Dashboard = () => {
 
   // Community Forum state (leveraging localStorage for persistence)
   const [forumPosts, setForumPosts] = useState<any[]>([]);
+  const [forumPage, setForumPage] = useState(1);
+  const [forumTotalPages, setForumTotalPages] = useState(1);
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostCategory, setNewPostCategory] = useState('General');
@@ -50,6 +52,8 @@ const Dashboard = () => {
   const [loadingPayments, setLoadingPayments] = useState(true);
 
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [leaderboardPage, setLeaderboardPage] = useState(1);
+  const [leaderboardTotalPages, setLeaderboardTotalPages] = useState(1);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [leaderboardSearch, setLeaderboardSearch] = useState('');
 
@@ -84,9 +88,9 @@ const Dashboard = () => {
     fetchUserPayments();
   }, [user?.id]);
 
-  const fetchForumPosts = async () => {
+  const fetchForumPosts = async (page = 1) => {
     try {
-      const res = await api.get('/forum');
+      const res = await api.get(`/forum?page=${page}&limit=10`);
       // Normalize posts to match what the frontend expects
       const normalized = res.data.discussions.map((d: any) => ({
         id: d.id,
@@ -108,7 +112,14 @@ const Dashboard = () => {
           minute: '2-digit'
         })
       }));
-      setForumPosts(normalized);
+      
+      if (page === 1) {
+        setForumPosts(normalized);
+      } else {
+        setForumPosts(prev => [...prev, ...normalized]);
+      }
+      setForumPage(res.data.meta.page);
+      setForumTotalPages(res.data.meta.totalPages);
     } catch (err) {
       console.error('Failed to fetch forum posts:', err);
     }
@@ -116,15 +127,21 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (activeTab === 'forum') {
-      fetchForumPosts();
+      fetchForumPosts(1);
     }
   }, [activeTab]);
 
-  const fetchLeaderboard = async () => {
-    setLoadingLeaderboard(true);
+  const fetchLeaderboard = async (page = 1) => {
+    setLoadingLeaderboard(page === 1);
     try {
-      const res = await api.get(`/practice/leaderboard?search=${leaderboardSearch}`);
-      setLeaderboard(res.data.leaderboard);
+      const res = await api.get(`/practice/leaderboard?search=${leaderboardSearch}&page=${page}&limit=10`);
+      if (page === 1) {
+        setLeaderboard(res.data.leaderboard);
+      } else {
+        setLeaderboard(prev => [...prev, ...res.data.leaderboard]);
+      }
+      setLeaderboardPage(res.data.meta.page);
+      setLeaderboardTotalPages(res.data.meta.totalPages);
     } catch (err) {
       console.error('Failed to fetch leaderboard:', err);
     } finally {
@@ -134,7 +151,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (activeTab === 'practice') {
-      fetchLeaderboard();
+      fetchLeaderboard(1);
     }
   }, [activeTab, leaderboardSearch]);
 
@@ -215,7 +232,7 @@ const Dashboard = () => {
       setNewPostTitle('');
       setNewPostContent('');
       alert('Forum thread published successfully!');
-      fetchForumPosts();
+      fetchForumPosts(1);
     } catch (err) {
       console.error('Failed to create forum thread:', err);
       alert('Failed to publish thread. Please try again.');
@@ -243,7 +260,7 @@ const Dashboard = () => {
       });
 
       setNewCommentText('');
-      fetchForumPosts();
+      fetchForumPosts(1);
     } catch (err) {
       console.error('Failed to add reply:', err);
       alert('Failed to post reply.');
@@ -254,7 +271,7 @@ const Dashboard = () => {
     if (!window.confirm("Are you sure you want to delete this reply?")) return;
     try {
       await api.delete(`/forum/comment/${commentId}`);
-      fetchForumPosts();
+      fetchForumPosts(1);
     } catch (err) {
       console.error('Failed to delete comment:', err);
       alert('Failed to delete reply.');
@@ -650,6 +667,17 @@ const Dashboard = () => {
                     );
                   })
                 )}
+                
+                {leaderboardPage < leaderboardTotalPages && (
+                  <div className="flex justify-center pt-2">
+                    <button
+                      onClick={() => fetchLeaderboard(leaderboardPage + 1)}
+                      className="px-4 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider text-emerald-400 hover:text-white hover:border-emerald-500 transition"
+                    >
+                      Load More
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -876,6 +904,17 @@ const Dashboard = () => {
                     </div>
                   );
                 })}
+                
+                {forumPage < forumTotalPages && (
+                  <div className="flex justify-center pt-4 border-t border-slate-850">
+                    <button
+                      onClick={() => fetchForumPosts(forumPage + 1)}
+                      className="px-6 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold uppercase tracking-wider text-emerald-400 hover:text-white hover:border-emerald-500 transition"
+                    >
+                      Load More Posts
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

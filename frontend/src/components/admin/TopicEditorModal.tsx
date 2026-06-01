@@ -1,6 +1,8 @@
 import React from 'react';
 import { Edit3, Eye, Image, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 interface Topic {
   id?: number;
@@ -95,15 +97,24 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
 
             {/* Topic Main Content text */}
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-slate-400">Topic Content Body (Rich Markdown Support)</label>
-              <textarea 
-                rows={8}
-                required
-                placeholder="Enter detailed technical explanations for students..."
-                value={editingTopic.text}
-                onChange={(e) => onChange({ ...editingTopic, text: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition font-sans leading-relaxed"
-              />
+              <label className="text-[10px] uppercase font-bold text-slate-400">Topic Content Body (Rich Text Support)</label>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden text-white react-quill-dark-theme">
+                <ReactQuill 
+                  theme="snow"
+                  value={editingTopic.text}
+                  onChange={(content) => onChange({ ...editingTopic, text: content })}
+                  className="text-xs focus:outline-none"
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, 3, false] }],
+                      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                      [{'list': 'ordered'}, {'list': 'bullet'}],
+                      ['link', 'image', 'code-block'],
+                      ['clean']
+                    ]
+                  }}
+                />
+              </div>
             </div>
 
             {/* Inline Code Snippet */}
@@ -168,7 +179,10 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
 
               <div className="space-y-4 pt-2">
                 <h4 className="text-lg font-black text-white">{editingTopic.title || 'Untitled Topic'}</h4>
-                <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{editingTopic.text || 'Study material description placeholder.'}</p>
+                <div 
+                  className="text-slate-300 text-sm leading-relaxed prose prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: editingTopic.text || 'Study material description placeholder.' }}
+                />
                 
                 {editingTopic.code && (
                   <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs font-mono text-cyan-400 overflow-x-auto shadow-inner leading-relaxed select-none">

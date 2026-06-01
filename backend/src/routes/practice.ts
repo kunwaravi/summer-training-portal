@@ -1,13 +1,14 @@
-import { Router, Response } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
 import { authenticateToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
 import { validateBody } from '../middleware/validate';
+import { getLeaderboard } from '../services/leaderboardService';
 
 const router = Router();
 
 // GET /api/practice/questions - Fetch practice questions by category
-router.get('/questions', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/questions', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { category } = req.query;
 
@@ -32,7 +33,7 @@ router.get('/questions', authenticateToken, async (req: any, res: Response): Pro
     });
   } catch (error: any) {
     logger.error('Fetch practice questions error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 });
 
@@ -41,7 +42,7 @@ router.post(
   '/submit',
   authenticateToken,
   validateBody(['category', 'answers']),
-  async (req: any, res: Response): Promise<any> => {
+  async (req: any, res: Response, next: NextFunction): Promise<any> => {
     try {
       const { category, answers } = req.body;
       const userId = req.user.id;
@@ -130,46 +131,33 @@ router.post(
       });
     } catch (error: any) {
       logger.error('Submit practice attempt error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      next(error);
     }
   }
 );
 
 // GET /api/practice/leaderboard - Get global student ranking
-router.get('/leaderboard', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/leaderboard', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
-    const { search } = req.query;
+    const { search, page = '1', limit = '10' } = req.query;
 
-    const whereClause: any = {};
-    if (search && typeof search === 'string') {
-      whereClause.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ];
-    }
+    const pageNum = Math.max(1, parseInt(page as string));
+    const limitNum = Math.max(1, parseInt(limit as string));
 
-    const leaderboard = await prisma.user.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        points: true,
-        avatarUrl: true,
-        collegeName: true,
-        role: true,
-      },
-      orderBy: {
-        points: 'desc',
-      },
-    });
+    const { leaderboard, total } = await getLeaderboard(search as string, pageNum, limitNum);
 
     res.json({
       leaderboard,
+      meta: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum)
+      }
     });
   } catch (error: any) {
     logger.error('Fetch leaderboard error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 });
 

@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
 import { authenticateToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
@@ -7,9 +7,13 @@ import { validateBody } from '../middleware/validate';
 const router = Router();
 
 // GET /api/forum - Fetch all discussion forum threads
-router.get('/', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
-    const { courseId, search } = req.query;
+    const { courseId, search, page = '1', limit = '10' } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page as string));
+    const limitNum = Math.max(1, parseInt(limit as string));
+    const skip = (pageNum - 1) * limitNum;
 
     const whereClause: any = {};
     if (courseId) {
@@ -22,49 +26,60 @@ router.get('/', authenticateToken, async (req: any, res: Response): Promise<any>
       ];
     }
 
-    const discussions = await prisma.discussion.findMany({
-      where: whereClause,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatarUrl: true,
-            role: true,
-          },
-        },
-        comments: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatarUrl: true,
-                role: true,
-              },
+    const [discussions, total] = await Promise.all([
+      prisma.discussion.findMany({
+        where: whereClause,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+              role: true,
             },
           },
-          orderBy: {
-            createdAt: 'asc',
+          comments: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarUrl: true,
+                  role: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: 'asc',
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limitNum,
+      }),
+      prisma.discussion.count({ where: whereClause })
+    ]);
 
     res.json({
       discussions,
+      meta: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum)
+      }
     });
   } catch (error: any) {
     logger.error('Fetch forum threads error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 });
 
 // GET /api/forum/:postId - Fetch a single discussion post with comments
-router.get('/:postId', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/:postId', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { postId } = req.params;
     const postIdNum = parseInt(postId);
@@ -111,7 +126,7 @@ router.get('/:postId', authenticateToken, async (req: any, res: Response): Promi
     });
   } catch (error: any) {
     logger.error('Fetch single thread error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 });
 
@@ -120,7 +135,7 @@ router.post(
   '/',
   authenticateToken,
   validateBody(['title', 'content']),
-  async (req: any, res: Response): Promise<any> => {
+  async (req: any, res: Response, next: NextFunction): Promise<any> => {
     try {
       const { title, content, courseId } = req.body;
       const userId = req.user.id;
@@ -150,7 +165,7 @@ router.post(
       res.status(201).json(newPost);
     } catch (error: any) {
       logger.error('Create forum post error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      next(error);
     }
   }
 );
@@ -160,7 +175,7 @@ router.post(
   '/:postId/comment',
   authenticateToken,
   validateBody(['content']),
-  async (req: any, res: Response): Promise<any> => {
+  async (req: any, res: Response, next: NextFunction): Promise<any> => {
     try {
       const { postId } = req.params;
       const postIdNum = parseInt(postId);
@@ -203,13 +218,13 @@ router.post(
       res.status(201).json(comment);
     } catch (error: any) {
       logger.error('Create forum reply error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      next(error);
     }
   }
 );
 
 // ADMIN CRUD - DELETE /api/forum/:postId (Delete post)
-router.delete('/:postId', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.delete('/:postId', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { postId } = req.params;
     const postIdNum = parseInt(postId);
@@ -241,12 +256,12 @@ router.delete('/:postId', authenticateToken, async (req: any, res: Response): Pr
     res.json({ message: 'Discussion post deleted successfully.' });
   } catch (error: any) {
     logger.error('Delete forum post error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 });
 
 // DELETE /api/forum/comment/:commentId - Delete a comment/reply
-router.delete('/comment/:commentId', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.delete('/comment/:commentId', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { commentId } = req.params;
     const commentIdNum = parseInt(commentId);
@@ -278,7 +293,7 @@ router.delete('/comment/:commentId', authenticateToken, async (req: any, res: Re
     res.json({ success: true, message: 'Comment deleted successfully.' });
   } catch (error: any) {
     logger.error('Delete forum comment error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 });
 

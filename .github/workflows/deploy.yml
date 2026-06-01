@@ -1,0 +1,61 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      - name: Build Backend
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci --legacy-peer-deps
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
+
+  docker-compose-test:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        
+      - name: Build Docker Compose Stack
+        run: docker-compose build
+        
+      # Optional: In a real scenario you would spin it up in detached mode and run e2e tests
+      # - name: Run Docker Compose Stack
+      #   run: docker-compose up -d
+
+  # Deployment job will depend on where the user actually hosts this.
+  # For Vercel/Render, they auto-deploy on push to main, so this CI just acts as a gatekeeper.
