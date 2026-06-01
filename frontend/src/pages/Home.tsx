@@ -402,10 +402,15 @@ const Home = () => {
                   <span className="flex items-center gap-3"><MessageCircle size={20} className="text-emerald-500" /> WhatsApp Community</span>
                   <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </button>
-                <button className="flex items-center justify-between p-5 bg-white rounded-2xl border border-indigo-200 text-indigo-600 font-black uppercase tracking-widest text-xs hover:shadow-lg transition group">
-                  <span className="flex items-center gap-3"><Globe size={20} className="text-blue-500" /> LinkedIn Network</span>
+                <a href="https://t.me/+tCapxtLwxNNlZjY1" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-5 bg-white rounded-2xl border border-indigo-200 text-indigo-600 font-black uppercase tracking-widest text-xs hover:shadow-lg transition group">
+                  <span className="flex items-center gap-3">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#0088cc]" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.12.03-1.96 1.25-5.54 3.67-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.98-.74 3.84-1.67 6.4-2.77 7.68-3.3 3.64-1.51 4.4-1.78 4.89-1.79.11 0 .35.03.48.14.11.09.14.22.15.34-.01.07-.01.2-.02.32z"/>
+                    </svg> 
+                    Telegram Group
+                  </span>
                   <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -455,7 +460,7 @@ const Home = () => {
           </div>
           <div className="flex flex-col items-center md:items-end gap-2">
             <p className="text-emerald-400 font-black uppercase tracking-[0.2em] text-[10px]">ISO 9001:2015 Accredited Organization</p>
-            <p className="text-slate-500 text-[10px] font-bold">© 2026 Edunexus Automation Labs • Ghaziabad, UP</p>
+            <p className="text-slate-500 text-[10px] font-bold">© 2026 Edunexus Automation Labs • Ballia, UP</p>
           </div>
         </div>
 

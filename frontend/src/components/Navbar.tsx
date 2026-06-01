@@ -42,8 +42,8 @@ const Navbar = () => {
           to={user ? "/dashboard" : "/"} 
           className="text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 tracking-tight hover:scale-[1.01] transition-transform"
         >
-          <ShieldCheck className="text-emerald-400 fill-emerald-400/10" size={24} />
-          <span>EDUNEXUS</span>
+          <img src="/logo.png" alt="" className="h-8 w-auto" />
+          <span>EDUNEXUS LAB</span>
         </Link>
         
         {user ? (
@@ -57,6 +57,18 @@ const Navbar = () => {
               <LayoutDashboard size={18} className="text-slate-400" /> 
               <span>Dashboard</span>
             </Link>
+
+            <a 
+              href="https://t.me/+tCapxtLwxNNlZjY1" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center gap-2 text-[#0088cc] hover:text-[#00aaff] transition text-sm font-semibold tracking-wide"
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.12.03-1.96 1.25-5.54 3.67-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.98-.74 3.84-1.67 6.4-2.77 7.68-3.3 3.64-1.51 4.4-1.78 4.89-1.79.11 0 .35.03.48.14.11.09.14.22.15.34-.01.07-.01.2-.02.32z"/>
+              </svg>
+              <span>Join Telegram</span>
+            </a>
 
             {user.role === 'ADMIN' && (
               <Link 
@@ -112,6 +124,17 @@ const Navbar = () => {
         ) : (
           /* Logged Out status buttons */
           <div className="flex items-center gap-4">
+            <a 
+              href="https://t.me/+tCapxtLwxNNlZjY1" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hidden sm:flex items-center gap-1.5 text-[#0088cc] hover:text-[#00aaff] transition text-xs font-black uppercase tracking-widest"
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.12.03-1.96 1.25-5.54 3.67-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.98-.74 3.84-1.67 6.4-2.77 7.68-3.3 3.64-1.51 4.4-1.78 4.89-1.79.11 0 .35.03.48.14.11.09.14.22.15.34-.01.07-.01.2-.02.32z"/>
+              </svg>
+              Telegram Group
+            </a>
             <button 
               onClick={toggleTheme}
               className="p-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 rounded-xl text-slate-400 hover:text-white transition"
