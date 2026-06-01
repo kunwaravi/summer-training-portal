@@ -62,7 +62,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 20, opacity: 0 }}
-            className="bg-slate-950 border border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-6 relative text-left"
+            className="bg-slate-950 border border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-6 relative text-left max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-slate-950"
           >
             <button 
               onClick={onClose}
@@ -117,121 +117,55 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
 
               {currentPrice > 0 ? (
-                <>
-                  {/* Payment Method Selector */}
-                  <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                    <button
-                      type="button"
-                      onClick={() => onChangePaymentMethod('card')}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${paymentMethod === 'card' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                      <CreditCard size={14} /> Card
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onChangePaymentMethod('upi')}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${paymentMethod === 'upi' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                      <QrCode size={14} /> UPI / QR
-                    </button>
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl">
+                    <QRCodeSVG 
+                      value={`upi://pay?pa=edunexuss@ptyes&pn=Anjali%20Singh&am=${currentPrice}&cu=INR`} 
+                      size={160}
+                      level="H"
+                      includeMargin={true}
+                    />
+                    <p className="text-slate-900 text-[10px] font-black uppercase tracking-tighter mt-2">Scan to pay ₹{currentPrice} with UPI</p>
                   </div>
 
-                  {paymentMethod === 'card' ? (
-                    <div className="space-y-4 animate-in fade-in duration-300">
-                      <div className="space-y-1 text-left">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">Card Number (Mock Input)</label>
-                        <div className="relative">
-                          <input 
-                            type="text" 
-                            required
-                            placeholder="4111 2222 3333 4444"
-                            value={cardNumber}
-                            onChange={(e) => onChangeCardNumber(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition font-mono"
-                          />
-                          <CreditCard size={16} className="absolute right-3.5 top-3 text-slate-500" />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1 text-left">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">Expiry Date</label>
-                          <input 
-                            type="text" 
-                            required
-                            placeholder="MM/YY"
-                            value={cardExpiry}
-                            onChange={(e) => onChangeCardExpiry(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-cyan-500 transition font-mono"
-                          />
-                        </div>
-                        <div className="space-y-1 text-left">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">CVV / CVC</label>
-                          <input 
-                            type="password" 
-                            required
-                            placeholder="•••"
-                            maxLength={3}
-                            value={cardCvv}
-                            onChange={(e) => onChangeCardCvv(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-cyan-500 transition font-mono"
-                          />
-                        </div>
-                      </div>
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">Payee Name</label>
+                    <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-bold">
+                      Anjali Singh
                     </div>
-                  ) : (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                      <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl">
-                        <QRCodeSVG 
-                          value={`upi://pay?pa=edunexuss@ptyes&pn=Anjali%20Singh&am=${currentPrice}&cu=INR`} 
-                          size={160}
-                          level="H"
-                          includeMargin={true}
-                        />
-                        <p className="text-slate-900 text-[10px] font-black uppercase tracking-tighter mt-2">Scan to pay ₹{currentPrice} with UPI</p>
-                      </div>
+                  </div>
 
-                      <div className="space-y-1 text-left">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">Payee Name</label>
-                        <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-bold">
-                          Anjali Singh
-                        </div>
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">UPI ID</label>
+                    <div className="relative">
+                      <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono">
+                        edunexuss@ptyes
                       </div>
-
-                      <div className="space-y-1 text-left">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">UPI ID</label>
-                        <div className="relative">
-                          <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono">
-                            edunexuss@ptyes
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => onCopyToClipboard('edunexuss@ptyes')}
-                            className="absolute right-2 top-1.5 p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-cyan-400 transition"
-                          >
-                            {upiCopied ? <Check size={14} /> : <Clipboard size={14} />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* UTR Input Field */}
-                      <div className="space-y-1 text-left">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">12-Digit UTR / Transaction Reference Number</label>
-                        <input
-                          type="text"
-                          required
-                          maxLength={12}
-                          pattern="\d{12}"
-                          placeholder="e.g. 612345678901"
-                          value={upiUtr}
-                          onChange={(e) => onChangeUpiUtr(e.target.value.replace(/\D/g, ''))}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition font-mono"
-                        />
-                        <p className="text-[9px] text-slate-500">Please enter the 12-digit number from your UPI payment receipt to speed up verification.</p>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onCopyToClipboard('edunexuss@ptyes')}
+                        className="absolute right-2 top-1.5 p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-cyan-400 transition"
+                      >
+                        {upiCopied ? <Check size={14} /> : <Clipboard size={14} />}
+                      </button>
                     </div>
-                  )}
-                </>
+                  </div>
+
+                  {/* UTR Input Field */}
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">12-Digit UTR / Transaction Reference Number</label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={12}
+                      pattern="\d{12}"
+                      placeholder="e.g. 612345678901"
+                      value={upiUtr}
+                      onChange={(e) => onChangeUpiUtr(e.target.value.replace(/\D/g, ''))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition font-mono"
+                    />
+                    <p className="text-[9px] text-slate-500">Please enter the 12-digit number from your UPI payment receipt to speed up verification.</p>
+                  </div>
               ) : (
                 <div className="p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex flex-col items-center justify-center space-y-3 animate-in zoom-in-95 duration-300">
                   <Sparkles className="text-cyan-400 animate-pulse" size={32} />
@@ -250,11 +184,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 {processingCheckout ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>{currentPrice === 0 ? 'Applying Free Clearance...' : (paymentMethod === 'card' ? 'Authorizing Sandbox Charge...' : 'Verifying UPI Transaction...')}</span>
+                    <span>{currentPrice === 0 ? 'Applying Free Clearance...' : 'Verifying UPI Transaction...'}</span>
                   </>
                 ) : (
                   <>
-                    <span>{currentPrice === 0 ? 'Claim Free Certificate' : (paymentMethod === 'card' ? `Pay ₹${currentPrice} Clearance Fee` : 'I have completed the payment')}</span>
+                    <span>{currentPrice === 0 ? 'Claim Free Certificate' : 'I have completed the payment'}</span>
                   </>
                 )}
               </button>

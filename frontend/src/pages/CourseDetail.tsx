@@ -44,7 +44,7 @@ const CourseDetail = () => {
   const [upiUtr, setUpiUtr] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('upi');
   const [upiCopied, setUpiCopied] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
