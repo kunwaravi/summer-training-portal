@@ -22,7 +22,7 @@ export const getLeaderboard = async (search: string, page: number, limit: number
       return JSON.parse(cachedData);
     }
   } catch (err) {
-    logger.warn('Redis cache get error:', err);
+    logger.error('Redis cache get error:', err);
   }
 
   logger.info(`Cache Miss: ${cacheKey}`);
@@ -54,7 +54,7 @@ export const getLeaderboard = async (search: string, page: number, limit: number
     // Cache for 5 minutes (300 seconds)
     await redis.setex(cacheKey, 300, JSON.stringify(result));
   } catch (err) {
-    logger.warn('Redis cache set error:', err);
+    logger.error('Redis cache set error:', err);
   }
 
   return result;

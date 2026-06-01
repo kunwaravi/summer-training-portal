@@ -12,7 +12,7 @@ export const getCurriculumMap = async () => {
       return JSON.parse(cachedData);
     }
   } catch (err) {
-    logger.warn('Redis cache get error:', err);
+    logger.error('Redis cache get error:', err);
   }
 
   logger.info(`Cache Miss: ${cacheKey}`);
@@ -42,7 +42,7 @@ export const getCurriculumMap = async () => {
     // Cache for 1 hour
     await redis.setex(cacheKey, 3600, JSON.stringify(curriculumMap));
   } catch (err) {
-    logger.warn('Redis cache set error:', err);
+    logger.error('Redis cache set error:', err);
   }
 
   return curriculumMap;
@@ -52,7 +52,7 @@ export const getModuleWithTopics = async (courseId: string, orderNum: number, us
   // Check if the user is an Admin OR has made a successful payment for this course
   const successPayment = await prisma.payment.findFirst({
     where: {
-      userId,
+      userId: parseInt(userId, 10),
       courseId,
       status: 'SUCCESS'
     }
