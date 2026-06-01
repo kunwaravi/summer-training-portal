@@ -166,7 +166,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     />
                     <p className="text-[9px] text-slate-500">Please enter the 12-digit number from your UPI payment receipt to speed up verification.</p>
                   </div>
-              ) : (
+                ) : (
                 <div className="p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex flex-col items-center justify-center space-y-3 animate-in zoom-in-95 duration-300">
                   <Sparkles className="text-cyan-400 animate-pulse" size={32} />
                   <div className="text-center">
