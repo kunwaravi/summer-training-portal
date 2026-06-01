@@ -235,6 +235,9 @@ const CourseDetail = () => {
       setActiveModuleIndex(activeModuleIndex + 1);
       setActiveTopicIndex(0);
       setExpandedModules(prev => ({ ...prev, [activeModuleIndex + 1]: true }));
+    } else {
+      // Last topic of the last module reached
+      navigate(`/quiz/${id}`);
     }
   };
 
@@ -754,7 +757,11 @@ const CourseDetail = () => {
                       onClick={handleMarkTopicCompleted}
                       className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center gap-2 hover:opacity-95 shadow active:scale-95"
                     >
-                      <CheckCircle2 size={16} /> Mark Completed & Continue
+                      <CheckCircle2 size={16} /> {
+                        (activeModuleIndex === modules.length - 1 && activeTopicIndex === (modules[activeModuleIndex]?.topics?.length || 3) - 1)
+                          ? "Mark Completed & Take Final Exam"
+                          : "Mark Completed & Continue"
+                      }
                     </motion.button>
                   </div>
                 </div>
