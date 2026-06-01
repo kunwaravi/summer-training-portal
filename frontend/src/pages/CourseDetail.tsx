@@ -41,6 +41,7 @@ const CourseDetail = () => {
   const [processingCheckout, setProcessingCheckout] = useState(false);
   
   const [cardNumber, setCardNumber] = useState('');
+  const [upiUtr, setUpiUtr] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
@@ -344,15 +345,25 @@ const CourseDetail = () => {
       const verifyRes = await api.post('/payments/verify', {
         orderId,
         mockSignature,
-        gatewayReference: `REF_EDUNEXUS_MOCK_${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
-        paymentDetails: { paymentMethod, cardNumber, cardExpiry, cardCvv }
+        gatewayReference: paymentMethod === 'upi' ? `UTR_${upiUtr}` : `REF_EDUNEXUS_MOCK_${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+        paymentDetails: { paymentMethod, cardNumber, cardExpiry, cardCvv, upiUtr }
       });
 
       if (verifyRes.data.success) {
-        setIsPaid(true);
-        setShowCheckoutModal(false);
-        await refreshUser();
-        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        const paymentStatus = verifyRes.data.payment?.status;
+        if (paymentStatus === 'SUCCESS') {
+          setIsPaid(true);
+          setShowCheckoutModal(false);
+          await refreshUser();
+          confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        } else if (paymentStatus === 'VERIFICATION_PENDING') {
+          setShowCheckoutModal(false);
+          alert('Simulated payment submitted! It is now pending admin verification. Once approved by the admin, your course will be unlocked.');
+        } else {
+          setIsPaid(true);
+          setShowCheckoutModal(false);
+          await refreshUser();
+        }
       }
     } catch (err: any) {
       alert(err.response?.data?.message || 'Payment system clearance failed.');
@@ -1001,6 +1012,8 @@ const CourseDetail = () => {
         processingCheckout={processingCheckout}
         upiCopied={upiCopied}
         onCopyToClipboard={copyToClipboard}
+        upiUtr={upiUtr}
+        onChangeUpiUtr={setUpiUtr}
       />
 
     </motion.div>

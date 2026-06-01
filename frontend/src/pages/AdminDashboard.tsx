@@ -94,6 +94,20 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleVerifyPayment = async (paymentId: string) => {
+    if (!window.confirm('Are you sure you want to verify and approve this payment transaction? This will grant the student access to the course.')) {
+      return;
+    }
+    try {
+      await api.put(`/payments/admin/verify/${paymentId}`);
+      alert('Payment successfully verified! The course has been unlocked for the student.');
+      fetchTransactions(currentPage);
+    } catch (err: any) {
+      console.error('Failed to verify payment:', err);
+      alert(err.response?.data?.message || 'Failed to verify payment.');
+    }
+  };
+
   // Fetch syllabus courses and dynamic module data
   const fetchCmsCourses = async () => {
     setLoadingCms(true);
@@ -475,6 +489,7 @@ const AdminDashboard = () => {
             totalPages={totalPages}
             totalCount={totalCount}
             onPageChange={(page) => fetchTransactions(page)}
+            onVerifyPayment={handleVerifyPayment}
           />
         )}
 

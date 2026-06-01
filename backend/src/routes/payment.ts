@@ -61,6 +61,43 @@ router.get('/admin/all', authenticateToken, isAdmin, async (req: Request, res: R
   }
 });
 
+// PUT /api/payments/admin/verify/:paymentId - Admin manual payment verification
+router.put('/admin/verify/:paymentId', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const paymentId = req.params.paymentId as string;
+
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId }
+    });
+
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment record not found.' });
+    }
+
+    if (payment.status === 'SUCCESS') {
+      return res.status(400).json({ message: 'Payment has already been successfully verified.' });
+    }
+
+    const updatedPayment = await prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: 'SUCCESS'
+      }
+    });
+
+    logger.info(`Admin manual verification successful for payment order ${paymentId}`);
+
+    res.json({
+      success: true,
+      message: 'Payment successfully verified by Admin.',
+      payment: updatedPayment
+    });
+  } catch (error: any) {
+    logger.error('Admin verify payment error caught in handler:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // GET /api/payments/status/:courseId - Get current payment status for active user
 router.get('/status/:courseId', authenticateToken, async (req: any, res: Response): Promise<any> => {
   try {
@@ -296,20 +333,20 @@ router.post(
         }
       }
 
-      // Update payment record to SUCCESS
+      // Update payment record to VERIFICATION_PENDING
       const updatedPayment = await prisma.payment.update({
         where: { id: orderId },
         data: {
-          status: 'SUCCESS',
+          status: 'VERIFICATION_PENDING',
           reference: gatewayReference || `PAY_MOCK_${crypto.randomBytes(6).toString('hex').toUpperCase()}`
         }
       });
 
-      logger.info(`Sandbox transaction successfully verified and captured for order ${orderId}`);
+      logger.info(`Sandbox transaction submitted and pending verification for order ${orderId}`);
 
       res.json({
         success: true,
-        message: 'Simulated payment verified and captured successfully.',
+        message: 'Simulated payment submitted and pending verification.',
         payment: updatedPayment
       });
     } catch (error: any) {

@@ -25,6 +25,8 @@ interface CheckoutModalProps {
   processingCheckout: boolean;
   upiCopied: boolean;
   onCopyToClipboard: (text: string) => void;
+  upiUtr: string;
+  onChangeUpiUtr: (utr: string) => void;
 }
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
@@ -48,7 +50,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onChangeCardCvv,
   processingCheckout,
   upiCopied,
-  onCopyToClipboard
+  onCopyToClipboard,
+  upiUtr,
+  onChangeUpiUtr
 }) => {
   return (
     <AnimatePresence>
@@ -179,7 +183,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                       <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl">
                         <QRCodeSVG 
-                          value={`upi://pay?pa=avinashkunwar07@ptyes&pn=Gaurav%20Singh&am=${currentPrice}&cu=INR`} 
+                          value={`upi://pay?pa=edunexuss@ptyes&pn=Anjali%20Singh&am=${currentPrice}&cu=INR`} 
                           size={160}
                           level="H"
                           includeMargin={true}
@@ -190,7 +194,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <div className="space-y-1 text-left">
                         <label className="text-[10px] uppercase font-bold text-slate-400">Payee Name</label>
                         <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-bold">
-                          Gaurav Singh
+                          Anjali Singh
                         </div>
                       </div>
 
@@ -198,16 +202,32 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <label className="text-[10px] uppercase font-bold text-slate-400">UPI ID</label>
                         <div className="relative">
                           <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono">
-                            avinashkunwar07@ptyes
+                            edunexuss@ptyes
                           </div>
                           <button
                             type="button"
-                            onClick={() => onCopyToClipboard('avinashkunwar07@ptyes')}
+                            onClick={() => onCopyToClipboard('edunexuss@ptyes')}
                             className="absolute right-2 top-1.5 p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-cyan-400 transition"
                           >
                             {upiCopied ? <Check size={14} /> : <Clipboard size={14} />}
                           </button>
                         </div>
+                      </div>
+
+                      {/* UTR Input Field */}
+                      <div className="space-y-1 text-left">
+                        <label className="text-[10px] uppercase font-bold text-slate-400">12-Digit UTR / Transaction Reference Number</label>
+                        <input
+                          type="text"
+                          required
+                          maxLength={12}
+                          pattern="\d{12}"
+                          placeholder="e.g. 612345678901"
+                          value={upiUtr}
+                          onChange={(e) => onChangeUpiUtr(e.target.value.replace(/\D/g, ''))}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition font-mono"
+                        />
+                        <p className="text-[9px] text-slate-500">Please enter the 12-digit number from your UPI payment receipt to speed up verification.</p>
                       </div>
                     </div>
                   )}

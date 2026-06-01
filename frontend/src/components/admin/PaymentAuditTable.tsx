@@ -24,6 +24,7 @@ interface PaymentAuditTableProps {
   totalPages: number;
   totalCount: number;
   onPageChange: (page: number) => void;
+  onVerifyPayment?: (paymentId: string) => void;
 }
 
 export const PaymentAuditTable: React.FC<PaymentAuditTableProps> = ({
@@ -32,7 +33,8 @@ export const PaymentAuditTable: React.FC<PaymentAuditTableProps> = ({
   currentPage,
   totalPages,
   totalCount,
-  onPageChange
+  onPageChange,
+  onVerifyPayment
 }) => {
   return (
     <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-6 space-y-4">
@@ -62,6 +64,7 @@ export const PaymentAuditTable: React.FC<PaymentAuditTableProps> = ({
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Gateway Reference</th>
                   <th className="py-3 px-4">Date</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-850">
@@ -78,13 +81,25 @@ export const PaymentAuditTable: React.FC<PaymentAuditTableProps> = ({
                       <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
                         t.status === 'SUCCESS'
                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25'
+                          : t.status === 'VERIFICATION_PENDING'
+                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25 animate-pulse'
                           : 'bg-red-500/10 text-red-400 border border-red-500/25'
                       }`}>
-                        {t.status}
+                        {t.status === 'VERIFICATION_PENDING' ? 'PENDING' : t.status}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-slate-450 text-[10px]">{t.reference || 'N/A'}</td>
                     <td className="py-3.5 px-4 text-slate-500 font-mono">{new Date(t.createdAt).toLocaleDateString()}</td>
+                    <td className="py-3.5 px-4 text-right">
+                      {t.status === 'VERIFICATION_PENDING' && (
+                        <button
+                          onClick={() => onVerifyPayment && onVerifyPayment(t.id)}
+                          className="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-600 active:scale-[0.98] text-slate-950 text-[10px] font-black uppercase rounded-lg transition-all"
+                        >
+                          Verify
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
