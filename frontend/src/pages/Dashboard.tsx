@@ -96,6 +96,8 @@ const Dashboard = () => {
         category: d.courseId || 'General',
         upvotes: 1, // local-only mock upvotes
         comments: d.comments.map((c: any) => ({
+          id: c.id,
+          userId: c.userId,
           author: c.user?.name || 'Respondent',
           text: c.content
         })),
@@ -117,6 +119,24 @@ const Dashboard = () => {
       fetchForumPosts();
     }
   }, [activeTab]);
+
+  const fetchLeaderboard = async () => {
+    setLoadingLeaderboard(true);
+    try {
+      const res = await api.get(`/practice/leaderboard?search=${leaderboardSearch}`);
+      setLeaderboard(res.data.leaderboard);
+    } catch (err) {
+      console.error('Failed to fetch leaderboard:', err);
+    } finally {
+      setLoadingLeaderboard(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'practice') {
+      fetchLeaderboard();
+    }
+  }, [activeTab, leaderboardSearch]);
 
   // Helper to extract course specific stats
   const getCourseProgress = (courseId: string) => {
@@ -230,6 +250,17 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteComment = async (commentId: number) => {
+    if (!window.confirm("Are you sure you want to delete this reply?")) return;
+    try {
+      await api.delete(`/forum/comment/${commentId}`);
+      fetchForumPosts();
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+      alert('Failed to delete reply.');
+    }
+  };
+
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCodeIdx(true);
@@ -271,26 +302,35 @@ const Dashboard = () => {
       initial="hidden" 
       animate="visible" 
       variants={containerVariants}
-      className="py-6 space-y-10 max-w-7xl mx-auto px-4 bg-slate-950 min-h-screen text-white"
+      className="py-6 space-y-10 max-w-7xl mx-auto px-4 min-h-screen text-white font-sans relative overflow-hidden"
+      style={{
+        backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.04) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.04) 0%, transparent 40%)'
+      }}
     >
+      {/* Background Technical Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none -z-20"></div>
+
       {/* 1. Header Welcome Cockpit */}
-      <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-850 pb-6 relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+      <motion.div 
+        variants={itemVariants} 
+        className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-emerald-500 bg-slate-900/40 backdrop-blur-md border border-slate-850/50 p-8 rounded-[2rem] shadow-[0_0_50px_-12px_rgba(16,185,129,0.15)] relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-550/10 to-transparent pointer-events-none -z-10"></div>
         <div className="space-y-2">
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-200 to-cyan-400 bg-clip-text text-transparent uppercase flex items-center gap-2">
-            <Zap className="text-emerald-400 fill-emerald-400/20" size={32} />
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-200 to-cyan-400 bg-clip-text text-transparent uppercase flex items-center gap-3">
+            <Zap className="text-emerald-400 fill-emerald-400/20 animate-pulse" size={28} />
             <span>Hello, {user?.name?.split(' ')[0]}!</span>
           </h1>
-          <p className="text-slate-400 text-sm max-w-xl font-medium">
+          <p className="text-slate-400 text-xs sm:text-sm max-w-xl font-medium leading-relaxed">
             Welcome to Edunexus. Study complete professional tracks, solve practice tests, and secure certifications.
           </p>
         </div>
         
-        <div className="flex flex-wrap gap-2 text-xs font-bold items-center">
-          <span className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 shadow flex items-center gap-2">
+        <div className="flex flex-wrap gap-2.5 text-[10px] font-black uppercase tracking-wider items-center">
+          <span className="px-4 py-2.5 rounded-2xl bg-slate-950/60 border border-slate-900 text-slate-350 shadow flex items-center gap-2">
             🏢 {user?.collegeName || 'Google Linked Account'}
           </span>
-          <span className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 shadow flex items-center gap-2">
+          <span className="px-4 py-2.5 rounded-2xl bg-slate-950/60 border border-slate-900 text-slate-350 shadow flex items-center gap-2">
             ⚙ {user?.branchName || 'N/A'}
           </span>
         </div>
@@ -298,14 +338,14 @@ const Dashboard = () => {
 
       {/* Staff Privileges Banner */}
       {user?.role === 'ADMIN' && (
-        <motion.div variants={itemVariants} className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-lg">
+        <motion.div variants={itemVariants} className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-lg">
           <div className="flex items-center gap-2">
             <ShieldAlert size={18} />
             <span>STAFF PRIVILEGES ACTIVE: You can manage courses, users, and quizzes.</span>
           </div>
           <button 
             onClick={() => navigate('/admin')}
-            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-rose-500 to-red-650 text-slate-950 font-black rounded-lg transition-all active:scale-[0.98] uppercase tracking-wider text-[10px]"
+            className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-rose-500 to-red-650 text-slate-950 font-black rounded-xl transition-all active:scale-[0.98] uppercase tracking-wider text-[10px]"
           >
             Open Admin Panel
           </button>
@@ -356,7 +396,7 @@ const Dashboard = () => {
           >
             {/* Quick Resume Dashboard Widget */}
             {latestActiveCourse && (
-              <div className="p-8 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-850 rounded-[2rem] flex flex-col justify-between relative overflow-hidden shadow-2xl">
+              <div className="p-8 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-850 rounded-[2.5rem] flex flex-col justify-between relative overflow-hidden shadow-2xl">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
                 <div className="space-y-4 relative z-10">
                   <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase tracking-wider">
@@ -388,15 +428,27 @@ const Dashboard = () => {
             {/* Aggregated Mini Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {[
-                { label: "Active Tracks", value: activeTracksCount, color: "text-emerald-450", bg: "bg-emerald-500/10" },
-                { label: "Completed Tracks", value: completedTracksCount, color: "text-teal-400", bg: "bg-teal-500/10" },
-                { label: "Highest Accuracy", value: `${highestAccuracy}%`, color: "text-cyan-400", bg: "bg-cyan-500/10" }
-              ].map((stat, sIdx) => (
-                <div key={sIdx} className="p-5 bg-slate-900 border border-slate-850 rounded-2xl flex items-center justify-between">
-                  <span className="text-slate-450 text-[10px] font-black uppercase tracking-widest">{stat.label}</span>
-                  <span className={`text-2xl font-bold ${stat.color}`}>{stat.value}</span>
-                </div>
-              ))}
+                { label: "Active Tracks", value: activeTracksCount, color: "text-emerald-450 bg-emerald-500/10 border-emerald-500/20", glow: "group-hover:shadow-[0_0_25px_-5px_rgba(16,185,129,0.25)]", icon: BookOpen },
+                { label: "Completed Tracks", value: completedTracksCount, color: "text-teal-400 bg-teal-500/10 border-teal-500/20", glow: "group-hover:shadow-[0_0_25px_-5px_rgba(20,184,166,0.25)]", icon: Award },
+                { label: "Highest Accuracy", value: `${highestAccuracy}%`, color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20", glow: "group-hover:shadow-[0_0_25px_-5px_rgba(6,182,212,0.25)]", icon: Target }
+              ].map((stat, sIdx) => {
+                const Icon = stat.icon;
+                return (
+                  <motion.div 
+                    key={sIdx} 
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    className="group p-6 bg-slate-900/60 backdrop-blur-md border border-slate-850 rounded-3xl flex items-center justify-between transition-all duration-300"
+                  >
+                    <div className="space-y-1.5">
+                      <span className="text-slate-450 text-[9px] font-black uppercase tracking-wider block">{stat.label}</span>
+                      <span className="text-3xl font-black text-white">{stat.value}</span>
+                    </div>
+                    <div className={`p-3.5 rounded-2xl ${stat.color} border flex items-center justify-center transition-all duration-300 ${stat.glow}`}>
+                      <Icon size={20} />
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
 
             {/* Search & Category Filter Section */}
@@ -406,7 +458,7 @@ const Dashboard = () => {
                   <button
                     key={cat}
                     onClick={() => setCourseCategory(cat)}
-                    className={`px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition ${courseCategory === cat ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-450 hover:text-white'}`}
+                    className={`px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition ${courseCategory === cat ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-455 hover:text-white'}`}
                   >
                     {cat}
                   </button>
@@ -438,7 +490,7 @@ const Dashboard = () => {
                 return (
                   <motion.div
                     key={course.id}
-                    whileHover={{ y: -6 }}
+                    whileHover={{ y: -6, scale: 1.01 }}
                     onClick={() => {
                         if ((isCompleted && isPaid) || user?.role === 'ADMIN') {
                             navigate(`/certificate?courseId=${course.id}`);
@@ -446,7 +498,7 @@ const Dashboard = () => {
                             navigate(`/course/${course.id}`);
                         }
                     }}
-                    className="group cursor-pointer bg-slate-900 border border-slate-850 rounded-3xl overflow-hidden shadow-xl hover:border-emerald-500/40 flex flex-col justify-between"
+                    className="group cursor-pointer bg-slate-900/50 backdrop-blur-md border border-slate-850/60 rounded-[2rem] overflow-hidden shadow-xl hover:border-emerald-500/50 hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.12)] flex flex-col justify-between transition-all duration-300"
                   >
                     <div className={`h-36 bg-gradient-to-br ${course.colorDark} p-6 relative overflow-hidden flex items-center justify-between`}>
                       <div className="absolute inset-0 bg-slate-950/20"></div>
@@ -462,10 +514,10 @@ const Dashboard = () => {
                     <div className="p-6 space-y-6 flex-1 flex flex-col justify-between">
                       <div className="space-y-2">
                         <h4 className="text-lg font-black tracking-tight text-white group-hover:text-emerald-450 transition">{course.titleShort}</h4>
-                        <p className="text-slate-400 text-xs leading-relaxed line-clamp-3">{course.descShort}</p>
+                        <p className="text-slate-450 text-xs leading-relaxed line-clamp-3 font-medium">{course.descShort}</p>
                       </div>
 
-                      <div className="space-y-3 pt-4 border-t border-slate-850">
+                      <div className="space-y-3 pt-4 border-t border-slate-850/60">
                         <div className="flex justify-between items-center text-[9px] font-black text-slate-500 uppercase">
                           <span>Mastery Progress</span>
                           <span className="text-slate-350">{progress.progress}%</span>
@@ -782,12 +834,26 @@ const Dashboard = () => {
                             >
                               {/* Comment List */}
                               <div className="space-y-3">
-                                {post.comments.map((c: any, cIdx: number) => (
-                                  <div key={cIdx} className="p-3 bg-slate-950/60 border border-slate-850 rounded-xl text-xs space-y-1">
-                                    <span className="font-black text-slate-350 block">{c.author}</span>
-                                    <p className="text-slate-400 font-medium leading-relaxed">{c.text}</p>
-                                  </div>
-                                ))}
+                                {post.comments.map((c: any, cIdx: number) => {
+                                  const canDelete = user?.role === 'ADMIN' || c.userId === user?.id;
+                                  return (
+                                    <div key={c.id || cIdx} className="p-3 bg-slate-950/60 border border-slate-850 rounded-xl text-xs space-y-1 relative group/comment">
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-black text-slate-350 block">{c.author}</span>
+                                        {canDelete && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteComment(c.id)}
+                                            className="text-[9px] font-black uppercase text-rose-500 hover:text-rose-400 opacity-0 group-hover/comment:opacity-100 focus:opacity-100 transition-opacity bg-slate-900 border border-slate-800 px-2 py-0.5 rounded cursor-pointer"
+                                          >
+                                            Delete
+                                          </button>
+                                        )}
+                                      </div>
+                                      <p className="text-slate-400 font-medium leading-relaxed">{c.text}</p>
+                                    </div>
+                                  );
+                                })}
                               </div>
 
                               {/* Comment Form */}

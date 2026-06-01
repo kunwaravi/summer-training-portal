@@ -17,8 +17,8 @@ router.get('/', authenticateToken, async (req: any, res: Response): Promise<any>
     }
     if (search && typeof search === 'string') {
       whereClause.OR = [
-        { title: { contains: search } },
-        { content: { contains: search } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -241,6 +241,43 @@ router.delete('/:postId', authenticateToken, async (req: any, res: Response): Pr
     res.json({ message: 'Discussion post deleted successfully.' });
   } catch (error: any) {
     logger.error('Delete forum post error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// DELETE /api/forum/comment/:commentId - Delete a comment/reply
+router.delete('/comment/:commentId', authenticateToken, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { commentId } = req.params;
+    const commentIdNum = parseInt(commentId);
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    if (isNaN(commentIdNum)) {
+      return res.status(400).json({ message: 'Invalid comment ID.' });
+    }
+
+    const comment = await prisma.forumComment.findUnique({
+      where: { id: commentIdNum },
+    });
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found.' });
+    }
+
+    // Only Admin or the comment creator can delete
+    if (userRole !== 'ADMIN' && comment.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied: You are not authorized to delete this comment.' });
+    }
+
+    await prisma.forumComment.delete({
+      where: { id: commentIdNum },
+    });
+
+    logger.info(`Forum comment ID ${commentIdNum} successfully deleted by user ${userId}.`);
+    res.json({ success: true, message: 'Comment deleted successfully.' });
+  } catch (error: any) {
+    logger.error('Delete forum comment error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

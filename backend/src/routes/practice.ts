@@ -80,7 +80,17 @@ router.post(
       });
 
       const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
-      const pointsEarned = correctCount * 10; // 10 points per correct answer
+      // Find the user's previous best attempt score for this category
+      const bestPreviousAttempt = await prisma.practiceAttempt.findFirst({
+        where: { userId, category },
+        orderBy: { score: 'desc' },
+      });
+
+      const previousBestScore = bestPreviousAttempt ? bestPreviousAttempt.score : 0;
+      
+      // Points are only awarded if the current score is higher than the previous best score
+      const newScoreDifference = Math.max(0, correctCount - previousBestScore);
+      const pointsEarned = newScoreDifference * 10; // 10 points per new correct answer
 
       // Save practice attempt and update user points in transaction
       const result = await prisma.$transaction(async (tx) => {
@@ -94,14 +104,16 @@ router.post(
         });
 
         // Award points to the user
-        await tx.user.update({
-          where: { id: userId },
-          data: {
-            points: {
-              increment: pointsEarned,
+        if (pointsEarned > 0) {
+          await tx.user.update({
+            where: { id: userId },
+            data: {
+              points: {
+                increment: pointsEarned,
+              },
             },
-          },
-        });
+          });
+        }
 
         return attempt;
       });
@@ -131,8 +143,8 @@ router.get('/leaderboard', authenticateToken, async (req: any, res: Response): P
     const whereClause: any = {};
     if (search && typeof search === 'string') {
       whereClause.OR = [
-        { name: { contains: search } },
-        { email: { contains: search } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
       ];
     }
 

@@ -47,10 +47,28 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
 });
 
 // GET /api/courses/:courseId/module/:order - Dynamic fetch for ONE module's full topics (Lazy loading detail view)
-router.get('/:courseId/module/:order', async (req: Request, res: Response): Promise<any> => {
+router.get('/:courseId/module/:order', authenticateToken, async (req: any, res: Response): Promise<any> => {
   try {
     const { courseId, order } = req.params as any;
     const orderNum = parseInt(order);
+    const userId = req.user.id;
+
+    // Check if the user is an Admin OR has made a successful payment for this course
+    const successPayment = await prisma.payment.findFirst({
+      where: {
+        userId,
+        courseId,
+        status: 'SUCCESS'
+      }
+    });
+
+    if (!successPayment && req.user.role !== 'ADMIN') {
+      logger.error(`Syllabus detail access blocked: User ${userId} has not purchased course ${courseId}`);
+      return res.status(402).json({ 
+        message: 'Payment required: Please purchase this course track to unlock full syllabus topics.',
+        paymentRequired: true 
+      });
+    }
 
     const moduleRecord = await prisma.module.findFirst({
       where: {
@@ -257,6 +275,43 @@ router.delete('/topic/:topicId', authenticateToken, isAdmin, async (req: Request
     res.json({ message: 'Topic deleted successfully' });
   } catch (error: any) {
     logger.error('Delete topic error caught in handler:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST /api/courses/progress - Save student reading progress for a course
+router.post('/progress', authenticateToken, async (req: any, res: Response): Promise<any> => {
+  try {
+    const userId = req.user.id;
+    const { courseId, progress, completed } = req.body;
+
+    if (!courseId || progress === undefined) {
+      return res.status(400).json({ message: 'Course ID and progress percentage are required.' });
+    }
+
+    const upsertedProgress = await prisma.courseProgress.upsert({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId
+        }
+      },
+      update: {
+        progress: parseInt(progress),
+        completed: !!completed
+      },
+      create: {
+        userId,
+        courseId,
+        progress: parseInt(progress),
+        completed: !!completed
+      }
+    });
+
+    logger.info(`Persisted course progress for user ${userId} on course ${courseId}: ${progress}% (Completed: ${completed})`);
+    res.json({ success: true, progress: upsertedProgress });
+  } catch (error: any) {
+    logger.error('Save course progress error caught in handler:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

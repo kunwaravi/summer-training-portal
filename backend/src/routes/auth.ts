@@ -18,18 +18,19 @@ router.post(
   async (req: Request, res: Response): Promise<any> => {
     try {
       const { email, password, name, collegeName, branchName } = req.body;
+      const emailNormalized = email ? email.toLowerCase().trim() : '';
 
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
       if (!passwordRegex.test(password)) {
-        logger.error(`Registration failed: Password complexity not met for ${email}`);
+        logger.error(`Registration failed: Password complexity not met for ${emailNormalized}`);
         return res.status(400).json({ 
           message: 'Password must be at least 8 characters long, and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).' 
         });
       }
       
-      const existingUser = await prisma.user.findUnique({ where: { email } });
+      const existingUser = await prisma.user.findUnique({ where: { email: emailNormalized } });
       if (existingUser) {
-        logger.error(`Registration failed: User ${email} already registered.`);
+        logger.error(`Registration failed: User ${emailNormalized} already registered.`);
         return res.status(400).json({ message: 'User already exists' });
       }
 
@@ -38,7 +39,7 @@ router.post(
       
       const user = await prisma.user.create({
         data: {
-          email,
+          email: emailNormalized,
           password: hashedPassword,
           name,
           collegeName,
@@ -65,7 +66,7 @@ router.post(
       // Omit password from return
       const { password: _, ...userWithoutPassword } = user;
 
-      logger.info(`User successfully registered (auto-verified): ${email}`);
+      logger.info(`User successfully registered (auto-verified): ${emailNormalized}`);
       
       res.status(201).json({ 
         token,
@@ -87,21 +88,22 @@ router.post(
   async (req: Request, res: Response): Promise<any> => {
     try {
       const { email, password } = req.body;
+      const emailNormalized = email ? email.toLowerCase().trim() : '';
       const user = await prisma.user.findUnique({
-        where: { email },
+        where: { email: emailNormalized },
         include: {
           progresses: true,
           results: true
         }
       });
       if (!user) {
-        logger.error(`Login failed: Invalid email attempt for ${email}`);
+        logger.error(`Login failed: Invalid email attempt for ${emailNormalized}`);
         return res.status(400).json({ message: 'Invalid credentials' });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        logger.error(`Login failed: Invalid password attempt for ${email}`);
+        logger.error(`Login failed: Invalid password attempt for ${emailNormalized}`);
         return res.status(400).json({ message: 'Invalid credentials' });
       }
 
@@ -118,7 +120,7 @@ router.post(
       // Omit password from return
       const { password: _, ...userWithoutPassword } = user;
 
-      logger.info(`User successfully logged in: ${email}`);
+      logger.info(`User successfully logged in: ${emailNormalized}`);
       res.json({ user: userWithoutPassword });
     } catch (error: any) {
       logger.error('Login error caught in handler:', error);
@@ -229,8 +231,9 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<any
     if (!email) {
       return res.status(400).json({ message: 'Email address is required.' });
     }
+    const emailNormalized = email.toLowerCase().trim();
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: emailNormalized } });
     
     // To prevent email enumeration, we always return success to the client
     if (user) {
@@ -245,9 +248,9 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<any
         }
       });
 
-      logger.info(`[SIMULATION] Password reset link for ${email}: http://localhost:8080/reset-password?token=${resetToken}`);
+      logger.info(`[SIMULATION] Password reset link for ${emailNormalized}: http://localhost:8080/reset-password?token=${resetToken}`);
     } else {
-      logger.info(`Password reset requested for non-existent email: ${email}`);
+      logger.info(`Password reset requested for non-existent email: ${emailNormalized}`);
     }
 
     res.json({ success: true, message: 'If that email address exists in our registry, a password reset link has been dispatched.' });
@@ -312,9 +315,10 @@ router.post(
   async (req: Request, res: Response): Promise<any> => {
     try {
       const { email, name } = req.body;
+      const emailNormalized = email ? email.toLowerCase().trim() : '';
 
       let user = await prisma.user.findUnique({
-        where: { email },
+        where: { email: emailNormalized },
         include: {
           progresses: true,
           results: true
@@ -327,7 +331,7 @@ router.post(
         
         user = await prisma.user.create({
           data: {
-            email,
+            email: emailNormalized,
             password: hashedPassword,
             name,
             collegeName: 'Google Linked Account',
@@ -339,7 +343,7 @@ router.post(
             results: true
           }
         });
-        logger.info(`Google Authentication: Registered new user: ${email}`);
+        logger.info(`Google Authentication: Registered new user: ${emailNormalized}`);
       } else {
         if (!user.isVerified) {
           user = await prisma.user.update({
@@ -347,9 +351,9 @@ router.post(
             data: { isVerified: true, verificationToken: null },
             include: { progresses: true, results: true }
           });
-          logger.info(`Google Authentication: Verified existing user: ${email}`);
+          logger.info(`Google Authentication: Verified existing user: ${emailNormalized}`);
         }
-        logger.info(`Google Authentication: User logged in: ${email}`);
+        logger.info(`Google Authentication: User logged in: ${emailNormalized}`);
       }
 
       const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, { expiresIn: '1d' });

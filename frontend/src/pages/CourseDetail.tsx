@@ -89,8 +89,7 @@ const CourseDetail = () => {
     ]);
   };
 
-  // Video playback simulation state
-  const [videoPlaying, setVideoPlaying] = useState(false);
+
 
   // Assignment states
   const [assignmentSubmitted, setAssignmentSubmitted] = useState(false);
@@ -534,49 +533,41 @@ const CourseDetail = () => {
         {/* Right Side: GFG Split Content Cockpit (8 Columns) */}
         <div className="lg:col-span-8 space-y-6">
           
-          {/* A. Premium Video Tutorial Player */}
-          <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-850 aspect-video shadow-2xl flex flex-col justify-center items-center group">
-            {videoPlaying ? (
-              // Simulated Interactive Video Playing Screen
-              <div className="w-full h-full bg-slate-950 relative flex items-center justify-center">
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                  title="Video Player"
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                />
-                <button
-                  onClick={() => setVideoPlaying(false)}
-                  className="absolute top-4 right-4 bg-slate-900/80 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white border border-slate-800"
-                >
-                  Close Player
-                </button>
-              </div>
-            ) : (
-              // Stunning placeholder GFG-style poster
-              <>
-                <div className="absolute inset-0 bg-cover bg-center opacity-45 filter blur-[1px]" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?q=80&w=2066')` }}></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
-                
-                <div className="relative z-10 text-center space-y-4 px-6">
-                  <motion.button 
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setVideoPlaying(true)}
-                    className="w-16 h-16 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-lg shadow-emerald-500/25 mx-auto hover:bg-emerald-450 transition-all duration-300"
-                  >
-                    <Play size={28} className="fill-slate-950 ml-1" />
-                  </motion.button>
-                  <p className="text-xs font-black uppercase tracking-widest text-emerald-400">Play Video Tutorial</p>
-                  <h3 className="text-xl font-bold text-white max-w-lg mx-auto">{activeTopic.title}</h3>
-                </div>
-              </>
-            )}
-          </div>
 
-          {/* B. Tabbed E-learning Content Console */}
-          <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-2xl space-y-6">
+
+          {!isPaid && user?.role !== 'ADMIN' ? (
+            <div className="relative p-8 rounded-3xl overflow-hidden bg-slate-900 border border-slate-850 text-center space-y-6 shadow-2xl flex flex-col justify-center items-center min-h-[45vh]">
+              <div className="absolute inset-0 bg-cover bg-center opacity-10 filter blur-sm" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?q=80&w=2066')` }}></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+              
+              <div className="relative z-10 w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10 animate-pulse">
+                <Lock size={28} />
+              </div>
+              
+              <div className="relative z-10 space-y-2 max-w-lg">
+                <h3 className="text-lg font-black text-white uppercase tracking-wider">Premium Content Locked</h3>
+                <h4 className="text-sm font-bold text-emerald-400 font-mono">{activeTopic.title}</h4>
+                <p className="text-slate-400 text-xs leading-relaxed pt-2">
+                  Gain unlimited lifetime access to comprehensive industrial syllabus topics, verified code examples, hands-on hardware sandbox simulation workbenches, step-by-step practical assignments, and earn an industry-accredited verified certification of accomplishment.
+                </p>
+              </div>
+
+              <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 pt-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleInitiatePayment}
+                  className="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-2xl shadow-xl shadow-emerald-500/20 text-xs uppercase tracking-widest"
+                >
+                  Unlock Course & Certification (₹999)
+                </motion.button>
+                <div className="flex items-center gap-1.5 text-slate-500 text-[10px] uppercase font-black tracking-widest bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-900">
+                  <ShieldAlert size={12} /> Secure Checkout
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-2xl space-y-6">
             {/* Tab switch navigation */}
             <div className="flex gap-2 border-b border-slate-850 pb-2">
               {[
@@ -877,6 +868,7 @@ const CourseDetail = () => {
               )}
             </div>
           </div>
+        )}
 
         </div>
 

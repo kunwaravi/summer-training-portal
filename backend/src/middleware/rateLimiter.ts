@@ -3,6 +3,16 @@ import { logger } from '../lib/logger';
 
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
+// Background worker to periodically prune expired rate-limit records every 5 minutes to prevent memory leaks (Issue #9)
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      rateLimitStore.delete(ip);
+    }
+  }
+}, 5 * 60 * 1000).unref(); // unref() lets the process exit cleanly if idle
+
 export const rateLimiter = (limit: number, windowMs: number) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const ip = (req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown') as string;

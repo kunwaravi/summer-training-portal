@@ -25,9 +25,27 @@ const calculateGrade = (accuracy: number): { grade: string, passed: boolean } =>
 };
 
 // GET /api/quiz/questions/:courseId - Fetch ALL questions for a specific course's final exam
-router.get('/questions/:courseId', async (req: Request, res: Response): Promise<any> => {
+router.get('/questions/:courseId', authenticateToken, async (req: any, res: Response): Promise<any> => {
   try {
     const { courseId } = req.params as any;
+    const userId = req.user.id;
+
+    // Enforce payment or admin verification before returning final exam questions
+    const successPayment = await prisma.payment.findFirst({
+      where: {
+        userId,
+        courseId,
+        status: 'SUCCESS'
+      }
+    });
+
+    if (!successPayment && req.user.role !== 'ADMIN') {
+      logger.error(`Final exam access blocked: User ${userId} has not purchased course ${courseId}`);
+      return res.status(402).json({ 
+        message: 'Payment required: Please purchase this course track to unlock the final examination.',
+        paymentRequired: true 
+      });
+    }
 
     const modules = await prisma.module.findMany({
       where: { courseId },
