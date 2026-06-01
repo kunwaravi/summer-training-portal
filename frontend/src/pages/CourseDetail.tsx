@@ -125,6 +125,59 @@ const CourseDetail = () => {
     fetchSyllabus();
   }, [id]);
 
+  // Load saved navigation state and read topics from localStorage
+  useEffect(() => {
+    if (user && id) {
+      const savedReadTopics = localStorage.getItem(`readTopics_${user.id}_${id}`);
+      if (savedReadTopics) {
+        try {
+          setReadTopics(JSON.parse(savedReadTopics));
+        } catch (e) {
+          console.error("Failed to parse read topics from localStorage", e);
+        }
+      }
+
+      const savedModuleIndex = localStorage.getItem(`activeModuleIndex_${user.id}_${id}`);
+      if (savedModuleIndex !== null) {
+        setActiveModuleIndex(parseInt(savedModuleIndex));
+      }
+
+      const savedTopicIndex = localStorage.getItem(`activeTopicIndex_${user.id}_${id}`);
+      if (savedTopicIndex !== null) {
+        setActiveTopicIndex(parseInt(savedTopicIndex));
+      }
+    }
+  }, [id, user]);
+
+  // Persist read topics list in localStorage
+  useEffect(() => {
+    if (user && id && readTopics.length > 0) {
+      localStorage.setItem(`readTopics_${user.id}_${id}`, JSON.stringify(readTopics));
+    }
+  }, [readTopics, id, user]);
+
+  // Persist active module navigation index in localStorage
+  useEffect(() => {
+    if (user && id) {
+      localStorage.setItem(`activeModuleIndex_${user.id}_${id}`, activeModuleIndex.toString());
+    }
+  }, [activeModuleIndex, id, user]);
+
+  // Persist active topic navigation index in localStorage
+  useEffect(() => {
+    if (user && id) {
+      localStorage.setItem(`activeTopicIndex_${user.id}_${id}`, activeTopicIndex.toString());
+    }
+  }, [activeTopicIndex, id, user]);
+
+  // Automatically expand the active module in sidebar
+  useEffect(() => {
+    setExpandedModules(prev => ({
+      ...prev,
+      [activeModuleIndex]: true
+    }));
+  }, [activeModuleIndex]);
+
   useEffect(() => {
     const fetchPaymentStatus = async () => {
       setCheckingPayment(true);
