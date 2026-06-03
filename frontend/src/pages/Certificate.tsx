@@ -305,43 +305,68 @@ const Certificate = () => {
                 size: A4 landscape;
                 margin: 0;
             }
-            body, html {
-                background: #111 !important;
+            body, html, #root, .min-h-screen, .container, .mx-auto, .px-4, .py-8 {
+                background: #020617 !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: none !important;
+                min-width: 0 !important;
+                overflow: hidden !important;
+                box-shadow: none !important;
+                transform: none !important;
             }
-            nav, button, .no-print {
+            nav, button, .no-print, .navbar {
                 display: none !important;
             }
             .print-container {
                 padding: 0 !important;
                 margin: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                background: #020617 !important;
+                overflow: hidden !important;
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                z-index: 9999999 !important;
+            }
+            .cert-body-style {
                 width: 100% !important;
                 height: 100% !important;
-                max-width: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
                 display: flex !important;
-                align-items: center !important;
                 justify-content: center !important;
-                background: #111 !important;
-                overflow: hidden !important;
+                align-items: center !important;
             }
             .certificate-container { 
                 box-shadow: none !important; 
                 border-width: 8px !important;
-                width: 297mm !important;
-                height: 210mm !important;
-                padding: 20mm !important;
-                margin: auto !important;
+                border-color: #b392ac !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                padding: 40px 50px !important;
+                margin: 0 !important;
+                position: relative !important;
+                left: auto !important;
+                top: auto !important;
                 background: radial-gradient(circle, #0a1128 0%, #020617 100%) !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
             }
         }
       `}</style>
