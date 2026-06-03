@@ -14,20 +14,6 @@ const Certificate = () => {
   const [error, setError] = useState('');
   const certRef = useRef<HTMLDivElement>(null);
 
-  const getFormattedDate = () => {
-    if (!displayData || !displayData.completionDate) return '30-05-2026';
-    try {
-      const d = new Date(displayData.completionDate);
-      if (isNaN(d.getTime())) return displayData.completionDate;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}-${month}-${year}`;
-    } catch (e) {
-      return displayData.completionDate;
-    }
-  };
-
   // Extract courseId from URL query parameter: e.g. /certificate?courseId=C
   const query = new URLSearchParams(window.location.search);
   const courseId = query.get('courseId') || 'C';
@@ -50,7 +36,12 @@ const Certificate = () => {
   }, [user?.id, courseId]);
 
   if (loading) {
-    return <div className="text-center py-20 text-slate-400">Verifying qualifications and rendering certified NEXUS credentials...</div>;
+    return (
+      <div className="py-20 text-center space-y-4 bg-slate-950 min-h-screen text-slate-400">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
+        <p className="text-sm font-semibold uppercase tracking-widest">Verifying qualifications and rendering certified credentials...</p>
+      </div>
+    );
   }
 
   if ((error || !data) && user?.role !== 'ADMIN') {
@@ -71,115 +62,287 @@ const Certificate = () => {
 
   // Handle fallback data for admin preview if actual data is missing
   const displayData = data || {
-    name: user?.name || "ADMIN PREVIEW",
-    courseName: "Specialized Engineering Track",
-    credentialId: "NEX-PREVIEW-ADMIN-VERIFIED",
-    completionDate: new Date().toISOString()
+    name: user?.name || "AVINASH KUNWAR",
+    fatherName: user?.fatherName || "AKHILESH KUNWAR",
+    collegeName: user?.collegeName || "GOVERNMENT POLYTECHNIC GHAZIABAD",
+    branchName: user?.branchName || "Electronics Engineering",
+    courseName: "C++ & OOP for Embedded Systems",
+    credentialId: "ENL-2026-EDM5926",
+    startDate: "June 1, 2026",
+    endDate: "June 28, 2026",
+    grade: "Outstanding"
+  };
+
+  const getPerformanceReviewText = (grade: string) => {
+    const upperGrade = (grade || '').toUpperCase();
+    if (upperGrade === 'OUTSTANDING') return 'OUTSTANDING (GRADE A)';
+    if (upperGrade === 'EXCELLENT') return 'EXCELLENT (GRADE B)';
+    if (upperGrade === 'VERY GOOD') return 'VERY GOOD (GRADE C)';
+    if (upperGrade === 'GOOD') return 'GOOD (GRADE D)';
+    return `${upperGrade} (GRADE A)`;
   };
 
   return (
     <div className="py-6 flex flex-col items-center max-w-5xl mx-auto px-4 space-y-6 print-container animate-fade-in">
       
-      {/* High-fidelity CSS themes, glowing gradients, and dark-theme landscape print overrides */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@300;400;600;700;800;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@400;600;700&display=swap');
         
-        .font-cinzel { font-family: 'Cinzel', serif; }
-        .font-playfair { font-family: 'Playfair Display', serif; }
-        .font-garamond { font-family: 'EB Garamond', serif; }
-        .font-montserrat { font-family: 'Montserrat', sans-serif; }
-
-        .cert-dark-bg {
-          background-color: #060709;
-          background-image: 
-            radial-gradient(circle at 50% 25%, rgba(0, 229, 255, 0.09) 0%, transparent 55%),
-            radial-gradient(circle at 80% 80%, rgba(0, 229, 255, 0.04) 0%, transparent 40%),
-            url("https://www.transparenttextures.com/patterns/dark-matter.png");
-          color: #ffffff;
+        .cert-body-style {
+          font-family: 'Montserrat', sans-serif;
         }
 
-        .luxury-double-border {
-          border: 4px double rgba(255, 255, 255, 0.85);
-          position: absolute;
-          inset: 12px;
-          border-radius: 8px;
-          pointer-events: none;
-        }
-
-        .luxury-inner-line {
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          position: absolute;
-          inset: 22px;
-          border-radius: 6px;
-          pointer-events: none;
-        }
-
-        .neon-cyan-glow {
-          color: #00e5ff;
-          text-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
-        }
-
-        .neon-cyan-text-shadow {
-          text-shadow: 0 0 10px rgba(0, 229, 255, 0.35);
-        }
-
-        /* Landscape A4 Print Optimization for Dark Theme */
-        @media print {
-          @page {
-            size: A4 landscape;
-            margin: 0;
-          }
-          body, html {
-            background: #060709 !important;
-            margin: 0 !important;
-            padding: 0 !important;
+        /* Certificate Container adapted for web + print scaling */
+        .certificate-container {
             width: 100%;
-            height: 100%;
+            max-width: 950px;
+            aspect-ratio: 297 / 210;
+            background: radial-gradient(circle, #0a1128 0%, #020617 100%);
+            color: #ffffff;
+            padding: 55px 65px;
+            box-sizing: border-box;
+            position: relative;
+            border: 8px solid #b392ac; 
             overflow: hidden;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          nav, button, .no-print {
-            display: none !important;
-          }
-          .print-container {
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            max-width: none !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            background: #060709 !important;
-            overflow: hidden !important;
-          }
-          .nexus-cert-frame {
-            box-shadow: none !important;
-            transform: scale(0.96) !important;
-            transform-origin: center center !important;
-            margin: auto !important;
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-            page-break-after: avoid !important;
-            width: 100% !important;
-            height: auto !important;
-            aspect-ratio: 1.414 / 1 !important;
-            background-color: #060709 !important;
-            background-image: 
-              radial-gradient(circle at 50% 25%, rgba(0, 229, 255, 0.09) 0%, transparent 55%),
-              radial-gradient(circle at 80% 80%, rgba(0, 229, 255, 0.04) 0%, transparent 40%),
-              url("https://www.transparenttextures.com/patterns/dark-matter.png") !important;
-            border: 20px solid #000000 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          h1, h2, h3, h4, p {
-            white-space: nowrap !important;
-          }
-          .signature-box {
-            width: 25% !important;
-          }
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Tech/Circuit Style Inner Border Design */
+        .certificate-container::before {
+            content: '';
+            position: absolute;
+            top: 15px; left: 15px; right: 15px; bottom: 15px;
+            border: 2px solid #d4af37;
+            pointer-events: none;
+        }
+
+        /* Decorative Corners */
+        .corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #d4af37;
+            pointer-events: none;
+        }
+        .top-left { top: 25px; left: 25px; border-right: none; border-bottom: none; }
+        .top-right { top: 25px; right: 25px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: 25px; left: 25px; border-right: none; border-top: none; }
+        .bottom-right { bottom: 25px; right: 25px; border-left: none; border-top: none; }
+
+        .content {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .logo-area {
+            font-family: 'Cinzel', serif;
+            font-size: 34px;
+            font-weight: 700;
+            color: #d4af37;
+            letter-spacing: 5px;
+            margin-top: 5px;
+            text-shadow: 0px 0px 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .sub-logo {
+            font-size: 11px;
+            letter-spacing: 4px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-top: 3px;
+            margin-bottom: 15px;
+        }
+
+        .cert-title {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            color: #ffffff;
+            letter-spacing: 2px;
+            margin-bottom: 3px;
+        }
+
+        .conferred-text {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .student-name {
+            font-family: 'Cinzel', serif;
+            font-size: 40px;
+            font-weight: 700;
+            color: #d4af37;
+            margin: 10px 0;
+            letter-spacing: 2px;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .details-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #e2e8f0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .highlight {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .course-box {
+            display: inline-block;
+            border: 2px solid #d4af37;
+            background: rgba(212, 175, 55, 0.05);
+            padding: 8px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #d4af37;
+            margin: 15px 0;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .duration-performance {
+            font-size: 13px;
+            color: #cbd5e1;
+            margin-bottom: 25px;
+        }
+
+        .footer-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 20px;
+            margin-top: 10px;
+        }
+
+        .credential-info {
+            text-align: left;
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .qr-code {
+            width: 70px;
+            height: 70px;
+            background: white;
+            padding: 5px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .signature-block {
+            text-align: center;
+            width: 220px;
+        }
+
+        .ceo-signature {
+            width: 130px;
+            height: 50px;
+            object-fit: contain;
+            margin-bottom: -5px;
+            filter: brightness(0) invert(1);
+        }
+
+        .signature-line {
+            border: none;
+            border-top: 1px solid #64748b;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .sig-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .sig-company {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        /* Golden Badge */
+        .badge {
+            position: absolute;
+            top: 40px;
+            right: 50px;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(212,175,55,0.4);
+            z-index: 10;
+        }
+
+        /* Landscape A4 Print Optimization */
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+            body, html {
+                background: #111 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            nav, button, .no-print {
+                display: none !important;
+            }
+            .print-container {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background: #111 !important;
+                overflow: hidden !important;
+            }
+            .certificate-container { 
+                box-shadow: none !important; 
+                border-width: 8px !important;
+                width: 297mm !important;
+                height: 210mm !important;
+                padding: 20mm !important;
+                margin: auto !important;
+                background: radial-gradient(circle, #0a1128 0%, #020617 100%) !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
         }
       `}</style>
 
@@ -191,213 +354,75 @@ const Certificate = () => {
         >
           ← Return to Console
         </button>
-        <span className="text-xs uppercase text-amber-600 font-bold bg-slate-900 px-3 py-1 rounded-full border border-slate-800 flex items-center gap-1.5 shadow">
+        <span className="text-xs uppercase text-amber-500 font-bold bg-slate-900 px-3 py-1 rounded-full border border-slate-800 flex items-center gap-1.5 shadow">
           <ShieldCheck size={14} /> Academic Excellence Verification
         </span>
-      </div>      {/* Ultra-Premium Institutional Certificate Frame (Edunexus Dark Theme) */}
-      <motion.div 
-        ref={certRef}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="nexus-cert-frame cert-dark-bg rounded-2xl shadow-2xl w-full max-w-[950px] aspect-[1.414] relative border-[12px] border-[#000000] p-8 select-none overflow-hidden"
-      >
-        {/* Double-Line Premium Borders */}
-        <div className="luxury-double-border"></div>
-        <div className="luxury-inner-line"></div>
+      </div>
 
-        {/* Elegant Translucent Watermark in Center Background */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none select-none">
-          <svg viewBox="0 0 100 100" className="w-[50%] h-[50%] text-[#00e5ff] fill-current">
-            <path d="M20 20 H80 V32 H35 V44 H70 V56 H35 V68 H80 V80 H20 Z" />
-          </svg>
-        </div>
+      {/* Scoped CSS Wrapper for Montserrat */}
+      <div ref={certRef} className="cert-body-style w-full flex justify-center">
+        <div className="certificate-container">
+            <div className="corner top-left"></div>
+            <div className="corner top-right"></div>
+            <div className="corner bottom-left"></div>
+            <div className="corner bottom-right"></div>
 
-        {/* Outer/Inner main flex wrapper */}
-        <div className="h-full w-full flex flex-col justify-between items-center relative z-10 p-4">
-          
-          {/* Top Row: SkillsMint Logo (Left) and Gold Trophy (Center) */}
-          <div className="w-full flex items-center justify-between">
-            {/* Logo Left */}
-            <div className="flex items-center gap-2 select-none">
-              <svg viewBox="0 0 100 100" className="w-9 h-9 text-[#00e5ff] fill-current filter drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]">
-                <path d="M20 20 H80 V32 H35 V44 H70 V56 H35 V68 H80 V80 H20 Z" />
-              </svg>
-              <div className="flex items-baseline font-montserrat">
-                <span className="text-[25px] font-black text-[#00e5ff] tracking-tight drop-shadow-[0_0_12px_rgba(0,229,255,0.4)]">Edu</span>
-                <span className="text-[25px] font-bold text-white tracking-tight">nexus</span>
-              </div>
-            </div>
+            <div className="badge">PROUD<br />MEMBER</div>
 
-            {/* Empty center spacing to balance the trophy */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 -top-1">
-              {/* Ultra-High-Fidelity Gold Trophy SVG */}
-              <svg viewBox="0 0 100 100" className="w-20 h-20 filter drop-shadow-[0_4px_12px_rgba(255,215,0,0.35)]">
-                <defs>
-                  <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#FFE259" />
-                    <stop offset="50%" stopColor="#FFC837" />
-                    <stop offset="100%" stopColor="#aa771c" />
-                  </linearGradient>
-                  <linearGradient id="shineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.7"/>
-                    <stop offset="100%" stopColor="#FFC837" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-                {/* Laurel Leaves around Trophy */}
-                <g stroke="url(#goldGrad)" strokeWidth="1.8" fill="none" strokeLinecap="round">
-                  <path d="M 30,58 C 21,52 17,40 19,29 C 21,18 30,12 39,15" />
-                  <path d="M 70,58 C 79,52 83,40 81,29 C 79,18 70,12 61,15" />
-                  {/* Leaves Left */}
-                  <path d="M 28,55 Q 18,53 25,47 Z" fill="url(#goldGrad)" />
-                  <path d="M 22,43 Q 13,39 20,33 Z" fill="url(#goldGrad)" />
-                  <path d="M 19,30 Q 11,24 19,19 Z" fill="url(#goldGrad)" />
-                  <path d="M 23,18 Q 18,9 27,9 Z" fill="url(#goldGrad)" />
-                  <path d="M 32,13 Q 32,3 38,7 Z" fill="url(#goldGrad)" />
-                  {/* Leaves Right */}
-                  <path d="M 72,55 Q 82,53 75,47 Z" fill="url(#goldGrad)" />
-                  <path d="M 78,43 Q 87,39 80,33 Z" fill="url(#goldGrad)" />
-                  <path d="M 81,30 Q 89,24 81,19 Z" fill="url(#goldGrad)" />
-                  <path d="M 77,18 Q 82,9 73,9 Z" fill="url(#goldGrad)" />
-                  <path d="M 68,13 Q 68,3 62,7 Z" fill="url(#goldGrad)" />
-                </g>
-                {/* Trophy Structure */}
-                <path d="M 38,72 L 62,72 L 58,66 L 42,66 Z" fill="url(#goldGrad)" />
-                <rect x="46" y="58" width="8" height="8" fill="url(#goldGrad)" />
-                <path d="M 40,58 Q 50,61 60,58 L 57,54 L 43,54 Z" fill="url(#goldGrad)" />
-                <path d="M 36,25 C 36,47 40,54 50,54 C 60,54 64,47 64,25 Z" fill="url(#goldGrad)" />
-                <ellipse cx="50" cy="25" rx="14" ry="2" fill="url(#goldGrad)" />
-                {/* Handles */}
-                <path d="M 36,28 C 26,28 26,42 36,44" stroke="url(#goldGrad)" strokeWidth="3" fill="none" />
-                <path d="M 64,28 C 74,28 74,42 64,44" stroke="url(#goldGrad)" strokeWidth="3" fill="none" />
-                {/* Highlight */}
-                <path d="M 40,28 C 40,44 43,50 50,51 C 45,47 42,39 42,28 Z" fill="url(#shineGrad)" />
-              </svg>
-            </div>
-            
-            {/* Symmetrical placeholder for spacing */}
-            <div className="w-[120px] no-print"></div>
-          </div>
+            <div className="content">
+                <div>
+                    <div className="logo-area">EDUNEXUS LAB</div>
+                    <div className="sub-logo">Advanced Research & Innovation Portal</div>
 
-          {/* Certificate Main Body Texts */}
-          <div className="text-center space-y-4 my-2">
-            <h2 className="text-[#00e5ff] text-4xl sm:text-5xl font-montserrat font-extrabold tracking-[0.06em] uppercase neon-cyan-glow">
-              Certificate of Completion
-            </h2>
-            <p className="text-slate-100 font-garamond italic text-lg sm:text-[22px] tracking-wide">
-              This certificate is proudly presented to
-            </p>
-            <h3 className="text-[#00e5ff] text-5xl sm:text-6xl font-montserrat font-black tracking-wide uppercase neon-cyan-text-shadow pt-2">
-              {displayData.name}
-            </h3>
-            <p className="text-slate-200 font-montserrat text-xs uppercase tracking-[0.25em] pt-1">
-              For Successfully Completing the Assessment of
-            </p>
-            <h4 className="text-white text-3xl sm:text-4xl font-montserrat font-black tracking-[0.05em] uppercase drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]">
-              {displayData.courseName}
-            </h4>
-          </div>
-
-          {/* Bottom Footer Section: Columns for QR/ID (Left), MD Signature (Center), MSME Stamp (Right) */}
-          <div className="w-full grid grid-cols-3 items-end px-4 mt-2">
-            
-            {/* Column 1: QR & Authenticity (Left) */}
-            <div className="flex flex-col items-start text-left space-y-2">
-              <div className="flex flex-col space-y-1.5">
-                <span className="text-[10px] font-montserrat font-semibold text-slate-400 uppercase tracking-wider">
-                  Authenticate your certificate here
-                </span>
-                <div className="flex items-center gap-3">
-                  <div className="bg-white p-1 rounded border border-cyan-500/30 shadow-[0_0_10px_rgba(0,229,255,0.15)] flex items-center justify-center">
-                    <QRCodeSVG 
-                      value={`${window.location.origin}/verify?id=${displayData.credentialId}`} 
-                      size={54}
-                      level="H"
-                    />
-                  </div>
-                  <div className="flex flex-col justify-end text-[10px] font-montserrat text-slate-300 font-medium space-y-0.5">
-                    <div>DATE : {getFormattedDate()}</div>
-                    <div className="uppercase">CERTIFICATE NO : {displayData.credentialId}</div>
-                  </div>
+                    <div className="cert-title">SUMMER TRAINING COMPLETION CREDENTIALS</div>
+                    <div className="conferred-text">This is proudly conferred upon the developer</div>
                 </div>
-              </div>
+
+                <div className="student-name">{displayData.name}</div>
+
+                <div className="details-text">
+                    Son / Daughter of Sh. <span className="highlight">{displayData.fatherName || "N/A"}</span><br />
+                    representing institution: <span className="highlight">{displayData.collegeName || "N/A"}</span><br />
+                    pursuing branch: <span className="highlight">{displayData.branchName || "N/A"}</span><br />
+                    for successfully executing specialized summer training curriculum in
+                </div>
+
+                <div>
+                    <div className="course-box">{displayData.courseName}</div>
+                </div>
+
+                <div className="duration-performance">
+                    Training Duration: From <span className="highlight">{displayData.startDate}</span> To <span className="highlight">{displayData.endDate}</span>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                    PERFORMANCE REVIEW: <span className="highlight" style={{ color: '#d4af37' }}>{getPerformanceReviewText(displayData.grade)}</span>
+                </div>
+
+                <div className="footer-section">
+                    <div className="credential-info">
+                        <div className="qr-code">
+                            <QRCodeSVG 
+                              value={`${window.location.origin}/verify?id=${displayData.credentialId}`} 
+                              size={60}
+                              level="H"
+                            />
+                        </div>
+                        <div>
+                            <strong>Credential ID:</strong> {displayData.credentialId}<br />
+                            Verify credentials authenticity at:<br />
+                            <span style={{ color: '#d4af37' }}>{window.location.host}/verify</span>
+                        </div>
+                    </div>
+                    
+                    <div className="signature-block">
+                        <img src="/Vinayak_sign-removebg-preview.png" alt="Vinayak Singh Signature" className="ceo-signature" />
+                        <hr className="signature-line" />
+                        <div className="sig-title">Vinayak Singh</div>
+                        <div className="sig-company">CEO & Co-Founder, Edunexus Lab</div>
+                    </div>
+                </div>
             </div>
-
-            {/* Column 2: Signature (Center) */}
-            <div className="flex flex-col items-center justify-end text-center space-y-1.5 pb-0.5">
-              {/* Realistic Handwritten Signature SVG */}
-              <div className="h-12 flex items-end justify-center">
-                <svg width="120" height="42" viewBox="0 0 120 40" className="text-white opacity-95 filter drop-shadow-[0_2px_4px_rgba(255,255,255,0.1)]">
-                  <path 
-                    d="M 15,28 C 25,22 35,10 40,8 C 45,6 50,15 48,22 C 45,30 38,36 34,36 C 30,36 28,30 32,24 C 38,15 48,12 55,18 C 62,24 65,30 72,28 C 80,26 82,16 85,12 C 88,8 92,20 90,24 C 88,28 92,30 96,28 C 102,25 106,18 110,14" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2.4" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                  />
-                </svg>
-              </div>
-              
-              <div className="w-[160px] h-[1px] bg-slate-400/50"></div>
-              
-              <div className="space-y-0.5">
-                <p className="text-[11px] font-montserrat font-bold text-white tracking-wider uppercase">
-                  Gaurav Sinha
-                </p>
-                <p className="text-[9px] font-montserrat font-bold text-[#00e5ff] tracking-wide uppercase">
-                  Managing Director & CEO
-                </p>
-              </div>
-            </div>
-
-            {/* Column 3: MSME Seal Emblem (Right) */}
-            <div className="flex flex-col items-end justify-end">
-              {/* Premium Gold Circular MSME Badge Vector SVG */}
-              <svg viewBox="0 0 100 100" className="w-16 h-16 filter drop-shadow-[0_0_8px_rgba(255,215,0,0.25)]">
-                <defs>
-                  <linearGradient id="msmeGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#FFE259" />
-                    <stop offset="60%" stopColor="#FFC837" />
-                    <stop offset="100%" stopColor="#c59b27" />
-                  </linearGradient>
-                </defs>
-                <circle cx="50" cy="50" r="46" fill="#060709" stroke="url(#msmeGoldGrad)" strokeWidth="1.8" />
-                <circle cx="50" cy="50" r="41" fill="none" stroke="url(#msmeGoldGrad)" strokeWidth="0.8" strokeDasharray="3 1.5" />
-                
-                {/* Center State Emblem (Lion Capital of Ashoka representation in Gold) */}
-                <g transform="translate(36, 26) scale(0.28)" fill="url(#msmeGoldGrad)">
-                  <path d="M20,30 C20,15 28,10 32,20 C34,25 30,35 30,45 L25,45 C23,45 20,40 20,30 Z" />
-                  <path d="M35,25 C35,10 65,10 65,25 C65,40 58,55 58,70 L42,70 C42,55 35,40 35,25 Z" />
-                  <circle cx="50" cy="22" r="3.2" fill="#060709" />
-                  <path d="M44,35 Q50,42 56,35 L54,32 L46,32 Z" fill="#060709" />
-                  <path d="M46,45 L54,45 L50,55 Z" />
-                  <path d="M80,30 C80,15 72,10 68,20 C66,25 70,35 70,45 L75,45 C77,45 80,40 80,30 Z" />
-                  <rect x="25" y="70" width="50" height="7" rx="1.5" />
-                  <circle cx="50" cy="73.5" r="3" fill="#060709" stroke="url(#msmeGoldGrad)" strokeWidth="1" />
-                  <path d="M 15 84 L 85 84 L 75 92 L 25 92 Z" />
-                </g>
-                
-                {/* Curved Border Texts */}
-                <path id="msmeTextCurve" d="M 50,50 m -34.5,0 a 34.5,34.5 0 1,1 69,0 a 34.5,34.5 0 1,1 -69,0" fill="none" />
-                <text fill="url(#msmeGoldGrad)" fontSize="5.5" fontWeight="800" letterSpacing="0.6">
-                  <textPath href="#msmeTextCurve" startOffset="5%" textAnchor="middle">
-                    MINISTRY OF MSME • GOVT OF INDIA
-                  </textPath>
-                </text>
-                
-                <path id="msmeInnerCurve" d="M 50,50 m -33.5,0 a 33.5,33.5 0 1,0 67,0 a 33.5,33.5 0 1,0 -67,0" fill="none" />
-                <text fill="url(#msmeGoldGrad)" fontSize="8.5" fontWeight="900" letterSpacing="0.8">
-                  <textPath href="#msmeInnerCurve" startOffset="50%" textAnchor="middle">
-                    MSME
-                  </textPath>
-                </text>
-              </svg>
-            </div>
-
-          </div>
-
         </div>
-      </motion.div>
+      </div>
 
       {/* Action Printing controls */}
       <div className="w-full flex justify-center gap-4 no-print pt-2">

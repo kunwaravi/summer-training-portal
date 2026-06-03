@@ -112,6 +112,23 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
 
     const credentialId = generateCredentialId(user.id, user.name, courseId);
 
+    const startDate = successPayment 
+      ? new Date(successPayment.createdAt) 
+      : new Date((progress?.updatedAt || new Date()).getTime() - 28 * 24 * 60 * 60 * 1000);
+    const endDate = new Date(startDate.getTime() + 28 * 24 * 60 * 60 * 1000);
+
+    const formattedStartDate = startDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const formattedEndDate = endDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
     logger.info(`Certificate generated successfully for user ${userId} on track ${courseId}. Grade: ${grade} (Admin bypass: ${req.user.role === 'ADMIN'})`);
 
     res.json({
@@ -123,11 +140,9 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
       courseName: displayCourseName,
       grade: grade,
       credentialId,
-      completionDate: new Date(progress?.updatedAt || new Date()).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
+      completionDate: formattedEndDate,
       signatures: {
         chiefAcademicOfficer: "Prof. Vinayak Singh",
         technicalDirector: "Er. Gaurav Singh"
@@ -202,6 +217,31 @@ router.get('/verify/:credentialId', rateLimiter(10, 60 * 1000), async (req: Requ
     else if (courseId === "IoT") displayCourseName = "IoT & Smart Interfacing Solutions";
     else if (courseId === "Embedded") displayCourseName = "Embedded Systems & Real-Time OS";
 
+    const payment = await prisma.payment.findFirst({
+      where: {
+        userId: user.id,
+        courseId,
+        status: 'SUCCESS'
+      }
+    });
+
+    const startDate = payment 
+      ? new Date(payment.createdAt) 
+      : new Date((progress?.updatedAt || new Date()).getTime() - 28 * 24 * 60 * 60 * 1000);
+    const endDate = new Date(startDate.getTime() + 28 * 24 * 60 * 60 * 1000);
+
+    const formattedStartDate = startDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const formattedEndDate = endDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
     logger.info(`Certificate verified query success: registry matches ID ${credentialId} / user ${user.id}`);
 
     res.json({
@@ -213,11 +253,9 @@ router.get('/verify/:credentialId', rateLimiter(10, 60 * 1000), async (req: Requ
       branchName: user.branchName,
       courseName: displayCourseName,
       grade,
-      completionDate: new Date(progress.updatedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
+      completionDate: formattedEndDate,
       accreditationRegistry: "NEXUS EMBEDDED SYSTEMS CORPORATE REGISTRY (CIN: U72900DL2026PTC394820)",
       compliance: "ISO 9001:2015 & ISO/IEC 27001 Certified System Standards"
     });
