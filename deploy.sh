@@ -23,10 +23,10 @@ echo "[1/4] Pulling latest code..."
 git pull origin main || echo "Warning: Not a git repository or pull failed. Continuing with local files."
 
 echo "[2/4] Building Docker Images..."
-docker-compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml build
 
 echo "[3/4] Starting the containers in detached mode..."
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 
 echo "[4/4] Pruning old unused images..."
 docker image prune -f
