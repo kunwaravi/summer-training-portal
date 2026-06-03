@@ -61,6 +61,7 @@ model QuizResult {
   id        Int      @id @default(autoincrement())
   userId    Int
   courseId  String   @default("C")
+  week      Int      @default(1)
   score     Int
   accuracy  Int      @default(0)
   grade     String?
