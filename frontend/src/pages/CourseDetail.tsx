@@ -6,6 +6,8 @@ import {
   CheckCircle, Lock, BookOpen, Play, Clipboard, 
   CheckCircle2, ChevronRight, Zap, Eye 
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import CourseHero from '../components/organisms/CourseHero';
@@ -234,7 +236,11 @@ const CourseDetail = () => {
                           {topic.title}
                         </h3>
                       </div>
-                      <p className="text-slate-300 text-sm leading-relaxed pl-8 whitespace-pre-wrap">{topic.text}</p>
+                      <div className="pl-8 prose prose-invert prose-sm max-w-none text-slate-300">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {topic.text}
+                        </ReactMarkdown>
+                      </div>
                       {topic.code && (
                         <div className="ml-0 sm:ml-8 rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner">
                           <button
