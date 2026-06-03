@@ -102,9 +102,23 @@ const LoginPage = () => {
         className="max-w-md w-full space-y-8 bg-slate-900 border border-slate-800 p-8 sm:p-10 rounded-3xl shadow-2xl relative z-10"
       >
         <div className="text-center">
-          <Link to="/" className="inline-flex items-center gap-2 text-2xl font-black bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">
-            <Zap className="text-emerald-400 fill-emerald-400/10" size={24} />
-            <span>EDUNEXUS</span>
+          <Link to="/" className="inline-flex items-center gap-2.5 hover:scale-[1.01] transition-transform select-none">
+            <img src="/logo.png" alt="Edunexus Logo" className="h-9 w-auto" />
+            <span className="font-extrabold uppercase text-slate-100 tracking-wider text-xl sm:text-2xl">
+              EDUNE
+              <span 
+                className="inline-block align-middle" 
+                style={{
+                  background: 'linear-gradient(90deg, #f1f5f9 50%, #d4af37 50%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  display: 'inline-block'
+                }}
+              >
+                X
+              </span>
+              US
+            </span>
           </Link>
           <h2 className="mt-6 text-3xl font-black tracking-tight text-white uppercase">
             Welcome Back

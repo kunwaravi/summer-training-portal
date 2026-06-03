@@ -451,8 +451,24 @@ const Home = () => {
         {/* 8. Footer */}
         <div className="pt-24 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
           <div className="space-y-4">
-            <h4 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
-              <Zap size={18} className="text-emerald-400 fill-emerald-400/15" /> Edunexus Labs
+            <h4 className="text-xl font-black flex items-center gap-2.5 tracking-wider select-none justify-center md:justify-start">
+              <img src="/logo.png" alt="Edunexus Logo" className="h-6 w-auto" />
+              <span className="font-extrabold uppercase text-slate-100 text-lg">
+                EDUNE
+                <span 
+                  className="inline-block align-middle" 
+                  style={{
+                    background: 'linear-gradient(90deg, #f1f5f9 50%, #d4af37 50%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    display: 'inline-block'
+                  }}
+                >
+                  X
+                </span>
+                US
+                <span className="text-[#d4af37] font-black ml-1.5">LABS</span>
+              </span>
             </h4>
             <p className="text-slate-500 text-xs font-medium max-w-sm">
               Empowering the next generation of engineers with high-fidelity hardware expertise, computer science logic, and accredited certifications.

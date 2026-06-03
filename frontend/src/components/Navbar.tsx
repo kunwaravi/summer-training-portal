@@ -36,14 +36,28 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 py-4 shadow-lg no-print">
       <div className="container mx-auto px-4 flex justify-between items-center">
         
-        {/* Brand logo - NEXUS LABS */}
         {/* Brand logo - EDUNEXUS */}
         <Link 
           to={user ? "/dashboard" : "/"} 
-          className="text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 tracking-tight hover:scale-[1.01] transition-transform"
+          className="text-2xl font-black flex items-center gap-2.5 tracking-wide hover:scale-[1.01] transition-transform select-none"
         >
-          <img src="/logo.png" alt="" className="h-8 w-auto" />
-          <span>EDUNEXUS LAB</span>
+          <img src="/logo.png" alt="Edunexus Logo" className="h-9 w-auto" />
+          <span className="font-extrabold uppercase text-slate-100 tracking-wider text-xl sm:text-2xl">
+            EDUNE
+            <span 
+              className="inline-block align-middle" 
+              style={{
+                background: 'linear-gradient(90deg, #f1f5f9 50%, #d4af37 50%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block'
+              }}
+            >
+              X
+            </span>
+            US
+            <span className="text-[#d4af37] font-black ml-1.5">LAB</span>
+          </span>
         </Link>
         
         {user ? (
