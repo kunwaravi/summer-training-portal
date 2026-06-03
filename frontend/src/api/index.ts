@@ -6,6 +6,10 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   // Anti-CSRF custom header validation (Issue #11)
   config.headers['X-Requested-With'] = 'XMLHttpRequest';
   return config;
