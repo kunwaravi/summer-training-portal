@@ -449,7 +449,7 @@ const CourseDetail = () => {
     setQuizAnswers({});
     try {
       const res = await api.get(`/quiz/module/${moduleId}`);
-      setQuizQuestions(res.data);
+      setQuizQuestions(res.data.questions || []);
       setQuizModuleId(moduleId);
       setShowQuizOverlay(true);
     } catch (err: any) {
