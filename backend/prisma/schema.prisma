@@ -7,29 +7,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 model User {
-  id            Int              @id @default(autoincrement())
-  email         String           @unique
-  password      String
-  name          String
-  fatherName    String?
-  collegeName   String?
-  branchName    String?
-  grade         String?          @default("N/A")
-  progress      Int              @default(0) // legacy global progress
-  weekCompleted Int              @default(0) // legacy global weekCompleted
-  courseType    String           @default("Electronics")
-  role          Role             @default(USER)
-  progresses    CourseProgress[]
-  results       QuizResult[]
-  payments      Payment[]
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  id                Int                    @id @default(autoincrement())
+  email             String                 @unique
+  password          String
+  name              String
+  fatherName        String?
+  collegeName       String?
+  branchName        String?
+  bio               String?
+  avatarUrl         String?
+  points            Int                    @default(0)
+  grade             String?                @default("N/A")
+  progress          Int                    @default(0)
+  courseType        String                 @default("Electronics")
+  role              String                 @default("USER")
+  isVerified        Boolean                @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpires DateTime?
+  createdAt         DateTime               @default(now())
+  streak            Int                    @default(0)
+  lastActiveAt      DateTime?              @default(now())
+  assignments       AssignmentSubmission[]
+  certificates      CertificateRecord[]
+  progresses        CourseProgress[]
+  discussions       Discussion[]
+  comments          ForumComment[]
+  moduleProgresses  ModuleProgress[]
+  payments          Payment[]
+  practiceAttempts  PracticeAttempt[]
+  projects          ProjectSubmission[]
+  results           QuizResult[]
 }
 
 model CourseProgress {
@@ -51,59 +60,62 @@ model CourseProgress {
 model QuizResult {
   id        Int      @id @default(autoincrement())
   userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId  String   @default("C")
-  course    Course   @relation(fields: [courseId], references: [id])
-  week      Int
   score     Int
+  accuracy  Int      @default(0)
+  grade     String?
   passed    Boolean
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, courseId])
 }
 
 model Course {
-  id          String           @id // "C", "C++", "IoT", "Embedded"
-  title       String
-  description String
-  price       Int              @default(999) // Price in rupees
-  isPublished Boolean          @default(true)
-  modules     Module[]
-  progresses  CourseProgress[]
-  results     QuizResult[]
-  payments    Payment[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id                 String              @id
+  title              String
+  description        String
+  price              Int                 @default(999)
+  isPublished        Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  progresses         CourseProgress[]
+  finalExamQuestions FinalExamQuestion[]
+  modules            Module[]
+  payments           Payment[]
+  projectSubmissions ProjectSubmission[]
+  results            QuizResult[]
 }
 
 model Module {
-  id            Int            @id @default(autoincrement())
+  id            Int              @id @default(autoincrement())
   courseId      String
-  course        Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course        Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   week          Int
   title         String
   description   String
   topics        Topic[]
   quizQuestions QuizQuestion[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  progresses    ModuleProgress[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   @@unique([courseId, week])
   @@index([courseId])
 }
 
 model Topic {
-  id          Int      @id @default(autoincrement())
-  moduleId    Int
-  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  title       String
-  text        String
-  code        String?
-  note        String?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  moduleId  Int
+  title     String
+  text      String
+  code      String?
+  note      String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@index([moduleId])
 }
@@ -111,34 +123,170 @@ model Topic {
 model QuizQuestion {
   id            Int      @id @default(autoincrement())
   moduleId      Int
-  module        Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   text          String
   options       String[]
   correctAnswer String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  module        Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@index([moduleId])
 }
 
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-}
-
 model Payment {
-  id            String        @id @default(uuid())
+  id            String   @id @default(uuid())
   userId        Int
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId      String
-  course        Course        @relation(fields: [courseId], references: [id])
-  transactionId String?       @unique
+  transactionId String?  @unique
   amount        Int
-  status        PaymentStatus @default(PENDING)
+  status        String   @default("PENDING")
   reference     String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  course        Course   @relation(fields: [courseId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, courseId])
+}
+
+model Project {
+  id            Int      @id @default(autoincrement())
+  title         String
+  category      String
+  difficulty    String
+  description   String
+  documentation String
+  codeSnippet   String?
+  schematicUrl  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Discussion {
+  id        Int            @id @default(autoincrement())
+  title     String
+  content   String
+  userId    Int
+  courseId  String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments  ForumComment[]
+
+  @@index([userId])
+}
+
+model ForumComment {
+  id        Int        @id @default(autoincrement())
+  content   String
+  postId    Int
+  userId    Int
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  post      Discussion @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
+}
+
+model PracticeQuestion {
+  id            Int      @id @default(autoincrement())
+  category      String
+  topic         String
+  difficulty    String
+  text          String
+  options       String[]
+  correctAnswer String
+  explanation   String?
+  createdAt     DateTime @default(now())
+}
+
+model PracticeAttempt {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  score          Int
+  totalQuestions Int
+  category       String
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model CertificateRecord {
+  id               String   @id @default(uuid())
+  userId           Int
+  courseId         String
+  verificationCode String   @unique
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AssignmentSubmission {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  courseId    String
+  weekNumber  Int
+  fileUrl     String
+  fileName    String
+  status      String   @default("PENDING")
+  feedback    String?
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId, weekNumber])
+  @@index([userId, courseId])
+}
+
+model ProjectSubmission {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  courseId      String
+  title         String
+  description   String
+  sourceCodeUrl String
+  reportUrl     String
+  githubUrl     String?
+  status        String   @default("PENDING")
+  feedback      String?
+  submittedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  course        Course   @relation(fields: [courseId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId, courseId])
+}
+
+model ModuleProgress {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  courseId   String
+  moduleId   Int
+  completed  Boolean  @default(false)
+  quizPassed Boolean  @default(false)
+  quizScore  Int?
+  updatedAt  DateTime @updatedAt
+  module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
+  @@index([userId, courseId])
+}
+
+model FinalExamQuestion {
+  id            Int      @id @default(autoincrement())
+  courseId      String
+  text          String
+  options       String[]
+  correctAnswer String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
 }

@@ -7,8 +7,8 @@ const router = Router();
 // GET /api/certificate/:userId/:courseId - Generate certificate data for a specific user and course track
 router.get('/:userId/:courseId', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = parseInt(req.params.userId);
-    const { courseId } = req.params;
+    const userId = parseInt(req.params.userId as string);
+    const courseId = req.params.courseId as string;
 
     const certificateData = await CertificateService.generateCertificate(userId, courseId);
     res.json(certificateData);
@@ -26,7 +26,7 @@ router.get('/:userId/:courseId', authenticateToken, async (req: Request, res: Re
 // GET /api/certificate/verify/:credentialId - Public verification registry endpoint
 router.get('/verify/:credentialId', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { credentialId } = req.params;
+    const credentialId = req.params.credentialId as string;
     const verificationData = await CertificateService.verifyCertificate(credentialId);
     res.json(verificationData);
   } catch (error) {
