@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { UIProvider } from './context/UIContext';
 import React, { Suspense } from 'react';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
@@ -67,13 +68,14 @@ function AppRoutes() {
   );
 }
 
-
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
+      <UIProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </UIProvider>
     </AuthProvider>
   );
 }

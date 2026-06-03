@@ -1,201 +1,59 @@
-import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../api';
-import { 
-  BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, 
-  Star, ShieldAlert, Settings, User, Key, Save, AlertCircle,
-  Search, Cpu, Code, Brain, Trophy, MessageSquare, Clipboard,
-  ExternalLink, ChevronRight, Play, BookOpenCheck, ThumbsUp, Send, Check
-} from 'lucide-react';
-import { coursesConfig } from '../config/courses';
-import { projectsConfig } from '../config/projects';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCourses } from '../hooks/useCourses';
+import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp } from 'lucide-react';
+import CourseCard from '../components/molecules/CourseCard';
+import Spinner from '../components/atoms/Spinner';
+
+const courseMetadata: Record<string, any> = {
+  'C': { 
+    icon: Code, 
+    color: 'from-blue-500 to-blue-700', 
+    barColor: 'bg-blue-500', 
+  },
+  'C++': { 
+    icon: Box, 
+    color: 'from-purple-500 to-purple-700', 
+    barColor: 'bg-purple-500', 
+  },
+  'IoT': { 
+    icon: Wifi, 
+    color: 'from-green-500 to-green-700', 
+    barColor: 'bg-green-500', 
+  },
+  'Embedded': { 
+    icon: Cpu, 
+    color: 'from-orange-500 to-orange-750', 
+    barColor: 'bg-orange-500', 
+  },
+};
 
 const Dashboard = () => {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const { data: coursesData, loading } = useCourses();
 
-  // Tab switching state
-  const [activeTab, setActiveTab] = useState<'courses' | 'practice' | 'projects' | 'forum' | 'credentials' | 'settings'>('courses');
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
-  // Filter & Search states for Courses
-  const [courseCategory, setCourseCategory] = useState<'All' | 'Programming' | 'Electronics'>('All');
-  const [courseSearch, setCourseSearch] = useState('');
-
-  // Project catalog states
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [projectFilter, setProjectFilter] = useState<'All' | 'Beginner' | 'Intermediate' | 'Advanced'>('All');
-  const [copiedCodeIdx, setCopiedCodeIdx] = useState(false);
-
-  // Community Forum state (leveraging localStorage for persistence)
-  const [forumPosts, setForumPosts] = useState<any[]>([]);
-  const [forumPage, setForumPage] = useState(1);
-  const [forumTotalPages, setForumTotalPages] = useState(1);
-  const [newPostTitle, setNewPostTitle] = useState('');
-  const [newPostContent, setNewPostContent] = useState('');
-  const [newPostCategory, setNewPostCategory] = useState('General');
-  const [expandedPostId, setExpandedPostId] = useState<number | null>(null);
-  const [newCommentText, setNewCommentText] = useState('');
-
-  // Form states for Profile Settings
-  const [name, setName] = useState(user?.name || '');
-  const [collegeName, setCollegeName] = useState(user?.collegeName || '');
-  const [branchName, setBranchName] = useState(user?.branchName || '');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-
-  const [payments, setPayments] = useState<any[]>([]);
-  const [loadingPayments, setLoadingPayments] = useState(true);
-
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [leaderboardPage, setLeaderboardPage] = useState(1);
-  const [leaderboardTotalPages, setLeaderboardTotalPages] = useState(1);
-  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
-  const [leaderboardSearch, setLeaderboardSearch] = useState('');
-
-  const fetchPayments = async () => {
-    try {
-      const res = await api.get('/payments/admin/all'); // Admin endpoint fetches all, but we only need it for the user if they were admin.
-      // Wait, there is no user-specific "all my payments" endpoint yet.
-      // Let's check if we have one or just fetch it for each course (inefficient).
-      // Actually, I can just use the user profile if it had payment info.
-    } catch (err) {
-      console.error('Failed to fetch payments:', err);
-    }
-  };
-
-  useEffect(() => {
-    const fetchUserPayments = async () => {
-        try {
-            // Let's assume we can get this from a new endpoint or just use profile results if we add it.
-            // For now, I'll just check status for each course.
-            const paymentPromises = coursesConfig.map(c => api.get(`/payments/status/${c.id}`));
-            const results = await Promise.all(paymentPromises);
-            const successfulPayments = results
-                .filter(r => r.data.paid)
-                .map((r, idx) => coursesConfig[idx].id);
-            setPayments(successfulPayments);
-        } catch (err) {
-            console.error('Failed to fetch payment statuses:', err);
-        } finally {
-            setLoadingPayments(false);
-        }
-    };
-    fetchUserPayments();
-  }, [user?.id]);
-
-  const fetchForumPosts = async (page = 1) => {
-    try {
-      const res = await api.get(`/forum?page=${page}&limit=10`);
-      // Normalize posts to match what the frontend expects
-      const normalized = res.data.discussions.map((d: any) => ({
-        id: d.id,
-        title: d.title,
-        content: d.content,
-        author: d.user?.name || 'Student',
-        category: d.courseId || 'General',
-        upvotes: 1, // local-only mock upvotes
-        comments: d.comments.map((c: any) => ({
-          id: c.id,
-          userId: c.userId,
-          author: c.user?.name || 'Respondent',
-          text: c.content
-        })),
-        createdAt: new Date(d.createdAt).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      }));
-      
-      if (page === 1) {
-        setForumPosts(normalized);
-      } else {
-        setForumPosts(prev => [...prev, ...normalized]);
-      }
-      setForumPage(res.data.meta.page);
-      setForumTotalPages(res.data.meta.totalPages);
-    } catch (err) {
-      console.error('Failed to fetch forum posts:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'forum') {
-      fetchForumPosts(1);
-    }
-  }, [activeTab]);
-
-  const fetchLeaderboard = async (page = 1) => {
-    setLoadingLeaderboard(page === 1);
-    try {
-      const res = await api.get(`/practice/leaderboard?search=${leaderboardSearch}&page=${page}&limit=10`);
-      if (page === 1) {
-        setLeaderboard(res.data.leaderboard);
-      } else {
-        setLeaderboard(prev => [...prev, ...res.data.leaderboard]);
-      }
-      setLeaderboardPage(res.data.meta.page);
-      setLeaderboardTotalPages(res.data.meta.totalPages);
-    } catch (err) {
-      console.error('Failed to fetch leaderboard:', err);
-    } finally {
-      setLoadingLeaderboard(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'practice') {
-      fetchLeaderboard(1);
-    }
-  }, [activeTab, leaderboardSearch]);
+  const courses = coursesData || [];
 
   // Helper to extract course specific stats
   const getCourseProgress = (courseId: string) => {
-    if (!user || !user.progresses) return { progress: 0, completed: false };
+    if (!user || !user.progresses) return { progress: 0, weekCompleted: 0, completed: false };
     const p = user.progresses.find((item: any) => item.courseId === courseId);
-    return p ? { progress: p.progress, completed: p.completed } : { progress: 0, completed: false };
-  };
-
-  const getBestGrade = (courseId: string) => {
-    if (!user || !user.results) return null;
-    const passingResults = user.results.filter((r: any) => r.courseId === courseId && r.passed);
-    if (passingResults.length === 0) return null;
-    const best = passingResults.reduce((prev: any, current: any) => (prev.accuracy > current.accuracy) ? prev : current);
-    return best.grade;
-  };
-
-  const getDetailedCourseProgress = (courseId: string) => {
-    if (!user) return { modulesPassed: 0, assignmentsApproved: 0, projectStatus: 'NOT_SUBMITTED', examScore: null };
-    
-    const modulesPassed = user.moduleProgresses?.filter(
-      (p: any) => p.courseId === courseId && p.quizPassed
-    ).length || 0;
-    
-    const assignmentsApproved = user.assignments?.filter(
-      (a: any) => a.courseId === courseId && a.status === 'APPROVED'
-    ).length || 0;
-
-    const project = user.projects?.find((p: any) => p.courseId === courseId);
-    const projectStatus = project ? project.status : 'NOT_SUBMITTED';
-
-    const examResults = user.results?.filter((r: any) => r.courseId === courseId);
-    const examScore = examResults && examResults.length > 0
-      ? Math.max(...examResults.map((r: any) => r.accuracy))
-      : null;
-
-    return { modulesPassed, assignmentsApproved, projectStatus, examScore };
+    return p ? { progress: p.progress, weekCompleted: p.weekCompleted, completed: p.completed } : { progress: 0, weekCompleted: 0, completed: false };
   };
 
   // Aggregated metrics
   const activeTracksCount = user?.progresses?.filter((p: any) => p.progress > 0 && p.progress < 100).length || 0;
   const completedTracksCount = user?.progresses?.filter((p: any) => p.progress === 100).length || 0;
-  const highestAccuracy = user?.results?.length > 0 ? Math.max(...user.results.map((r: any) => r.accuracy)) : 0;
+  const totalQuizzesPassed = user?.results?.filter((r: any) => r.passed).length || 0;
 
   const getGreeting = () => {
     const hr = new Date().getHours();
@@ -204,1108 +62,230 @@ const Dashboard = () => {
     return "Good Evening";
   };
 
+  const streakDays = totalQuizzesPassed > 0 ? (totalQuizzesPassed * 2 + 1) : activeTracksCount > 0 ? 1 : 0;
+
+  const hasWeek1 = user?.progresses?.some((p: any) => p.weekCompleted >= 1) || false;
+  const hasWeek2 = user?.progresses?.some((p: any) => p.weekCompleted >= 2) || false;
+  const hasWeek3 = user?.progresses?.some((p: any) => p.weekCompleted >= 3) || false;
+  const hasCompleted = user?.progresses?.some((p: any) => p.completed) || false;
+
   const activeTracks = user?.progresses?.filter((p: any) => p.progress > 0 && p.progress < 100) || [];
   const latestProgressInfo = activeTracks.length > 0 ? activeTracks[0] : null;
   const latestActiveCourse = latestProgressInfo ? {
     id: latestProgressInfo.courseId,
     progress: latestProgressInfo.progress,
-    title: coursesConfig.find(c => c.id === latestProgressInfo.courseId)?.titleShort || "Specialized Track"
+    weekCompleted: latestProgressInfo.weekCompleted,
+    title: courses.find((c: any) => c.id === latestProgressInfo.courseId)?.title || "Specialized Track"
   } : null;
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSuccessMsg('');
-    setErrorMsg('');
-
-    if (password && password !== confirmPassword) {
-      setErrorMsg('Passwords do not match.');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const payload: any = { name, collegeName, branchName };
-      if (password) payload.password = password;
-
-      const response = await api.put('/auth/profile', payload);
-      login(response.data.token || '', response.data.user);
-      setSuccessMsg('Profile updated successfully!');
-      setPassword('');
-      setConfirmPassword('');
-    } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || 'Failed to update profile settings.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Handle Forum interactions
-  const handleCreatePost = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPostTitle.trim() || !newPostContent.trim()) return;
-
-    try {
-      await api.post('/forum', {
-        title: newPostTitle,
-        content: newPostContent,
-        courseId: newPostCategory !== 'General' ? newPostCategory : null
-      });
-
-      setNewPostTitle('');
-      setNewPostContent('');
-      alert('Forum thread published successfully!');
-      fetchForumPosts(1);
-    } catch (err) {
-      console.error('Failed to create forum thread:', err);
-      alert('Failed to publish thread. Please try again.');
-    }
-  };
-
-  const handleUpvotePost = (postId: number) => {
-    // Keep local simulated upvotes on top of the DB posts
-    const updated = forumPosts.map(p => {
-      if (p.id === postId) {
-        return { ...p, upvotes: p.upvotes + 1 };
-      }
-      return p;
-    });
-    setForumPosts(updated);
-  };
-
-  const handleAddForumComment = async (e: React.FormEvent, postId: number) => {
-    e.preventDefault();
-    if (!newCommentText.trim()) return;
-
-    try {
-      await api.post(`/forum/${postId}/comment`, {
-        content: newCommentText
-      });
-
-      setNewCommentText('');
-      fetchForumPosts(1);
-    } catch (err) {
-      console.error('Failed to add reply:', err);
-      alert('Failed to post reply.');
-    }
-  };
-
-  const handleDeleteComment = async (commentId: number) => {
-    if (!window.confirm("Are you sure you want to delete this reply?")) return;
-    try {
-      await api.delete(`/forum/comment/${commentId}`);
-      fetchForumPosts(1);
-    } catch (err) {
-      console.error('Failed to delete comment:', err);
-      alert('Failed to delete reply.');
-    }
-  };
-
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCodeIdx(true);
-    setTimeout(() => setCopiedCodeIdx(false), 2000);
-  };
-
-  // Filter Courses
-  const filteredCourses = coursesConfig.filter(c => {
-    const matchesCategory = courseCategory === 'All' || c.category === courseCategory;
-    const matchesSearch = c.title.toLowerCase().includes(courseSearch.toLowerCase()) || 
-                          c.titleShort.toLowerCase().includes(courseSearch.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  // Filter Projects
-  const filteredProjects = projectsConfig.filter(p => {
-    return projectFilter === 'All' || p.difficulty === projectFilter;
-  });
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.05 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 15, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { type: "spring" as const, stiffness: 300, damping: 24 }
-    }
-  };
-
   return (
-    <motion.div 
-      initial="hidden" 
-      animate="visible" 
-      variants={containerVariants}
-      className="py-6 space-y-10 max-w-7xl mx-auto px-4 min-h-screen text-white font-sans relative overflow-hidden"
-      style={{
-        backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.04) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.04) 0%, transparent 40%)'
-      }}
-    >
-      {/* Background Technical Grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none -z-20"></div>
-
-      {/* 1. Header Welcome Cockpit */}
-      <motion.div 
-        variants={itemVariants} 
-        className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-emerald-500 bg-slate-900/40 backdrop-blur-md border border-slate-850/50 p-8 rounded-[2rem] shadow-[0_0_50px_-12px_rgba(16,185,129,0.15)] relative overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-550/10 to-transparent pointer-events-none -z-10"></div>
-        <div className="space-y-2">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-200 to-cyan-400 bg-clip-text text-transparent uppercase flex items-center gap-3">
-            <Zap className="text-emerald-400 fill-emerald-400/20 animate-pulse" size={28} />
-            <span>Hello, {user?.name?.split(' ')[0]}!</span>
+    <div className="py-8 space-y-10 max-w-7xl mx-auto px-4">
+      
+      {/* Welcome Heading & Profile Details */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+        <div className="space-y-1.5">
+          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent">
+            {getGreeting()}, {user?.name?.split(' ')[0]}!
           </h1>
-          <p className="text-slate-400 text-xs sm:text-sm max-w-xl font-medium leading-relaxed">
-            Welcome to Edunexus. Study complete professional tracks, solve practice tests, and secure certifications.
+          <p className="text-slate-450 text-sm">
+            Welcome to your student academic console. Manage your industrial learning tracks below.
           </p>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <span className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
-              🔥 <span className="font-mono">{user?.streak || 0}</span> Day Streak
-            </span>
-            <span className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
-              ⚡ <span className="font-mono">{user?.points || 0}</span> XP Points
-            </span>
-          </div>
         </div>
         
-        <div className="flex flex-wrap gap-2.5 text-[10px] font-black uppercase tracking-wider items-center">
-          <span className="px-4 py-2.5 rounded-2xl bg-slate-950/60 border border-slate-900 text-slate-350 shadow flex items-center gap-2">
-            🏢 {user?.collegeName || 'Google Linked Account'}
+        <div className="flex flex-wrap gap-2 text-xs font-bold items-center">
+          <span className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 shadow-sm">
+            🔥 {streakDays}-Day Learn Streak
           </span>
-          <span className="px-4 py-2.5 rounded-2xl bg-slate-950/60 border border-slate-900 text-slate-350 shadow flex items-center gap-2">
-            ⚙ {user?.branchName || 'N/A'}
+          <span className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
+            🏢 {user?.collegeName || 'Government Polytechnic'}
+          </span>
+          <span className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
+            ⚙ {user?.branchName || 'ECE'}
           </span>
         </div>
-      </motion.div>
+      </div>
 
       {/* Staff Privileges Banner */}
       {user?.role === 'ADMIN' && (
-        <motion.div variants={itemVariants} className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-lg">
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-lg shadow-red-950/20">
           <div className="flex items-center gap-2">
-            <ShieldAlert size={18} />
-            <span>STAFF PRIVILEGES ACTIVE: You can manage courses, users, and quizzes.</span>
+            <span className="text-sm">🛡</span>
+            <span>STAFF PRIVILEGES ACTIVE: You have complete administrative privileges over course contents, transactions, and quizzes.</span>
           </div>
           <button 
             onClick={() => navigate('/admin')}
-            className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-rose-500 to-red-650 text-slate-950 font-black rounded-xl transition-all active:scale-[0.98] uppercase tracking-wider text-[10px]"
+            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-lg transition-all active:scale-[0.98] uppercase tracking-wider text-[10px]"
           >
-            Open Admin Panel
+            Open CMS Editor Panel
           </button>
-        </motion.div>
+        </div>
       )}
 
-      {/* 2. GFG-Style Tab Navigation */}
-      <motion.div variants={itemVariants} className="flex flex-wrap gap-2 border-b border-slate-850 pb-2 overflow-x-auto">
+      {/* Analytics Metric Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { id: 'courses', label: 'My Courses', icon: BookOpen },
-          { id: 'practice', label: 'Practice Arena', icon: Trophy },
-          { id: 'projects', label: 'Projects Workspace', icon: Cpu },
-          { id: 'forum', label: 'Q&A Forum', icon: MessageSquare },
-          { id: 'credentials', label: 'Credentials Chest', icon: Award },
-          { id: 'settings', label: 'Profile Editor', icon: Settings }
-        ].map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2.5 transition-all ${
-                isActive 
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/10' 
-                  : 'text-slate-400 hover:text-white bg-slate-900 border border-slate-850 hover:bg-slate-850'
-              }`}
-            >
-              <Icon size={14} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </motion.div>
-
-      {/* 3. Dynamic Console Screens */}
-      <AnimatePresence mode="wait">
-        
-        {/* Tab 1: My Learning Courses */}
-        {activeTab === 'courses' && (
-          <motion.div
-            key="courses-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-8"
-          >
-            {/* Quick Resume Dashboard Widget */}
-            {latestActiveCourse && (
-              <div className="p-8 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-850 rounded-[2.5rem] flex flex-col justify-between relative overflow-hidden shadow-2xl">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
-                <div className="space-y-4 relative z-10">
-                  <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase tracking-wider">
-                    <Zap size={14} className="animate-pulse fill-emerald-400/20" /> Resume Learning Track
-                  </div>
-                  <h3 className="text-3xl font-black text-white tracking-tight">{latestActiveCourse.title}</h3>
-                  <div className="flex items-center gap-4 pt-2">
-                    <div className="flex-1 h-3 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-slate-850">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${latestActiveCourse.progress}%` }}
-                        className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full" 
-                      />
-                    </div>
-                    <span className="text-xs font-black text-emerald-400 font-mono bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">{latestActiveCourse.progress}%</span>
-                  </div>
-                </div>
-                <div className="pt-6 mt-6 border-t border-slate-850 flex justify-end relative z-10">
-                  <button 
-                    onClick={() => navigate(`/course/${latestActiveCourse.id}`)}
-                    className="bg-emerald-500 text-slate-950 font-black text-xs uppercase tracking-widest px-6 py-3.5 rounded-xl shadow hover:opacity-95 transition flex items-center gap-2"
-                  >
-                    Resume Training <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Aggregated Mini Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {[
-                { label: "Active Tracks", value: activeTracksCount, color: "text-emerald-450 bg-emerald-500/10 border-emerald-500/20", glow: "group-hover:shadow-[0_0_25px_-5px_rgba(16,185,129,0.25)]", icon: BookOpen },
-                { label: "Completed Tracks", value: completedTracksCount, color: "text-teal-400 bg-teal-500/10 border-teal-500/20", glow: "group-hover:shadow-[0_0_25px_-5px_rgba(20,184,166,0.25)]", icon: Award },
-                { label: "Highest Accuracy", value: `${highestAccuracy}%`, color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20", glow: "group-hover:shadow-[0_0_25px_-5px_rgba(6,182,212,0.25)]", icon: Target }
-              ].map((stat, sIdx) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div 
-                    key={sIdx} 
-                    whileHover={{ scale: 1.03, y: -2 }}
-                    className="group p-6 bg-slate-900/60 backdrop-blur-md border border-slate-850 rounded-3xl flex items-center justify-between transition-all duration-300"
-                  >
-                    <div className="space-y-1.5">
-                      <span className="text-slate-450 text-[9px] font-black uppercase tracking-wider block">{stat.label}</span>
-                      <span className="text-3xl font-black text-white">{stat.value}</span>
-                    </div>
-                    <div className={`p-3.5 rounded-2xl ${stat.color} border flex items-center justify-center transition-all duration-300 ${stat.glow}`}>
-                      <Icon size={20} />
-                    </div>
-                  </motion.div>
-                );
-              })}
+          { icon: BookOpen, label: 'Active Tracks', value: activeTracksCount, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+          { icon: CheckCircle2, label: 'Completed Tracks', value: completedTracksCount, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { icon: TrendingUp, label: 'Quizzes Passed', value: totalQuizzesPassed, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+          { icon: Award, label: 'Certificates Earned', value: completedTracksCount, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+        ].map((stat, idx) => (
+          <div key={idx} className="p-5 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl flex items-center gap-4 shadow-sm hover:border-slate-700 transition-colors">
+            <div className={`p-3 ${stat.bg} rounded-xl ${stat.color}`}>
+              <stat.icon size={24} />
             </div>
-
-            {/* Achievements & Badges Panel */}
-            <div className="p-6 bg-slate-900/40 backdrop-blur-md border border-slate-850 rounded-[2rem] space-y-4">
-              <h4 className="text-sm font-black uppercase tracking-wider text-slate-350 flex items-center gap-2">
-                <Trophy size={16} className="text-emerald-400" /> Earned Achievement Badges
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Badge 1: Weekly Achievement */}
-                {(() => {
-                  const weeklyPassed = (user?.moduleProgresses?.filter((p: any) => p.quizPassed).length || 0) >= 5 || (user?.assignments?.length || 0) >= 1;
-                  return (
-                    <div className={`p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 ${
-                      weeklyPassed 
-                        ? 'bg-slate-950/60 border-emerald-500/30 text-white shadow-[0_0_15px_-3px_rgba(16,185,129,0.1)]' 
-                        : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-50'
-                    }`}>
-                      <div className={`p-3 rounded-xl ${weeklyPassed ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-900 text-slate-700 border border-slate-850'}`}>
-                        <Zap size={24} className={weeklyPassed ? 'animate-pulse' : ''} />
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-black uppercase tracking-wider block text-slate-500">Weekly Achievement</span>
-                        <h5 className="text-xs font-extrabold">Weekly Milestone</h5>
-                        <p className="text-[9px] text-slate-400 leading-snug">Pass 5 module quizzes or submit a weekly assignment.</p>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Badge 2: Top Performer */}
-                {(() => {
-                  const topPerformer = highestAccuracy >= 90;
-                  return (
-                    <div className={`p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 ${
-                      topPerformer 
-                        ? 'bg-slate-950/60 border-amber-500/30 text-white shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)]' 
-                        : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-50'
-                    }`}>
-                      <div className={`p-3 rounded-xl ${topPerformer ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-slate-900 text-slate-700 border border-slate-850'}`}>
-                        <Star size={24} className={topPerformer ? 'animate-bounce' : ''} />
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-black uppercase tracking-wider block text-slate-500">Top Performer</span>
-                        <h5 className="text-xs font-extrabold">Elite Performer</h5>
-                        <p className="text-[9px] text-slate-400 leading-snug">Achieve 90%+ score on any quiz or final exam.</p>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Badge 3: Completion */}
-                {(() => {
-                  const completedBadge = completedTracksCount >= 1;
-                  return (
-                    <div className={`p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 ${
-                      completedBadge 
-                        ? 'bg-slate-950/60 border-cyan-500/30 text-white shadow-[0_0_15px_-3px_rgba(6,182,212,0.1)]' 
-                        : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-50'
-                    }`}>
-                      <div className={`p-3 rounded-xl ${completedBadge ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'bg-slate-900 text-slate-700 border border-slate-850'}`}>
-                        <Award size={24} />
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-black uppercase tracking-wider block text-slate-500">Completion</span>
-                        <h5 className="text-xs font-extrabold">Alumnus Badge</h5>
-                        <p className="text-[9px] text-slate-400 leading-snug">Successfully complete a 4-week industrial training track.</p>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Search & Category Filter Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-slate-850">
-              <div className="flex flex-wrap gap-1.5 bg-slate-950/60 p-1 border border-slate-850 rounded-2xl">
-                {(['All', 'Programming', 'Electronics'] as const).map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setCourseCategory(cat)}
-                    className={`px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition ${courseCategory === cat ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-455 hover:text-white'}`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-              
-              <div className="relative w-full md:max-w-xs">
-                <Search className="absolute left-4 top-3 text-slate-500" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search courses..."
-                  value={courseSearch}
-                  onChange={(e) => setCourseSearch(e.target.value)}
-                  className="w-full pl-12 pr-4 py-2.5 bg-slate-900 border border-slate-850 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-xs font-bold"
-                />
-              </div>
-            </div>
-
-            {/* Courses grid rendering */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredCourses.map((course, cIdx) => {
-                const progress = getCourseProgress(course.id);
-                const hasStarted = progress.progress > 0;
-                const isCompleted = progress.completed;
-                const grade = getBestGrade(course.id);
-
-                const isPaid = payments.includes(course.id);
-                const detailed = getDetailedCourseProgress(course.id);
-
-                return (
-                  <motion.div
-                    key={course.id}
-                    whileHover={{ y: -6, scale: 1.01 }}
-                    onClick={() => {
-                        if ((isCompleted && isPaid) || user?.role === 'ADMIN') {
-                            navigate(`/certificate?courseId=${course.id}`);
-                        } else {
-                            navigate(`/course/${course.id}`);
-                        }
-                    }}
-                    className="group cursor-pointer bg-slate-900/50 backdrop-blur-md border border-slate-850/60 rounded-[2rem] overflow-hidden shadow-xl hover:border-emerald-500/50 hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.12)] flex flex-col justify-between transition-all duration-300"
-                  >
-                    <div className={`h-36 bg-gradient-to-br ${course.colorDark} p-6 relative overflow-hidden flex items-center justify-between`}>
-                      <div className="absolute inset-0 bg-slate-950/20"></div>
-                      <course.icon size={48} className="text-white drop-shadow-xl relative z-10 shrink-0" />
-                      
-                      <div className="text-right z-10 space-y-1">
-                        <span className={`px-2.5 py-1 rounded-xl text-[9px] font-black uppercase border tracking-wider shadow ${isCompleted ? 'bg-emerald-500 text-slate-950 border-emerald-400' : hasStarted ? 'bg-teal-500 text-slate-950 border-teal-400' : 'bg-slate-950 text-slate-300 border-slate-850'}`}>
-                          {isCompleted ? (grade ? `${grade}` : 'COMPLETED') : hasStarted ? 'IN PROGRESS' : 'NOT STARTED'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-6 space-y-6 flex-1 flex flex-col justify-between">
-                      <div className="space-y-2">
-                        <h4 className="text-lg font-black tracking-tight text-white group-hover:text-emerald-450 transition">{course.titleShort}</h4>
-                        <p className="text-slate-450 text-xs leading-relaxed line-clamp-3 font-medium">{course.descShort}</p>
-                      </div>
-
-                      <div className="space-y-3 pt-4 border-t border-slate-850/60">
-                        <div className="flex justify-between items-center text-[9px] font-black text-slate-500 uppercase">
-                          <span>Mastery Progress</span>
-                          <span className="text-slate-350">{progress.progress}%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-850">
-                          <div className={`h-full ${course.barColor}`} style={{ width: `${progress.progress}%` }}></div>
-                        </div>
-                      </div>
-
-                      {/* Detailed Progress Milestones */}
-                      <div className="grid grid-cols-2 gap-2 text-[9px] font-black uppercase tracking-wider text-slate-400">
-                        <div className="flex items-center gap-1.5 bg-slate-950/30 p-2 rounded-xl border border-slate-850/50">
-                          <span>📚</span>
-                          <span>Modules: <span className="text-slate-200">{detailed.modulesPassed}/20</span></span>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-slate-950/30 p-2 rounded-xl border border-slate-850/50">
-                          <span>📝</span>
-                          <span>Tasks: <span className="text-slate-200">{detailed.assignmentsApproved}/4</span></span>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-slate-950/30 p-2 rounded-xl border border-slate-850/50">
-                          <span>⚙️</span>
-                          <span>Project: <span className={
-                            detailed.projectStatus === 'APPROVED' ? 'text-emerald-450' :
-                            detailed.projectStatus === 'PENDING' ? 'text-amber-500' : 'text-slate-550'
-                          }>{detailed.projectStatus}</span></span>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-slate-950/30 p-2 rounded-xl border border-slate-850/50">
-                          <span>🏆</span>
-                          <span>Exam: <span className={detailed.examScore !== null ? 'text-emerald-450' : 'text-slate-550'}>
-                            {detailed.examScore !== null ? `${detailed.examScore}%` : 'N/A'}
-                          </span></span>
-                        </div>
-                      </div>
-
-                      <div className={`flex items-center justify-between font-black text-[11px] uppercase ${course.textColor} pt-2`}>
-                        <span>{(isCompleted || user?.role === 'ADMIN') ? 'View Certificate' : hasStarted ? 'Resume Next Module' : 'Explore Track'}</span>
-                        <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Tab 2: Practice Arena */}
-        {activeTab === 'practice' && (
-          <motion.div
-            key="practice-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-          >
-            {/* Left Col: Diagnostic Timed Tests */}
-            <div className="lg:col-span-2 space-y-6">
-              <div>
-                <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                  <Zap className="text-amber-400 fill-amber-400/20" /> Topic-wise Mock Tests
-                </h3>
-                <p className="text-slate-400 text-xs mt-1">Accelerate your programming syntax and electronics parameters with timed tests.</p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {[
-                  { title: "Programming MCQs Practice", category: "Programming", qs: "5 MCQs", time: "15 Mins" },
-                  { title: "Electronics Parameter Practice", category: "Electronics", qs: "5 MCQs", time: "15 Mins" },
-                  { title: "Timed Systems Mock Test", category: "Programming", qs: "5 MCQs", time: "15 Mins" }
-                ].map((test, idx) => (
-                  <div key={idx} className="p-6 bg-slate-900 border border-slate-850 rounded-3xl space-y-4 flex flex-col justify-between shadow-xl">
-                    <div className="space-y-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 tracking-wider">{test.category}</span>
-                      <h4 className="text-base font-bold text-white leading-snug">{test.title}</h4>
-                      <p className="text-[10px] text-slate-500 font-bold font-mono">Telemetry: {test.qs} • Limit: {test.time}</p>
-                    </div>
-
-                    <button 
-                      onClick={() => navigate(`/practice/arena?category=${test.category}`)}
-                      className="w-full py-3 bg-slate-950 hover:bg-slate-850 border border-slate-850 rounded-xl text-[10px] font-black uppercase tracking-widest text-emerald-450 hover:text-white flex items-center justify-center gap-2 transition"
-                    >
-                      <Play size={12} className="fill-emerald-400/20 text-emerald-400" /> Start Arena
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right Col: Global Leaderboard */}
-            <div className="bg-slate-900 border border-slate-850 p-6 rounded-3xl space-y-4 shadow-2xl shrink-0 self-start">
-              <div className="flex items-center gap-2 border-b border-slate-850 pb-3 justify-between">
-                <div className="flex items-center gap-2">
-                  <Trophy className="text-yellow-500" size={20} />
-                  <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">Global Leaderboard</h3>
-                </div>
-                <span className="px-2 py-0.5 rounded-full bg-slate-950 text-[9px] font-bold text-slate-450 border border-slate-850 font-mono">
-                  {leaderboard.length} users
-                </span>
-              </div>
-
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-                <input
-                  type="text"
-                  placeholder="Search students..."
-                  value={leaderboardSearch}
-                  onChange={(e) => setLeaderboardSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-slate-950/60 border border-slate-850 rounded-2xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition font-medium"
-                />
-              </div>
-
-              <div className="space-y-3 pt-2">
-                {loadingLeaderboard ? (
-                  <div className="py-8 text-center space-y-2">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500 mx-auto"></div>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Syncing Rankings...</p>
-                  </div>
-                ) : leaderboard.length === 0 ? (
-                  <p className="text-center py-6 text-xs text-slate-500 font-bold">No ranking profiles found.</p>
-                ) : (
-                  leaderboard.map((student, sIdx) => {
-                    const isCurrentUser = student.id === user?.id;
-                    const initials = student.name
-                      ? student.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2)
-                      : 'ST';
-                    
-                    const badge = student.points >= 500 ? 'Master' : student.points >= 200 ? 'Pro' : 'Scholar';
-                    const badgeColor = badge === 'Master' ? 'text-amber-400' : badge === 'Pro' ? 'text-blue-400' : 'text-slate-400';
-
-                    return (
-                      <div 
-                        key={student.id}
-                        className={`p-3 rounded-2xl flex items-center justify-between border transition ${isCurrentUser ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-slate-950/40 border-slate-850 hover:border-slate-800'}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${sIdx === 0 ? 'bg-yellow-500 text-slate-950' : sIdx === 1 ? 'bg-slate-300 text-slate-950' : sIdx === 2 ? 'bg-amber-600 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
-                            {sIdx + 1}
-                          </span>
-                          
-                          <div className="w-8 h-8 rounded-full bg-slate-850 border border-slate-700 text-slate-350 text-xs font-black flex items-center justify-center shrink-0">
-                            {initials}
-                          </div>
-
-                          <div>
-                            <h4 className="text-xs font-black text-slate-200">{student.name}</h4>
-                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                              <span className={`font-black ${badgeColor}`}>{badge}</span> • {student.collegeName || 'Edunexus User'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <span className="text-xs font-black text-emerald-400 font-mono shrink-0">{student.points} XP</span>
-                      </div>
-                    );
-                  })
-                )}
-                
-                {leaderboardPage < leaderboardTotalPages && (
-                  <div className="flex justify-center pt-2">
-                    <button
-                      onClick={() => fetchLeaderboard(leaderboardPage + 1)}
-                      className="px-4 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider text-emerald-400 hover:text-white hover:border-emerald-500 transition"
-                    >
-                      Load More
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Tab 3: Projects Workspace */}
-        {activeTab === 'projects' && (
-          <motion.div
-            key="projects-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-8"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-850 pb-4">
-              <div>
-                <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                  <Cpu className="text-emerald-450" /> Electronics Projects Workspace
-                </h3>
-                <p className="text-slate-400 text-xs mt-1">Acquire physical knowledge by prototyping advanced, verified hardware modules.</p>
-              </div>
-
-              <div className="flex gap-1.5 bg-slate-950/60 p-1 border border-slate-850 rounded-2xl shrink-0">
-                {(['All', 'Beginner', 'Intermediate', 'Advanced'] as const).map(diff => (
-                  <button
-                    key={diff}
-                    onClick={() => setProjectFilter(diff)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${projectFilter === diff ? 'bg-slate-900 text-white' : 'text-slate-450 hover:text-white'}`}
-                  >
-                    {diff}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Projects Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {filteredProjects.map((project, pIdx) => (
-                <div key={pIdx} className="p-6 bg-slate-900 border border-slate-850 rounded-[2rem] flex flex-col justify-between shadow-xl">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 tracking-wider">{project.category}</span>
-                      <span className={`text-[9px] font-black uppercase tracking-widest ${project.difficulty === 'Advanced' ? 'text-rose-400' : project.difficulty === 'Intermediate' ? 'text-amber-400' : 'text-emerald-450'}`}>{project.difficulty}</span>
-                    </div>
-
-                    <h4 className="text-lg font-black leading-snug text-white">{project.title}</h4>
-                    <p className="text-slate-450 text-xs leading-relaxed">{project.description}</p>
-                  </div>
-
-                  <button
-                    onClick={() => setSelectedProject(project)}
-                    className="w-full mt-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-95 transition flex items-center justify-center gap-2"
-                  >
-                    <ExternalLink size={12} /> View Specs & Manual
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Project Viewer Lightbox Modal */}
-            <AnimatePresence>
-              {selectedProject && (
-                <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 20, opacity: 0 }}
-                    className="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-[2.5rem] w-full max-w-4xl max-h-[85vh] overflow-y-auto space-y-6 relative text-left shadow-2xl"
-                  >
-                    <button
-                      onClick={() => setSelectedProject(null)}
-                      className="absolute right-6 top-6 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white bg-slate-950 border border-slate-850 px-4 py-2 rounded-xl"
-                    >
-                      Close ✕
-                    </button>
-
-                    <div className="space-y-2 border-b border-slate-850 pb-4">
-                      <div className="flex gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 border border-emerald-500/20 text-emerald-450">{selectedProject.category}</span>
-                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-950 border border-slate-850 text-slate-400">{selectedProject.difficulty}</span>
-                      </div>
-                      <h3 className="text-2xl font-black text-white">{selectedProject.title}</h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                      {/* Left: Manual assembly instructions */}
-                      <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed max-w-md">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-emerald-450 border-b border-slate-850 pb-2">1. Hardware Manual & Wiring</h4>
-                        <div className="p-4 bg-slate-950 border border-slate-850 rounded-2xl font-mono text-[10px] text-slate-400 overflow-x-auto whitespace-pre">
-                          {selectedProject.schematic}
-                        </div>
-                        <div className="whitespace-pre-wrap pt-2">
-                          {selectedProject.documentation}
-                        </div>
-                      </div>
-
-                      {/* Right: Embedded source code */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-850 pb-2">
-                          <h4 className="text-xs font-black uppercase tracking-wider text-emerald-450">2. Firmware Driver Code</h4>
-                          <button
-                            onClick={() => handleCopyCode(selectedProject.code)}
-                            className="px-3 py-1.5 bg-slate-950 border border-slate-850 text-[10px] text-slate-300 font-bold uppercase rounded-xl hover:text-white transition flex items-center gap-1.5"
-                          >
-                            <Clipboard size={12} />
-                            {copiedCodeIdx ? 'Copied!' : 'Copy Code'}
-                          </button>
-                        </div>
-                        <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-5 shadow-inner">
-                          <pre className="text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed select-all">
-                            <code>{selectedProject.code}</code>
-                          </pre>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-
-        {/* Tab 4: Q&A Discussions Forum */}
-        {activeTab === 'forum' && (
-          <motion.div
-            key="forum-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-          >
-            {/* Left: Interactive posts feeds */}
-            <div className="lg:col-span-2 space-y-6">
-              <div>
-                <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                  <MessageSquare className="text-emerald-450" /> Q&A Forum Threads
-                </h3>
-                <p className="text-slate-400 text-xs mt-1">Engage with fellow students, raise doubts, and contribute verified solutions.</p>
-              </div>
-
-              <div className="space-y-4">
-                {forumPosts.map(post => {
-                  const isExpanded = expandedPostId === post.id;
-                  return (
-                    <div key={post.id} className="p-6 bg-slate-900 border border-slate-850 rounded-[2rem] space-y-4 shadow-xl">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase bg-emerald-500/10 text-emerald-400">{post.category}</span>
-                            <span className="text-[9px] text-slate-500 font-bold">posted by {post.author} • {post.createdAt}</span>
-                          </div>
-                          <h4 className="text-base font-bold text-white hover:text-emerald-400 transition cursor-pointer" onClick={() => setExpandedPostId(isExpanded ? null : post.id)}>
-                            {post.title}
-                          </h4>
-                        </div>
-
-                        <button 
-                          onClick={() => handleUpvotePost(post.id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-950 border border-slate-850 rounded-xl hover:border-emerald-500 text-[10px] text-slate-400 hover:text-emerald-400 font-bold transition shrink-0"
-                        >
-                          <ThumbsUp size={12} /> {post.upvotes}
-                        </button>
-                      </div>
-
-                      <p className="text-slate-400 text-xs leading-relaxed line-clamp-3">{post.content}</p>
-
-                      <div className="pt-2">
-                        <button
-                          onClick={() => setExpandedPostId(isExpanded ? null : post.id)}
-                          className="text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:underline flex items-center gap-1"
-                        >
-                          {isExpanded ? 'Hide Thread Answers' : `View Answers / Comments (${post.comments.length})`}
-                        </button>
-
-                        <AnimatePresence>
-                          {isExpanded && (
-                            <motion.div
-                              initial={{ height: 0 }}
-                              animate={{ height: 'auto' }}
-                              exit={{ height: 0 }}
-                              className="overflow-hidden mt-4 pt-4 border-t border-slate-850 space-y-4"
-                            >
-                              {/* Comment List */}
-                              <div className="space-y-3">
-                                {post.comments.map((c: any, cIdx: number) => {
-                                  const canDelete = user?.role === 'ADMIN' || c.userId === user?.id;
-                                  return (
-                                    <div key={c.id || cIdx} className="p-3 bg-slate-950/60 border border-slate-850 rounded-xl text-xs space-y-1 relative group/comment">
-                                      <div className="flex justify-between items-center">
-                                        <span className="font-black text-slate-350 block">{c.author}</span>
-                                        {canDelete && (
-                                          <button
-                                            type="button"
-                                            onClick={() => handleDeleteComment(c.id)}
-                                            className="text-[9px] font-black uppercase text-rose-500 hover:text-rose-400 opacity-0 group-hover/comment:opacity-100 focus:opacity-100 transition-opacity bg-slate-900 border border-slate-800 px-2 py-0.5 rounded cursor-pointer"
-                                          >
-                                            Delete
-                                          </button>
-                                        )}
-                                      </div>
-                                      <p className="text-slate-400 font-medium leading-relaxed">{c.text}</p>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-
-                              {/* Comment Form */}
-                              <form onSubmit={(e) => handleAddForumComment(e, post.id)} className="flex gap-2 items-center">
-                                <input
-                                  type="text"
-                                  placeholder="Type your verified reply..."
-                                  value={newCommentText}
-                                  onChange={(e) => setNewCommentText(e.target.value)}
-                                  className="flex-1 px-4 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500"
-                                />
-                                <button type="submit" className="p-2.5 bg-emerald-500 text-slate-950 rounded-xl hover:opacity-90 transition shadow">
-                                  <Send size={14} />
-                                </button>
-                              </form>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  );
-                })}
-                
-                {forumPage < forumTotalPages && (
-                  <div className="flex justify-center pt-4 border-t border-slate-850">
-                    <button
-                      onClick={() => fetchForumPosts(forumPage + 1)}
-                      className="px-6 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold uppercase tracking-wider text-emerald-400 hover:text-white hover:border-emerald-500 transition"
-                    >
-                      Load More Posts
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right: Post a new thread */}
-            <div className="bg-slate-900 border border-slate-850 p-6 rounded-3xl space-y-6 shadow-2xl shrink-0 h-fit">
-              <div className="border-b border-slate-850 pb-3">
-                <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">Start New Thread</h3>
-              </div>
-
-              <form onSubmit={handleCreatePost} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase text-slate-500">Thread Title</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. MSP430 Timer Overflow"
-                    value={newPostTitle}
-                    onChange={(e) => setNewPostTitle(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase text-slate-500">Category</label>
-                  <select
-                    value={newPostCategory}
-                    onChange={(e) => setNewPostCategory(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-xs font-bold text-slate-350 focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="General">General Doubt</option>
-                    <option value="Programming">Programming</option>
-                    <option value="Electronics">Electronics Hardware</option>
-                    <option value="AI & ML">AI & Machine Learning</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase text-slate-500">Content / Question Details</label>
-                  <textarea
-                    required
-                    rows={4}
-                    placeholder="Provide assembly codes, configurations, or error dumps..."
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-emerald-500 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-90 transition active:scale-95 shadow"
-                >
-                  Publish Thread
-                </button>
-              </form>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Tab 5: Credentials Chest */}
-        {activeTab === 'credentials' && (
-          <motion.div
-            key="credentials-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-6"
-          >
             <div>
-              <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                <Award className="text-emerald-450" /> Credentials Chest
-              </h3>
-              <p className="text-slate-400 text-xs mt-1">Your verifiable digital certifications are safely archived inside this chest.</p>
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
+              <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
             </div>
+          </div>
+        ))}
+      </div>
 
-            {completedTracksCount === 0 ? (
-              <div className="p-10 border border-dashed border-slate-800 rounded-3xl text-center space-y-4">
-                <div className="w-16 h-16 bg-slate-900 border border-slate-850 rounded-full flex items-center justify-center text-slate-500 mx-auto text-xl">🔒</div>
-                <h4 className="text-sm font-black text-slate-350 uppercase tracking-widest">No certifications issued yet</h4>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                  Complete all modules inside an engineering track and pass the final examination with at least 70% accuracy to unlock.
+      {/* Dynamic Mid-Section: Quick Resume & Milestone Badges */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Left Column (2/3 width): Quick Resume Card */}
+        <div className="lg:col-span-2 p-8 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-3xl flex flex-col justify-between relative overflow-hidden shadow-sm">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 text-blue-400 text-[10px] font-black uppercase tracking-widest">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
+              Pick Up Where You Left Off
+            </div>
+            
+            {latestActiveCourse ? (
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold text-white tracking-tight">{latestActiveCourse.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
+                  You are currently on Week {latestActiveCourse.weekCompleted + 1} module. Resume your studies and clear the weekly assessment to proceed!
                 </p>
+                <div className="space-y-3 pt-2">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    <span>Course Progress</span>
+                    <span className="text-blue-400 font-mono">{latestActiveCourse.progress}%</span>
+                  </div>
+                  <div className="h-2 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-slate-800/50">
+                    <div 
+                      className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(59,130,246,0.3)]" 
+                      style={{ width: `${latestActiveCourse.progress}%` }}
+                    ></div>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {user?.progresses?.filter((p: any) => p.completed).map((completed: any, idx: number) => {
-                  const courseMeta = coursesConfig.find(c => c.id === completed.courseId);
-                  const randomCode = `NX-2026-CERT-${completed.courseId}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-                  
-                  return (
-                    <div key={idx} className="p-6 bg-slate-900 border border-slate-850 rounded-3xl flex flex-col justify-between gap-6 shadow-xl">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-2">
-                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 tracking-wider">Verifiable Credential</span>
-                          <h4 className="text-lg font-black text-white pt-1">{courseMeta?.title || completed.courseId}</h4>
-                          <p className="text-[10px] text-slate-500 font-bold font-mono">Registry Serial: {randomCode}</p>
-                        </div>
-                        <Award size={36} className="text-emerald-450 shrink-0" />
-                      </div>
-
-                      <div className="pt-4 border-t border-slate-850 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-black uppercase">
-                          <CheckCircle2 size={16} /> Fully Verified
-                        </span>
-                        
-                        <button
-                          onClick={() => navigate(`/certificate?courseId=${completed.courseId}`)}
-                          className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:opacity-90 transition active:scale-95 shadow"
-                        >
-                          View & Download PDF
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold text-white tracking-tight">Ready to start your journey?</h3>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
+                  Choose a specialized engineering track below, study the industrial-focused weekly curriculum, and claim your accredited certifications!
+                </p>
               </div>
             )}
-          </motion.div>
-        )}
+          </div>
+          
+          <div className="pt-8 mt-8 border-t border-slate-800/50 flex justify-end">
+            <button 
+              onClick={() => navigate(latestActiveCourse ? `/course/${latestActiveCourse.id}` : `/course/C`)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-8 py-3.5 rounded-2xl transition-all shadow-lg shadow-blue-900/20 active:scale-95 flex items-center gap-2 uppercase tracking-widest"
+            >
+              {latestActiveCourse ? "Resume Course" : "Get Started"}
+              <span className="text-lg">→</span>
+            </button>
+          </div>
+        </div>
 
-        {/* Tab 6: Profile Settings Editor */}
-        {activeTab === 'settings' && (
-          <motion.div
-            key="settings-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="max-w-2xl bg-slate-900 border border-slate-850 p-8 rounded-3xl shadow-xl space-y-8"
-          >
-            <div>
-              <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                <User className="text-emerald-450" /> Profile Information
-              </h3>
-              <p className="text-slate-400 text-xs mt-1">Update your name, educational credentials, and account password.</p>
-            </div>
-
-            <form onSubmit={handleUpdateProfile} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Full Name</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-3 text-slate-500" size={16} />
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Email (Read-only)</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-3.5 text-slate-500 text-xs font-bold font-mono">@</span>
-                    <input
-                      type="email"
-                      disabled
-                      value={user?.email || ''}
-                      className="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-850 rounded-xl text-slate-500 text-xs font-bold cursor-not-allowed font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase text-slate-500 tracking-wider">College Name</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-3 text-slate-500 text-xs">🏢</span>
-                    <input
-                      type="text"
-                      required
-                      value={collegeName}
-                      onChange={(e) => setCollegeName(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Branch / Specialty</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-3.5 text-slate-500 text-xs">⚙</span>
-                    <input
-                      type="text"
-                      required
-                      value={branchName}
-                      onChange={(e) => setBranchName(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                </div>
+        {/* Right Column (1/3 width): Gamified Badges Panel */}
+        <div className="p-8 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-3xl space-y-6 shadow-sm">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-800 pb-4">Milestone Badges</h3>
+          
+          <div className="grid grid-cols-2 gap-4 pt-1">
+            {[
+              { emoji: '🚀', label: 'First Step', sub: 'Passed W1', active: hasWeek1, color: 'blue' },
+              { emoji: '🎯', label: 'Quiz Ace', sub: 'Passed W2', active: hasWeek2, color: 'purple' },
+              { emoji: '🛡', label: 'Specialist', sub: 'Passed W3', active: hasWeek3, color: 'orange' },
+              { emoji: '🎓', label: 'Graduate', sub: 'Certified', active: hasCompleted, color: 'emerald' },
+            ].map((badge, idx) => (
+              <div key={idx} className={`p-4 rounded-2xl border flex flex-col items-center justify-center text-center transition-all duration-300 ${
+                badge.active 
+                  ? `bg-${badge.color}-500/5 border-${badge.color}-500/20 text-amber-400 shadow-sm` 
+                  : 'bg-slate-950/20 border-slate-800 text-slate-600 opacity-60'
+              }`}>
+                <span className={`text-3xl mb-2 filter ${badge.active ? 'drop-shadow-lg' : 'grayscale opacity-40'}`}>{badge.emoji}</span>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-200">{badge.label}</h4>
+                <p className={`text-[8px] mt-1 font-black uppercase tracking-tighter ${badge.active ? 'text-amber-500/80' : 'text-slate-600'}`}>
+                  {badge.active ? badge.sub : "Locked"}
+                </p>
               </div>
+            ))}
+          </div>
+        </div>
 
-              <div className="border-t border-slate-850 pt-6 space-y-6">
-                <div>
-                  <h4 className="text-sm font-black text-white uppercase tracking-tight flex items-center gap-2">
-                    <Key size={16} className="text-emerald-450" /> Change Security Password
-                  </h4>
-                  <p className="text-slate-400 text-[10px] mt-0.5">Leave blank if you do not wish to modify your active password.</p>
-                </div>
+      </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-500 tracking-wider">New Password</label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-emerald-500 font-mono"
-                    />
-                  </div>
+      {/* Courses/Tracks Grid */}
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-black tracking-tight text-white uppercase tracking-widest text-sm opacity-80">Choose Your Training Track</h2>
+          <div className="h-px flex-1 bg-slate-800 mx-6"></div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {courses.map((course: any) => {
+            const progressInfo = getCourseProgress(course.id);
+            const metadata = courseMetadata[course.id] || {
+              icon: BookOpen,
+              color: 'from-slate-700 to-slate-900',
+              barColor: 'bg-slate-500',
+            };
 
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Confirm New Password</label>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-emerald-500 font-mono"
-                    />
-                  </div>
-                </div>
-              </div>
+            return (
+              <CourseCard
+                key={course.id}
+                id={course.id}
+                title={course.title}
+                desc={course.description || course.desc}
+                icon={metadata.icon}
+                color={metadata.color}
+                barColor={metadata.barColor}
+                progress={progressInfo.progress}
+                weekCompleted={progressInfo.weekCompleted}
+                completed={progressInfo.completed}
+                type="dashboard"
+                onAction={(id) => navigate(`/course/${id}`)}
+              />
+            );
+          })}
+        </div>
+      </div>
 
-              {successMsg && (
-                <div className="p-4 bg-emerald-950/20 border border-emerald-500/20 rounded-2xl flex items-center gap-3 text-emerald-400 text-xs font-bold animate-in fade-in duration-200">
-                  <CheckCircle2 size={16} />
-                  <span>{successMsg}</span>
-                </div>
-              )}
-
-              {errorMsg && (
-                <div className="p-4 bg-red-950/20 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold animate-in fade-in duration-200">
-                  <AlertCircle size={16} />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
-
-              <div className="flex justify-end pt-4">
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:opacity-90 transition active:scale-95 disabled:opacity-75"
-                >
-                  {isSaving ? (
-                    <div className="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Save size={16} />
-                      <span>Save Profile Settings</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-    </motion.div>
+      {/* Training Guidelines */}
+      <div className="p-8 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-3xl relative overflow-hidden shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+            <CheckCircle2 size={20} />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-white">Training Guidelines</h2>
+        </div>
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+          {[
+            "The training is structured into 4 weeks per course.",
+            "Each week has dedicated study material that must be reviewed before unlocking quizzes.",
+            "A quiz is mandatory at the end of each week to unlock the next. You need at least 60% in each quiz to pass.",
+            "Progress is tracked separately for all tracks, allowing you to study multiple tracks simultaneously!",
+            "Complete all 4 weeks of any track to generate and print your official certified certificate.",
+            "Quizzes can be retaken if you don't pass on your first attempt."
+          ].map((text, idx) => (
+            <li key={idx} className="flex items-start gap-3 text-slate-400 text-xs leading-relaxed">
+              <span className="text-blue-500 font-bold">0{idx + 1}</span>
+              <span>{text}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 };
 

@@ -38,10 +38,10 @@ app.use(cors({
   credentials: true
 }));
 
-// Restrict incoming payload sizes to prevent heap-exhaustion DoS (Issue #7)
+// Restrict incoming payload sizes to prevent heap-exhaustion DoS
 app.use(express.json({ limit: '10kb' }));
 
-// Global CSRF Protection Check for all state-modifying requests (Issue #11)
+// Global CSRF Protection Check for all state-modifying requests
 app.use((req, res, next) => {
   if (req.method !== 'GET') {
     const csrfHeader = req.headers['x-requested-with'];
@@ -63,7 +63,7 @@ app.use('/api/forum', forumRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/projects', projectRoutes);
 
-// Health Check Instrumentation Endpoint (Issue #8)
+// Health Check Instrumentation Endpoint
 app.get('/health', async (req, res) => {
   try {
     // Assert active database connection
@@ -87,14 +87,14 @@ app.get('/', (req, res) => {
   res.send('Summer Training Portal API is running');
 });
 
-// Centralized error handling
+// Centralized error handler
 app.use(errorHandler);
 
 const server = app.listen(PORT, () => {
   logger.info(`Server successfully started and listening on port ${PORT}`);
 });
 
-// Graceful Connection Teardown Handler (Issue #9)
+// Graceful Connection Teardown Handler
 const gracefulShutdown = async (signal: string) => {
   logger.info(`Process received ${signal} signal. Starting graceful teardown...`);
   

@@ -7,49 +7,42 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
-  id                Int                    @id @default(autoincrement())
-  email             String                 @unique
-  password          String
-  name              String
-  fatherName        String?
-  collegeName       String?
-  branchName        String?
-  bio               String?
-  avatarUrl         String?
-  points            Int                    @default(0)
-  grade             String?                @default("N/A")
-  progress          Int                    @default(0) // legacy global progress
-  courseType        String                 @default("Electronics")
-  role              String                 @default("USER")
-  isVerified        Boolean                @default(false)
-  verificationToken String?
-  resetToken        String?
-  resetTokenExpires DateTime?
-  progresses        CourseProgress[]
-  results           QuizResult[]
-  payments          Payment[]
-  discussions       Discussion[]
-  comments          ForumComment[]
-  practiceAttempts  PracticeAttempt[]
-  certificates      CertificateRecord[]
-  moduleProgresses  ModuleProgress[]
-  assignments       AssignmentSubmission[]
-  projects          ProjectSubmission[]
-  streak            Int                    @default(0)
-  lastActiveAt      DateTime?              @default(now())
-  createdAt         DateTime               @default(now())
+  id            Int              @id @default(autoincrement())
+  email         String           @unique
+  password      String
+  name          String
+  fatherName    String?
+  collegeName   String?
+  branchName    String?
+  grade         String?          @default("N/A")
+  progress      Int              @default(0) // legacy global progress
+  weekCompleted Int              @default(0) // legacy global weekCompleted
+  courseType    String           @default("Electronics")
+  role          Role             @default(USER)
+  progresses    CourseProgress[]
+  results       QuizResult[]
+  payments      Payment[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 }
 
 model CourseProgress {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId  String // "C", "C++", "IoT", "Embedded"
-  course    Course   @relation(fields: [courseId], references: [id])
-  progress  Int      @default(0) // 0 to 100
-  completed Boolean  @default(false)
-  updatedAt DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId      String   // "C", "C++", "IoT", "Embedded"
+  course        Course   @relation(fields: [courseId], references: [id])
+  weekCompleted Int      @default(0) // 0 to 4
+  progress      Int      @default(0) // 0 to 100
+  completed     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([userId, courseId])
   @@index([courseId])
@@ -61,59 +54,56 @@ model QuizResult {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId  String   @default("C")
   course    Course   @relation(fields: [courseId], references: [id])
+  week      Int
   score     Int
-  accuracy  Int      @default(0) // 0 to 100 percentage
-  grade     String?
   passed    Boolean
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, courseId])
 }
 
 model Course {
-  id                 String              @id // "C", "C++", "IoT", "Embedded"
-  title              String
-  description        String
-  price              Int                 @default(999) // Price in rupees
-  isPublished        Boolean             @default(true)
-  modules            Module[]
-  progresses         CourseProgress[]
-  results            QuizResult[]
-  payments           Payment[]
-  projectSubmissions ProjectSubmission[]
-  finalExamQuestions FinalExamQuestion[]
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  id          String           @id // "C", "C++", "IoT", "Embedded"
+  title       String
+  description String
+  price       Int              @default(999) // Price in rupees
+  isPublished Boolean          @default(true)
+  modules     Module[]
+  progresses  CourseProgress[]
+  results     QuizResult[]
+  payments    Payment[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 model Module {
-  id            Int              @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   courseId      String
-  course        Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  order         Int              @default(0)
+  course        Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  week          Int
   title         String
   description   String
   topics        Topic[]
   quizQuestions QuizQuestion[]
-  progresses    ModuleProgress[]
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  @@unique([courseId, order])
+  @@unique([courseId, week])
   @@index([courseId])
 }
 
 model Topic {
-  id        Int      @id @default(autoincrement())
-  moduleId  Int
-  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  title     String
-  text      String
-  code      String?
-  note      String?
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  moduleId    Int
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title       String
+  text        String
+  code        String?
+  note        String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([moduleId])
 }
@@ -123,7 +113,7 @@ model QuizQuestion {
   moduleId      Int
   module        Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   text          String
-  options       String
+  options       String[]
   correctAnswer String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -131,161 +121,24 @@ model QuizQuestion {
   @@index([moduleId])
 }
 
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model Payment {
-  id            String   @id @default(uuid())
+  id            String        @id @default(uuid())
   userId        Int
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId      String
-  course        Course   @relation(fields: [courseId], references: [id])
-  transactionId String?  @unique
+  course        Course        @relation(fields: [courseId], references: [id])
+  transactionId String?       @unique
   amount        Int
-  status        String   @default("PENDING")
+  status        PaymentStatus @default(PENDING)
   reference     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@index([userId, courseId])
 }
-
-model Project {
-  id            Int      @id @default(autoincrement())
-  title         String
-  category      String   // "Arduino", "IoT", "Embedded", "Robotics"
-  difficulty    String   // "Beginner", "Intermediate", "Advanced"
-  description   String
-  documentation String   // markdown text
-  codeSnippet   String?
-  schematicUrl  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model Discussion {
-  id        Int            @id @default(autoincrement())
-  title     String
-  content   String
-  userId    Int
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId  String?        // optional course binding
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  comments  ForumComment[]
-
-  @@index([userId])
-}
-
-model ForumComment {
-  id         Int        @id @default(autoincrement())
-  content    String
-  postId     Int
-  post       Discussion @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId     Int
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-
-  @@index([postId])
-  @@index([userId])
-}
-
-model PracticeQuestion {
-  id            Int      @id @default(autoincrement())
-  category      String   // "Programming", "Electronics"
-  topic         String   // "C Pointers", "STM32 Timers", etc.
-  difficulty    String   // "Easy", "Medium", "Hard"
-  text          String
-  options       String   // JSON stringified array of options
-  correctAnswer String
-  explanation   String?
-  createdAt     DateTime @default(now())
-}
-
-model PracticeAttempt {
-  id             Int      @id @default(autoincrement())
-  userId         Int
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  score          Int
-  totalQuestions Int
-  category       String
-  createdAt      DateTime @default(now())
-
-  @@index([userId])
-}
-
-model CertificateRecord {
-  id               String   @id @default(uuid())
-  userId           Int
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId         String
-  verificationCode String   @unique
-  createdAt        DateTime @default(now())
-
-  @@index([userId])
-}
-
-model AssignmentSubmission {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId    String
-  weekNumber  Int      // 1, 2, 3, 4
-  fileUrl     String   // path to uploaded file (PDF/DOCX/ZIP)
-  fileName    String
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  feedback    String?
-  submittedAt DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([userId, courseId, weekNumber])
-  @@index([userId, courseId])
-}
-
-model ProjectSubmission {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId      String
-  course        Course   @relation(fields: [courseId], references: [id])
-  title         String
-  description   String
-  sourceCodeUrl String   // Path to source code ZIP
-  reportUrl     String   // Path to report PDF
-  githubUrl     String?  // Optional GitHub repository link
-  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  feedback      String?
-  submittedAt   DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@unique([userId, courseId])
-  @@index([userId, courseId])
-}
-
-model ModuleProgress {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId   String
-  moduleId   Int
-  module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  completed  Boolean  @default(false)
-  quizPassed Boolean  @default(false)
-  quizScore  Int?
-  updatedAt  DateTime @updatedAt
-
-  @@unique([userId, moduleId])
-  @@index([userId, courseId])
-}
-
-model FinalExamQuestion {
-  id            Int      @id @default(autoincrement())
-  courseId      String
-  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  text          String
-  options       String   // Stringified JSON array of choices
-  correctAnswer String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([courseId])
-}
-

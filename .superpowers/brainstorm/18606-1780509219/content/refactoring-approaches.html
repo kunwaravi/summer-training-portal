@@ -1,0 +1,86 @@
+<h2>Three Approaches to Big-Bang Refactoring</h2>
+<p class="subtitle">Which fits your 2-week timeline and quality goals?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Design System First (Foundation-Up)</h3>
+      <p><strong>Approach:</strong> Build Storybook + component library → refactor frontend → organize backend → clean database</p>
+      <p style="margin-top: 8px; font-size: 13px;"><strong>Best for:</strong> Long-term scalability and consistency</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Reusable component library for future</li>
+            <li>All visual consistency guaranteed</li>
+            <li>Clean foundation for scaling to 1000+</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Takes longer (4-5 weeks realistically)</li>
+            <li>Overkill if you just need it working</li>
+            <li>Hard to parallelize work</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Parallel Layer Refactoring (Fast & Focused)</h3>
+      <p><strong>Approach:</strong> Refactor frontend components + backend routes + state management + database IN PARALLEL, coordinated cutover</p>
+      <p style="margin-top: 8px; font-size: 13px;"><strong>Best for:</strong> ASAP deployment with clean architecture</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Can parallelize across layers</li>
+            <li>Fits 2-week timeline</li>
+            <li>No design system overhead</li>
+            <li>Clear responsibility boundaries</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Integration testing is complex</li>
+            <li>One-shot deployment risk</li>
+            <li>Needs strict coordination</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>UI-First with Incremental Backend (Quick Win)</h3>
+      <p><strong>Approach:</strong> Redesign + refactor frontend first (visible improvement) → refactor backend incrementally behind the scenes</p>
+      <p style="margin-top: 8px; font-size: 13px;"><strong>Best for:</strong> Fast user-facing improvements, backend cleanup over time</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Users see improvement quickly</li>
+            <li>Lower deployment risk</li>
+            <li>Backend cleanup can continue after</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Backend still messy for scaling</li>
+            <li>Frontend can't fully leverage clean API</li>
+            <li>Not a true "big-bang"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
