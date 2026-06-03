@@ -2,33 +2,24 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, LogIn, ArrowRight, Zap, CheckCircle, X, ChevronRight, ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useUI } from '../context/UIContext';
+import { Mail, Lock, LogIn, ArrowRight, ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Button from '../components/atoms/Button';
+import Input from '../components/atoms/Input';
+import Card from '../components/atoms/Card';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Google OAuth Simulator states
-  const [isGoogleOpen, setIsGoogleOpen] = useState(false);
-  const [googleStep, setGoogleStep] = useState<'chooser' | 'email' | 'name' | 'loading'>('chooser');
-  const [customEmail, setCustomEmail] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [googleError, setGoogleError] = useState('');
 
   const { login } = useAuth();
+  const { addToast } = useUI();
   const navigate = useNavigate();
-
-  const presetAccounts = [
-    { email: 'student.edunexus@gmail.com', name: 'Edunexus Student', avatar: 'ES' },
-    { email: 'abhi.kumar@gmail.com', name: 'Abhi Kumar', avatar: 'AK' }
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
 
     const emailNormalized = email ? email.toLowerCase().trim() : '';
@@ -36,190 +27,113 @@ const LoginPage = () => {
     try {
       const response = await api.post('/auth/login', { email: emailNormalized, password });
       login(response.data.token, response.data.user);
+      addToast(`Welcome back, ${response.data.user.name}!`, 'success');
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid credentials or connection error');
+      const msg = err.response?.data?.message || 'Invalid credentials. Please try again.';
+      addToast(msg, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleAuth = async (emailToAuth: string, nameToAuth: string) => {
-    setGoogleError('');
-    setGoogleStep('loading');
-    try {
-      const response = await api.post('/auth/google', {
-        email: emailToAuth,
-        name: nameToAuth
-      });
-      login(response.data.token, response.data.user);
-      setIsGoogleOpen(false);
-      navigate('/dashboard');
-    } catch (err: any) {
-      setGoogleError(err.response?.data?.message || 'Google Authentication failed.');
-      setGoogleStep('chooser');
-    }
-  };
-
-  const handleCustomEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setGoogleError('');
-    if (!customEmail || !customEmail.includes('@')) {
-      setGoogleError('Please enter a valid Google email address.');
-      return;
-    }
-    // Check if it's already a preset account, if so just log in
-    const foundPreset = presetAccounts.find(acc => acc.email.toLowerCase() === customEmail.toLowerCase());
-    if (foundPreset) {
-      handleGoogleAuth(foundPreset.email, foundPreset.name);
-      return;
-    }
-    // Otherwise go to Name step to register
-    setGoogleStep('name');
-  };
-
-  const handleCustomRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setGoogleError('');
-    if (!customName.trim()) {
-      setGoogleError('Please enter your full name.');
-      return;
-    }
-    handleGoogleAuth(customEmail, customName);
-  };
-
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-950">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-[10%] left-[10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[10%] right-[10%] w-[30%] h-[30%] bg-emerald-600/5 rounded-full blur-[100px]"></div>
       </div>
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md w-full space-y-8 bg-slate-900 border border-slate-800 p-8 sm:p-10 rounded-3xl shadow-2xl relative z-10"
+        className="max-w-md w-full"
       >
-        <div className="text-center">
-          <Link to="/" className="inline-flex items-center gap-2.5 hover:scale-[1.01] transition-transform select-none">
-            <img src="/logo.png" alt="Edunexus Logo" className="h-9 w-auto" />
-            <span className="font-extrabold uppercase text-slate-100 tracking-wider text-xl sm:text-2xl">
-              EDUNE
-              <span 
-                className="inline-block align-middle" 
-                style={{
-                  background: 'linear-gradient(90deg, #f1f5f9 50%, #d4af37 50%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  display: 'inline-block'
-                }}
-              >
-                X
-              </span>
-              US
-            </span>
-          </Link>
-          <h2 className="mt-6 text-3xl font-black tracking-tight text-white uppercase">
-            Welcome Back
-          </h2>
-          <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-            Enter your credentials to access your dashboard
-          </p>
-        </div>
+        <Card className="p-8 sm:p-10 border-slate-800/50 shadow-2xl relative overflow-hidden">
+          {/* Subtle decoration */}
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <ShieldCheck size={120} className="text-blue-500" />
+          </div>
 
-        <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div className="relative">
-              <Mail className="absolute left-4 top-3.5 text-slate-500" size={18} />
-              <input
+          <div className="text-center relative z-10">
+            <div className="inline-flex items-center justify-center p-3 bg-blue-600/10 rounded-2xl mb-6 border border-blue-500/20">
+              <LogIn className="text-blue-500" size={28} />
+            </div>
+            <h2 className="text-3xl font-black tracking-tight text-white uppercase italic">
+              Member <span className="text-blue-500">Login</span>
+            </h2>
+            <p className="mt-3 text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+              Access your training dashboard
+            </p>
+          </div>
+
+          <form className="mt-10 space-y-5 relative z-10" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <Input
+                label="Registered Email"
                 id="email-address"
                 name="email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email Address"
-                className="w-full pl-12 pr-4 py-3.5 bg-slate-950 border border-slate-850 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs font-bold font-mono"
+                placeholder="name@example.com"
+                icon={<Mail size={16} />}
               />
+
+              <div className="space-y-1.5">
+                <Input
+                  label="Secure Password"
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  icon={<Lock size={16} />}
+                />
+                <div className="flex justify-end">
+                  <Link
+                    to="/forgot-password"
+                    className="text-[10px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition"
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
+              </div>
             </div>
 
-            <div className="relative">
-              <Lock className="absolute left-4 top-3.5 text-slate-500" size={18} />
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full pl-12 pr-4 py-3.5 bg-slate-950 border border-slate-850 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs font-bold font-mono"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                defaultChecked
-                className="h-4 w-4 text-emerald-500 focus:ring-emerald-500 border-slate-800 rounded bg-slate-950"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-slate-450">
-                Remember me
-              </label>
-            </div>
-
-            <Link
-              to="/forgot-password"
-              className="text-emerald-400 hover:text-emerald-300 transition"
+            <Button
+              type="submit"
+              isLoading={isLoading}
+              className="w-full mt-4 h-14 font-black uppercase tracking-[0.15em] text-sm shadow-lg shadow-blue-600/20"
+              variant="accent"
+              rightIcon={<ArrowRight size={18} />}
             >
-              Forgot Password?
-            </Link>
+              Sign In Now
+            </Button>
+          </form>
+
+          <div className="mt-10 pt-8 border-t border-slate-800/50 text-center relative z-10">
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+              New to Edunexus?{' '}
+              <Link
+                to="/register"
+                className="text-blue-400 hover:text-blue-300 font-black ml-1 transition underline decoration-2 underline-offset-4"
+              >
+                Join Free
+              </Link>
+            </p>
           </div>
-
-          {error && (
-            <div className="p-3 bg-red-950/30 border border-red-500/20 rounded-2xl text-center">
-              <p className="text-red-400 text-[10px] font-black uppercase tracking-tight">
-                ⚠ {error}
-              </p>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full mt-6 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 hover:opacity-90 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 active:scale-[0.98] disabled:opacity-75 text-xs uppercase tracking-[0.2em]"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></div>
-            ) : (
-              <>
-                <LogIn size={16} /> Sign In
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Google Sign-in option disabled as requested */}
-
-        <div className="text-center pt-4 border-t border-slate-850">
-          <p className="text-slate-450 text-xs font-bold">
-            Don't have an account?{' '}
-            <Link
-              to="/register"
-              className="text-emerald-400 hover:text-emerald-300 font-extrabold uppercase tracking-widest text-[11px] ml-1 transition"
-            >
-              Sign Up Free <ArrowRight className="inline-block" size={14} />
-            </Link>
-          </p>
-        </div>
+        </Card>
+        
+        <p className="mt-8 text-center text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em]">
+          Secure Infrastructure &bull; ISO 9001:2015
+        </p>
       </motion.div>
-
-      {/* Google Identity Simulator Popup disabled */}
     </div>
   );
 };
