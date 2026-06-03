@@ -155,7 +155,7 @@ const CourseDetail = () => {
     );
   }
 
-  const completedPercentage = Math.min(Math.round(((currentWeek) / 4) * 100), 100);
+  const completedPercentage = weeks.length > 0 ? Math.min(Math.round(((currentWeek) / weeks.length) * 100), 100) : 0;
   const wordCount = selectedWeek?.description?.split(/\s+/).length + (activeModuleDetail?.topics?.reduce((acc: number, t: any) => acc + (t.text?.split(/\s+/).length || 0), 0) || 0);
   const readingTime = Math.max(Math.ceil(wordCount / 180), 1);
 
@@ -177,7 +177,7 @@ const CourseDetail = () => {
         />
 
         {/* Right Column: Dynamic E-Learning Viewer Console */}
-        <div className="flex-1 w-full bg-slate-900/30 border border-slate-800 rounded-2xl p-6 lg:p-8 space-y-6">
+        <div className="flex-1 w-full bg-slate-900/30 border border-slate-800 rounded-2xl p-6 lg:p-8 space-y-6 overflow-hidden">
           
           {loadingDetails ? (
             <div className="space-y-6 animate-pulse py-4">
@@ -234,9 +234,9 @@ const CourseDetail = () => {
                           {topic.title}
                         </h3>
                       </div>
-                      <p className="text-slate-300 text-sm leading-relaxed pl-8">{topic.text}</p>
+                      <p className="text-slate-300 text-sm leading-relaxed pl-8 whitespace-pre-wrap">{topic.text}</p>
                       {topic.code && (
-                        <div className="ml-8 rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner">
+                        <div className="ml-0 sm:ml-8 rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner">
                           <button
                             onClick={() => handleCopyCode(topic.code, idx)}
                             className="absolute right-3 top-3 p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all text-xs flex items-center gap-1.5 opacity-0 group-hover/code:opacity-100 focus:opacity-100"
@@ -244,13 +244,15 @@ const CourseDetail = () => {
                             <Clipboard size={14} />
                             {copiedText === `${idx}` ? 'Copied!' : 'Copy'}
                           </button>
-                          <pre className="p-4 text-xs font-mono text-cyan-400 overflow-x-auto leading-relaxed">
-                            <code>{topic.code}</code>
-                          </pre>
+                          <div className="overflow-x-auto w-full">
+                            <pre className="p-4 text-xs font-mono text-cyan-400 leading-relaxed min-w-[300px]">
+                              <code>{topic.code}</code>
+                            </pre>
+                          </div>
                         </div>
                       )}
                       {topic.note && (
-                        <div className="ml-8 p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-teal-300 text-xs leading-relaxed flex items-start gap-3">
+                        <div className="ml-0 sm:ml-8 p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-teal-300 text-xs leading-relaxed flex items-start gap-3">
                           <span className="text-lg leading-none select-none">💡</span>
                           <div>
                             <strong className="text-teal-200 block mb-0.5">Core Takeaway</strong>
@@ -263,7 +265,7 @@ const CourseDetail = () => {
                 </div>
 
                 {/* Concept Visualized Blueprint */}
-                <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 ml-8">
+                <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 ml-0 sm:ml-8">
                   <div className="flex items-center gap-2 text-cyan-400">
                     <Zap size={18} className="animate-pulse" />
                     <h4 className="text-xs font-black uppercase tracking-widest">Concept Visualized Blueprint</h4>
@@ -348,7 +350,7 @@ const CourseDetail = () => {
                     ← Prev Module
                   </button>
                   <button
-                    disabled={activeWeekIndex >= Math.min(currentWeek, 3)}
+                    disabled={activeWeekIndex >= Math.min(currentWeek, weeks.length - 1)}
                     onClick={() => setActiveWeekIndex(activeWeekIndex + 1)}
                     className="px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
                   >
@@ -361,7 +363,7 @@ const CourseDetail = () => {
         </div>
       </div>
 
-      {currentWeek >= 4 && !checkingPayment && (
+      {currentWeek >= weeks.length && !checkingPayment && (
         <EnrollmentPanel 
           courseId={id}
           user={user}

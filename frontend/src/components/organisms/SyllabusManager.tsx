@@ -61,7 +61,7 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
         </div>
         <div>
           <h3 className="text-xs font-black text-slate-100 uppercase tracking-wider">Track Progress</h3>
-          <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{currentWeek} of 4 Modules Completed</p>
+          <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{currentWeek} of {weeks.length} Modules Completed</p>
         </div>
       </div>
       
