@@ -1,44 +1,48 @@
-import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import api from '../api';
-import { Lock, ShieldCheck, ShieldAlert, ArrowLeft } from 'lucide-react';
+import { useUI } from '../context/UIContext';
+import { Lock, ShieldCheck, ArrowLeft, Target, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Button from '../components/atoms/Button';
+import Input from '../components/atoms/Input';
+import Card from '../components/atoms/Card';
 
-export const ResetPassword = () => {
+const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
+  const { addToast } = useUI();
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Password complexity helpers
-  const hasMinLength = newPassword.length >= 8;
-  const hasUppercase = /[A-Z]/.test(newPassword);
-  const hasLowercase = /[a-z]/.test(newPassword);
-  const hasNumber = /\d/.test(newPassword);
-  const hasSpecial = /[@$!%*?&]/.test(newPassword);
+  const passChecks = {
+    length: newPassword.length >= 8,
+    upper: /[A-Z]/.test(newPassword),
+    lower: /[a-z]/.test(newPassword),
+    number: /\d/.test(newPassword),
+    special: /[@$!%*?&]/.test(newPassword)
+  };
 
   const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (!token) {
-      setError('Password reset token is missing. Please request a new link.');
+      addToast('Reset token is missing.', 'error');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match.');
+      addToast('Passwords do not match.', 'error');
       return;
     }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(newPassword)) {
-      setError('Password does not meet the complexity requirements.');
+      addToast('Password does not meet security requirements.', 'error');
       return;
     }
 
@@ -46,143 +50,140 @@ export const ResetPassword = () => {
     try {
       await api.post('/auth/reset-password', { token, newPassword });
       setSuccess(true);
+      addToast('Password updated successfully.', 'success');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to reset password. The link is invalid or has expired.');
+      const msg = err.response?.data?.message || 'Failed to reset password. Link may be expired.';
+      addToast(msg, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="py-20 max-w-md mx-auto px-4 flex flex-col items-center justify-center min-h-[85vh]">
-      
-      {/* Top Return Button */}
-      <div className="w-full mb-4 flex justify-start no-print">
-        <button 
-          onClick={() => navigate('/')} 
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition text-xs font-bold uppercase tracking-wider"
-        >
-          <ArrowLeft size={16} /> Back to Login
-        </button>
+    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-[10%] left-[10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[10%] right-[10%] w-[30%] h-[30%] bg-emerald-600/5 rounded-full blur-[100px]"></div>
       </div>
 
-      <div className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-radial-gradient from-cyan-500/5 to-transparent pointer-events-none"></div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md w-full"
+      >
+        <Card className="p-8 sm:p-10 border-slate-800/50 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <KeyRound size={120} className="text-blue-500" />
+          </div>
 
-        <div className="text-center space-y-1">
-          <h2 className="text-2xl font-black tracking-tight text-white uppercase">Reset Password</h2>
-          <p className="text-xs text-slate-400">Establish a secure password for your credentials</p>
-        </div>
+          <div className="text-center relative z-10 mb-8">
+            <div className="inline-flex items-center justify-center p-3 bg-blue-600/10 rounded-2xl mb-6 border border-blue-500/20">
+              <Lock className="text-blue-500" size={28} />
+            </div>
+            <h2 className="text-3xl font-black tracking-tight text-white uppercase italic">
+              New <span className="text-blue-500">Password</span>
+            </h2>
+            <p className="mt-3 text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+              Establish your new secure credentials
+            </p>
+          </div>
 
-        <AnimatePresence mode="wait">
-          {success ? (
-            <motion.div
-              key="success"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="space-y-6 py-4 text-center"
-            >
-              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
-                <ShieldCheck size={36} className="animate-pulse" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-base font-black text-white uppercase tracking-wider">Password Reset Completed!</h3>
-                <p className="text-xs text-slate-350 leading-relaxed">
-                  Your password has been successfully updated in the secure PostgreSQL registry. You can now login using your new credentials.
-                </p>
-              </div>
-              <button
-                onClick={() => navigate('/')}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition shadow shadow-cyan-500/10 active:scale-[0.98]"
+          <AnimatePresence mode="wait">
+            {success ? (
+              <motion.div
+                key="success"
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="space-y-6 text-center py-4 relative z-10"
               >
-                Proceed to Login
-              </button>
-            </motion.div>
-          ) : (
-            <motion.form 
-              key="form"
-              onSubmit={handleResetSubmit} 
-              className="space-y-4"
-            >
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                <input 
-                  type="password" 
-                  placeholder="New Password" 
-                  required
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition text-xs font-bold" 
-                />
-              </div>
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400">
+                  <ShieldCheck size={32} className="animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-white font-bold uppercase tracking-widest text-sm">Update Complete!</h3>
+                  <p className="text-xs text-slate-450 font-bold leading-relaxed">
+                    Your password has been securely updated in our encrypted registry.
+                  </p>
+                </div>
+                <Link to="/login" className="block pt-4">
+                  <Button variant="accent" className="w-full uppercase tracking-widest text-xs font-black h-12 shadow-lg shadow-blue-600/20">
+                    Proceed to Login
+                  </Button>
+                </Link>
+              </motion.div>
+            ) : (
+              <motion.form 
+                key="form"
+                onSubmit={handleResetSubmit} 
+                className="space-y-6 relative z-10"
+              >
+                <div className="space-y-4">
+                  <Input
+                    label="New Secure Password"
+                    type="password"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    icon={<Lock size={16} />}
+                  />
+                  <Input
+                    label="Confirm Password"
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    icon={<Lock size={16} />}
+                  />
+                </div>
 
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                <input 
-                  type="password" 
-                  placeholder="Confirm New Password" 
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition text-xs font-bold" 
-                />
-              </div>
-
-              {/* Password Complexity helper panel */}
-              {newPassword.length > 0 && (
-                <div className="p-4 bg-slate-950 border border-slate-850 rounded-xl space-y-2 text-left text-[10px] animate-in fade-in duration-200">
-                  <p className="font-extrabold uppercase text-slate-500 tracking-wider">Complexity Requirements</p>
-                  <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-slate-400 font-bold">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full transition ${hasMinLength ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                      <span>Min 8 characters</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full transition ${hasUppercase ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                      <span>One uppercase (A-Z)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full transition ${hasLowercase ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                      <span>One lowercase (a-z)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full transition ${hasNumber ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                      <span>One number (0-9)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 col-span-2">
-                      <span className={`w-1.5 h-1.5 rounded-full transition ${hasSpecial ? 'bg-emerald-500 shadow shadow-emerald-500/20' : 'bg-rose-400'}`} />
-                      <span>One special symbol (@$!%*?&)</span>
+                {newPassword.length > 0 && (
+                  <div className="p-5 bg-slate-950/50 border border-slate-800/50 rounded-2xl space-y-3">
+                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
+                      <Target size={12} className="text-blue-500" /> Complexity Audit
+                    </p>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                      {Object.entries({
+                        '8+ Chars': passChecks.length,
+                        'Uppercase': passChecks.upper,
+                        'Lowercase': passChecks.lower,
+                        'Number': passChecks.number,
+                        'Symbol': passChecks.special
+                      }).map(([label, met]) => (
+                        <div key={label} className="flex items-center gap-2">
+                          <div className={`w-1.5 h-1.5 rounded-full transition-colors ${met ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-slate-800'}`} />
+                          <span className={`text-[10px] font-bold uppercase tracking-tight ${met ? 'text-slate-300' : 'text-slate-600'}`}>{label}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              )}
-
-              {error && (
-                <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 flex items-start gap-2.5 text-left text-xs">
-                  <ShieldAlert className="text-red-400 shrink-0 mt-0.5" size={16} />
-                  <span className="text-slate-300 leading-tight">{error}</span>
-                </div>
-              )}
-
-              <button 
-                type="submit" 
-                disabled={isLoading || !token}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-slate-800 disabled:to-slate-800 text-white font-extrabold rounded-xl shadow-lg shadow-cyan-500/10 transition duration-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2 active:scale-[0.99]"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Applying Changes...</span>
-                  </>
-                ) : (
-                  <span>Update Password</span>
                 )}
-              </button>
-            </motion.form>
-          )}
-        </AnimatePresence>
-      </div>
+
+                <Button 
+                  type="submit" 
+                  isLoading={isLoading}
+                  disabled={!token}
+                  className="w-full h-14 font-black uppercase tracking-[0.15em] text-sm shadow-lg shadow-blue-600/20"
+                  variant="accent"
+                >
+                  Update My Password
+                </Button>
+              </motion.form>
+            )}
+          </AnimatePresence>
+
+          <div className="mt-10 pt-8 border-t border-slate-800/50 text-center relative z-10">
+            <Link
+              to="/login"
+              className="text-slate-400 hover:text-white font-black uppercase tracking-widest text-[10px] transition inline-flex items-center gap-2"
+            >
+              <ArrowLeft size={14} /> Cancel & Return
+            </Link>
+          </div>
+        </Card>
+      </motion.div>
     </div>
   );
 };
