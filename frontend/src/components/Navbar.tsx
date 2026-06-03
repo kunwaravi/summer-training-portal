@@ -10,23 +10,6 @@ const Navbar = () => {
   const { addToast } = useUI();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('edunexus_theme');
-    return saved === 'light' ? 'light' : 'dark';
-  });
-
-  useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('light');
-    } else {
-      document.documentElement.classList.remove('light');
-    }
-    localStorage.setItem('edunexus_theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(t => t === 'light' ? 'dark' : 'light');
-  };
 
   const handleLogout = () => {
     logout();
@@ -96,14 +79,6 @@ const Navbar = () => {
           )}
 
           <div className="flex items-center gap-4 border-l border-slate-850 pl-8">
-            <button 
-              onClick={toggleTheme}
-              className="p-2 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-white transition-colors"
-              title="Toggle Theme"
-            >
-              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
-
             {user ? (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3 px-3 py-1.5 bg-slate-900/50 border border-slate-800 rounded-xl hover:bg-slate-900 transition-colors cursor-pointer group">
