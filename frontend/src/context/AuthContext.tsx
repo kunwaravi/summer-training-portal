@@ -42,7 +42,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     syncAuth();
   }, []);
 
-  const login = (_token: string, userData: any) => {
+  const login = (token: string, userData: any) => {
+    localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
   };
@@ -53,6 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (err) {
       console.error('Logout request failed:', err);
     }
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
   };
