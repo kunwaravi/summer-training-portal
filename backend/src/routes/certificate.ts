@@ -8,7 +8,7 @@ const router = Router();
 
 // Helper to generate the exact same Credential ID
 const generateCredentialId = (userId: number, name: string, courseId: string) => {
-  const cleanFirstName = name.split(' ')[0].toUpperCase();
+  const cleanFirstName = (name || '').trim().split(' ')[0].toUpperCase() || 'STUDENT';
   const cleanCourseKey = courseId.toUpperCase() === "C++" ? "CPP_EMBEDDED" : courseId.toUpperCase() + "_SYSTEMS";
   return `NEX-${cleanCourseKey}-${cleanFirstName}${1000 + userId}-VERIFIED`;
 };
@@ -159,7 +159,7 @@ router.get('/verify/:credentialId', rateLimiter(10, 60 * 1000), async (req: Requ
   try {
     const { credentialId } = req.params as any;
 
-    const match = credentialId.match(/-[A-Z0-9_]+([0-9]{4})-VERIFIED$/i);
+    const match = credentialId.match(/([0-9]{4})-VERIFIED$/i);
     if (!match) {
       logger.error(`Certificate verification query failed: Invalid Credential ID format ${credentialId}`);
       return res.status(400).json({ message: 'Invalid Credential ID format.' });
@@ -191,10 +191,6 @@ router.get('/verify/:credentialId', rateLimiter(10, 60 * 1000), async (req: Requ
     else if (credentialId.toUpperCase().includes("C_SYSTEMS")) courseId = "C";
 
     const progress = user.progresses.find(p => p.courseId === courseId);
-    if (!progress || !progress.completed) {
-      logger.error(`Certificate verification query failed: Track ${courseId} is incomplete for student ${calculatedUserId}`);
-      return res.status(403).json({ message: 'Credential is still active/uncompleted in database.' });
-    }
 
     const expectedId = generateCredentialId(user.id, user.name, courseId);
     if (expectedId.toLowerCase() !== credentialId.toLowerCase()) {
@@ -227,7 +223,7 @@ router.get('/verify/:credentialId', rateLimiter(10, 60 * 1000), async (req: Requ
 
     const startDate = payment 
       ? new Date(payment.createdAt) 
-      : new Date((progress?.updatedAt || new Date()).getTime() - 28 * 24 * 60 * 60 * 1000);
+      : new Date((progress?.updatedAt || user.createdAt || new Date()).getTime() - 28 * 24 * 60 * 60 * 1000);
     const endDate = new Date(startDate.getTime() + 28 * 24 * 60 * 60 * 1000);
 
     const formattedStartDate = startDate.toLocaleDateString('en-US', {
