@@ -78,7 +78,7 @@ function generateModuleQuizzes(courseId: string, order: number, title: string) {
 
     questions.push({
       text: questionText,
-      options: JSON.stringify(options),
+      options: options,
       correctAnswer: correctAnswer
     });
   }
@@ -99,7 +99,7 @@ function generateFinalExamQuestions(courseId: string) {
     const correctAnswer = options[0];
     questions.push({
       text: questionText,
-      options: JSON.stringify(options),
+      options: options,
       correctAnswer: correctAnswer
     });
   }
@@ -149,7 +149,7 @@ async function main() {
       const modRecord = await prisma.module.create({
         data: {
           courseId: course.id,
-          order: moduleOrder,
+          week: moduleOrder,
           title: moduleTitle,
           description: `Deep dive into advanced concepts, syntax structures, and system benchmarks for ${moduleTitle}.`
         }
@@ -267,7 +267,7 @@ async function main() {
       topic: "Systems & Memory",
       difficulty: "Medium",
       text: "What is the size of a pointer in a 64-bit operating system?",
-      options: JSON.stringify(["2 bytes", "4 bytes", "8 bytes", "Depends on pointed data type"]),
+      options: ["2 bytes", "4 bytes", "8 bytes", "Depends on pointed data type"],
       correctAnswer: "8 bytes",
       explanation: "On 64-bit systems, a memory address requires 64 bits (8 bytes) of storage, regardless of the data type it points to."
     },
@@ -276,7 +276,7 @@ async function main() {
       topic: "Data Structures",
       difficulty: "Easy",
       text: "Which data structure operates on a Last In First Out (LIFO) basis?",
-      options: JSON.stringify(["Queue", "Stack", "Linked List", "Binary Tree"]),
+      options: ["Queue", "Stack", "Linked List", "Binary Tree"],
       correctAnswer: "Stack",
       explanation: "A Stack utilizes a LIFO access pattern where elements are pushed and popped from the same end."
     },
@@ -285,7 +285,7 @@ async function main() {
       topic: "C++ OOP",
       difficulty: "Easy",
       text: "In C++, which keyword is used to allocate memory on the heap?",
-      options: JSON.stringify(["malloc", "new", "alloc", "virtual"]),
+      options: ["malloc", "new", "alloc", "virtual"],
       correctAnswer: "new",
       explanation: "The 'new' operator dynamically allocates memory on the heap and returns a pointer to it."
     },
@@ -294,7 +294,7 @@ async function main() {
       topic: "DSA Analysis",
       difficulty: "Hard",
       text: "What is the worst-case time complexity of searching in a balanced Binary Search Tree (BST)?",
-      options: JSON.stringify(["O(1)", "O(log n)", "O(n)", "O(n log n)"]),
+      options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
       correctAnswer: "O(log n)",
       explanation: "A balanced BST halves the search space at each level, leading to logarithmic search complexity even in the worst case."
     },
@@ -303,7 +303,7 @@ async function main() {
       topic: "Serial Protocols",
       difficulty: "Easy",
       text: "Which serial communication protocol uses only 2 wires (SDA and SCL)?",
-      options: JSON.stringify(["SPI", "UART", "I2C", "CAN Bus"]),
+      options: ["SPI", "UART", "I2C", "CAN Bus"],
       correctAnswer: "I2C",
       explanation: "I2C (Inter-Integrated Circuit) uses two bidirectional lines: Serial Data (SDA) and Serial Clock (SCL)."
     }
