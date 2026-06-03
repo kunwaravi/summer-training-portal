@@ -53,28 +53,60 @@ const coursesList = [
   }
 ];
 
-// Helper to generate 10 quiz questions for a module
-function generateModuleQuizzes(courseId: string, order: number, title: string) {
+// Helper to generate 10 distinct quiz questions for a module
+function generateModuleQuizzes(courseId: string, week: number, title: string) {
   const questions = [];
   const subjects: Record<string, string[]> = {
-    C: ["compilation execution", "memory addresses", "type allocations", "pointer arithmetic", "binary structures"],
-    "C++": ["OOP principles", "class instances", "vtables vptrs", "smart references", "generic templates"],
-    IoT: ["cloud nodes", "ESP32 registers", "MQTT brokers", "SPI signals", "ADC resolutions"],
-    Embedded: ["NVIC interrupts", "FreeRTOS queues", "ARM memory mappings", "GPIO configs", "timer clocks"]
+    C: [
+      "stack allocation", "heap management", "pointer dereferencing", "interrupt latency", 
+      "bitmasking", "volatile qualifiers", "alignment padding", "endianness",
+      "preprocessor macros", "linker scripts", "static analysis", "register banking"
+    ],
+    "C++": [
+      "RAII patterns", "vtable dispatch", "copy elision", "template specialization",
+      "rvalue references", "smart pointers", "exception safety", "inline namespaces",
+      "const correctness", "friend classes", "operator overloading", "multiple inheritance"
+    ],
+    IoT: [
+      "MQTT publish rates", "TLS handshake overhead", "Deep sleep current", "OTA update safety",
+      "ADC sampling frequency", "I2C clock stretching", "SPI full-duplex", "WiFi beaconing",
+      "RESTful API latency", "JSON parsing heap", "Watchdog triggers", "LoraWAN spreading factors"
+    ],
+    Embedded: [
+      "RTOS task scheduling", "Priority inversion", "Mutex deadlocks", "ISR stack overflow",
+      "DMA transfer bursts", "Hardware debouncing", "PLL clock stabilization", "Memory mapped I/O",
+      "Bootloader entry flags", "Zero-copy buffers", "Context switching overhead", "Critical sections"
+    ]
   };
 
-  const currentSubjects = subjects[courseId] || ["general concepts"];
+  const currentSubjects = subjects[courseId] || ["general architecture"];
+  
+  const questionTemplates = [
+    (title: string, term: string) => `In the context of ${title}, what is the primary risk associated with improper ${term}?`,
+    (title: string, term: string) => `Which configuration provides the highest deterministic performance for ${term} in ${title}?`,
+    (title: string, term: string) => `Regarding ${title}, how does a system register handle a failure during ${term}?`,
+    (title: string, term: string) => `Which tool or technique is most effective for debugging ${term} within a ${title} environment?`,
+    (title: string, term: string) => `When architecting ${title}, what is the recommended standard for ${term} compliance?`
+  ];
 
   for (let q = 1; q <= 10; q++) {
-    const term = currentSubjects[(q + order) % currentSubjects.length];
-    const questionText = `Regarding ${title}, which option represents the optimal setup for ${term}?`;
+    const termIdx = (q * week + 7) % currentSubjects.length;
+    const term = currentSubjects[termIdx];
+    
+    const templateIdx = (q + week) % questionTemplates.length;
+    const questionText = questionTemplates[templateIdx](title, term);
+    
     const options = [
-      `Pre-allocated static stack configuration to minimize ${term} latency`,
-      `Dynamic heap allocation during runtime validation`,
-      `Fallback checking using standard peripheral interrupt flags`,
-      `Default compiler optimization utilizing register caching`
+      `Implementing restricted boundary checks and ${term} validation`,
+      `Using asynchronous multi-buffer strategies for ${term}`,
+      `Configuring direct memory access (DMA) bypass for ${term}`,
+      `Utilizing legacy software polling instead of ${term} hardware interrupts`
     ];
-    const correctAnswer = options[0];
+    // Rotate options so correct answer is not always the first one
+    const rotate = (q * week) % 4;
+    for(let i=0; i<rotate; i++) options.push(options.shift()!);
+    
+    const correctAnswer = options[(4 - rotate) % 4];
 
     questions.push({
       text: questionText,
