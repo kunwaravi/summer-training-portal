@@ -16,6 +16,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const refreshUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await api.get('/auth/me');
       setUser(response.data);
@@ -23,7 +29,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Session refresh failed:', error);
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
       setUser(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,7 +45,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       await refreshUser();
-      setLoading(false);
     };
     
     syncAuth();

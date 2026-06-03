@@ -10,6 +10,7 @@ export const authenticateToken = async (req: any, res: Response, next: NextFunct
     const token = authHeader && authHeader.split(' ')[1];
     
     if (!token) {
+      console.warn(`Auth Failed: No token provided for ${req.method} ${req.path}`);
       return res.status(401).json({ message: 'Access token missing' });
     }
 

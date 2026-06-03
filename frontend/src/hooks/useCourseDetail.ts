@@ -21,7 +21,9 @@ export const useCourseDetail = (courseId: string | undefined) => {
     setLoadingSyllabus(true);
     try {
       const res = await api.get('/courses');
-      const courseWeeks = res.data[courseId] || [];
+      // Find the specific course in the returned array
+      const course = res.data.find((c: any) => c.id === courseId);
+      const courseWeeks = course?.modules || [];
       setWeeks(courseWeeks);
       
       const activeIndex = Math.min(currentWeek, 3);

@@ -1,5 +1,4 @@
 import prisma from '../lib/prisma';
-
 export const getAllCourses = async () => {
   const courses = await prisma.course.findMany({
     include: {
@@ -17,11 +16,7 @@ export const getAllCourses = async () => {
     }
   });
 
-  const curriculumMap: Record<string, any[]> = {};
-  for (const c of courses) {
-    curriculumMap[c.id] = c.modules;
-  }
-  return curriculumMap;
+  return courses;
 };
 
 export const getModuleByWeek = async (courseId: string, week: number) => {
