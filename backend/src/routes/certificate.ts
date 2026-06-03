@@ -32,16 +32,7 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check course-specific progress in DB
-    const progress = user.progresses.find(p => p.courseId === courseId);
-    if (!progress || !progress.completed) {
-      if (req.user.role !== 'ADMIN') {
-        logger.error(`Certificate fetch denied: Track ${courseId} is uncompleted for user ${userId}.`);
-        return res.status(403).json({ message: `Training track '${courseId}' not completed yet. Pass the final exam to unlock.` });
-      }
-    }
-
-    // Secure Certificate Generation: Ensure successful payment record exists in DB
+    // 1. Check payment status
     const successPayment = await prisma.payment.findFirst({
       where: {
         userId,
@@ -58,11 +49,53 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response): Pro
       });
     }
 
-    // Get the best quiz result for this course
+    // 2. Check 20 modules completed & passed
+    const completedCount = await prisma.moduleProgress.count({
+      where: {
+        userId,
+        courseId,
+        quizPassed: true
+      }
+    });
+    if (completedCount < 20 && req.user.role !== 'ADMIN') {
+      logger.error(`Certificate fetch denied: Modules incomplete (${completedCount}/20) for user ${userId}.`);
+      return res.status(403).json({ message: `Syllabus incomplete: You must pass the quizzes for all 20 modules. Completed: ${completedCount}/20.` });
+    }
+
+    // 3. Check 4 weekly assignments approved
+    const approvedAssignments = await prisma.assignmentSubmission.count({
+      where: {
+        userId,
+        courseId,
+        status: 'APPROVED'
+      }
+    });
+    if (approvedAssignments < 4 && req.user.role !== 'ADMIN') {
+      logger.error(`Certificate fetch denied: Assignments outstanding (${approvedAssignments}/4 approved) for user ${userId}.`);
+      return res.status(403).json({ message: `Assignments outstanding: You must have all 4 weekly assignments APPROVED by an instructor. Approved: ${approvedAssignments}/4.` });
+    }
+
+    // 4. Check final project approved
+    const approvedProject = await prisma.projectSubmission.findUnique({
+      where: {
+        userId_courseId: { userId, courseId }
+      }
+    });
+    if ((!approvedProject || approvedProject.status !== 'APPROVED') && req.user.role !== 'ADMIN') {
+      logger.error(`Certificate fetch denied: Project is not approved for user ${userId}.`);
+      return res.status(403).json({ message: 'Project outstanding: Your final project submission must be APPROVED by an instructor.' });
+    }
+
+    // 5. Check final exam passed
     const coursePassingResults = user.results.filter(r => r.courseId === courseId && r.passed);
     if (coursePassingResults.length === 0 && req.user.role !== 'ADMIN') {
-      return res.status(403).json({ message: `Final exam for '${courseId}' has not been passed.` });
+      logger.error(`Certificate fetch denied: Final exam not passed for user ${userId}.`);
+      return res.status(403).json({ message: 'Final Exam outstanding: You must pass the final assessment exam with a score >= 60%.' });
     }
+
+    const progress = await prisma.courseProgress.findUnique({
+      where: { userId_courseId: { userId, courseId } }
+    });
 
     const bestResult = coursePassingResults.length > 0 
         ? coursePassingResults.reduce((prev, current) => (prev.accuracy > current.accuracy) ? prev : current)

@@ -10,6 +10,15 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
+// Middleware to verify admin privileges
+const isAdmin = (req: any, res: Response, next: NextFunction): any => {
+  if (req.user && req.user.role === 'ADMIN') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Access denied: Admin permissions required' });
+  }
+};
+
 // POST /api/auth/register - Register a new candidate
 router.post(
   '/register',
@@ -49,7 +58,10 @@ router.post(
         },
         include: {
           progresses: true,
-          results: true
+          results: true,
+          moduleProgresses: true,
+          assignments: true,
+          projects: true
         }
       });
 
@@ -177,7 +189,10 @@ router.put('/profile', authenticateToken, async (req: any, res: Response): Promi
       data: dataToUpdate,
       include: {
         progresses: true,
-        results: true
+        results: true,
+        moduleProgresses: true,
+        assignments: true,
+        projects: true
       }
     });
 
@@ -378,13 +393,6 @@ router.post(
 );
 
 // Admin User Manager Endpoints
-const isAdmin = (req: any, res: Response, next: NextFunction): any => {
-  if (req.user && req.user.role === 'ADMIN') {
-    next();
-  } else {
-    res.status(403).json({ message: 'Access denied: Admin permissions required' });
-  }
-};
 
 // GET /api/auth/admin/users - List all users
 router.get('/admin/users', authenticateToken, isAdmin, async (req: any, res: Response): Promise<any> => {

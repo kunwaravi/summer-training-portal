@@ -8,8 +8,8 @@ datasource db {
 }
 
 model User {
-  id                Int                 @id @default(autoincrement())
-  email             String              @unique
+  id                Int                    @id @default(autoincrement())
+  email             String                 @unique
   password          String
   name              String
   fatherName        String?
@@ -17,12 +17,12 @@ model User {
   branchName        String?
   bio               String?
   avatarUrl         String?
-  points            Int                 @default(0)
-  grade             String?             @default("N/A")
-  progress          Int                 @default(0) // legacy global progress
-  courseType        String              @default("Electronics")
-  role              String              @default("USER")
-  isVerified        Boolean             @default(false)
+  points            Int                    @default(0)
+  grade             String?                @default("N/A")
+  progress          Int                    @default(0) // legacy global progress
+  courseType        String                 @default("Electronics")
+  role              String                 @default("USER")
+  isVerified        Boolean                @default(false)
   verificationToken String?
   resetToken        String?
   resetTokenExpires DateTime?
@@ -33,7 +33,12 @@ model User {
   comments          ForumComment[]
   practiceAttempts  PracticeAttempt[]
   certificates      CertificateRecord[]
-  createdAt         DateTime            @default(now())
+  moduleProgresses  ModuleProgress[]
+  assignments       AssignmentSubmission[]
+  projects          ProjectSubmission[]
+  streak            Int                    @default(0)
+  lastActiveAt      DateTime?              @default(now())
+  createdAt         DateTime               @default(now())
 }
 
 model CourseProgress {
@@ -66,30 +71,33 @@ model QuizResult {
 }
 
 model Course {
-  id          String           @id // "C", "C++", "IoT", "Embedded"
-  title       String
-  description String
-  price       Int              @default(999) // Price in rupees
-  isPublished Boolean          @default(true)
-  modules     Module[]
-  progresses  CourseProgress[]
-  results     QuizResult[]
-  payments    Payment[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id                 String              @id // "C", "C++", "IoT", "Embedded"
+  title              String
+  description        String
+  price              Int                 @default(999) // Price in rupees
+  isPublished        Boolean             @default(true)
+  modules            Module[]
+  progresses         CourseProgress[]
+  results            QuizResult[]
+  payments           Payment[]
+  projectSubmissions ProjectSubmission[]
+  finalExamQuestions FinalExamQuestion[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 }
 
 model Module {
-  id            Int            @id @default(autoincrement())
+  id            Int              @id @default(autoincrement())
   courseId      String
-  course        Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  order         Int            @default(0)
+  course        Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order         Int              @default(0)
   title         String
   description   String
   topics        Topic[]
   quizQuestions QuizQuestion[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  progresses    ModuleProgress[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   @@unique([courseId, order])
   @@index([courseId])
@@ -213,5 +221,71 @@ model CertificateRecord {
   createdAt        DateTime @default(now())
 
   @@index([userId])
+}
+
+model AssignmentSubmission {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId    String
+  weekNumber  Int      // 1, 2, 3, 4
+  fileUrl     String   // path to uploaded file (PDF/DOCX/ZIP)
+  fileName    String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  feedback    String?
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, courseId, weekNumber])
+  @@index([userId, courseId])
+}
+
+model ProjectSubmission {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id])
+  title         String
+  description   String
+  sourceCodeUrl String   // Path to source code ZIP
+  reportUrl     String   // Path to report PDF
+  githubUrl     String?  // Optional GitHub repository link
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  feedback      String?
+  submittedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([userId, courseId])
+}
+
+model ModuleProgress {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId   String
+  moduleId   Int
+  module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  completed  Boolean  @default(false)
+  quizPassed Boolean  @default(false)
+  quizScore  Int?
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, moduleId])
+  @@index([userId, courseId])
+}
+
+model FinalExamQuestion {
+  id            Int      @id @default(autoincrement())
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  text          String
+  options       String   // Stringified JSON array of choices
+  correctAnswer String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([courseId])
 }
 

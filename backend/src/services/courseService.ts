@@ -66,6 +66,34 @@ export const getModuleWithTopics = async (courseId: string, orderNum: number, us
     throw error;
   }
 
+  // Enforce sequential unlocking
+  if (orderNum > 1 && userRole !== 'ADMIN') {
+    const prevModule = await prisma.module.findFirst({
+      where: {
+        courseId,
+        order: orderNum - 1
+      }
+    });
+
+    if (prevModule) {
+      const prevProgress = await prisma.moduleProgress.findUnique({
+        where: {
+          userId_moduleId: {
+            userId: parseInt(userId, 10),
+            moduleId: prevModule.id
+          }
+        }
+      });
+
+      if (!prevProgress || !prevProgress.quizPassed) {
+        logger.error(`Module locked: User ${userId} has not completed previous module ${orderNum - 1}`);
+        const error: any = new Error(`Locked module: You must pass the quiz for Module ${orderNum - 1} before unlocking Module ${orderNum}.`);
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+  }
+
   const moduleRecord = await prisma.module.findFirst({
     where: {
       courseId,

@@ -17,7 +17,10 @@ export const authenticateToken = async (req: any, res: Response, next: NextFunct
       where: { id: decoded.userId },
       include: {
         progresses: true,
-        results: true
+        results: true,
+        moduleProgresses: true,
+        assignments: true,
+        projects: true
       }
     });
 

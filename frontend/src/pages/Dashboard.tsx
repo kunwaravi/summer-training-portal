@@ -170,6 +170,28 @@ const Dashboard = () => {
     return best.grade;
   };
 
+  const getDetailedCourseProgress = (courseId: string) => {
+    if (!user) return { modulesPassed: 0, assignmentsApproved: 0, projectStatus: 'NOT_SUBMITTED', examScore: null };
+    
+    const modulesPassed = user.moduleProgresses?.filter(
+      (p: any) => p.courseId === courseId && p.quizPassed
+    ).length || 0;
+    
+    const assignmentsApproved = user.assignments?.filter(
+      (a: any) => a.courseId === courseId && a.status === 'APPROVED'
+    ).length || 0;
+
+    const project = user.projects?.find((p: any) => p.courseId === courseId);
+    const projectStatus = project ? project.status : 'NOT_SUBMITTED';
+
+    const examResults = user.results?.filter((r: any) => r.courseId === courseId);
+    const examScore = examResults && examResults.length > 0
+      ? Math.max(...examResults.map((r: any) => r.accuracy))
+      : null;
+
+    return { modulesPassed, assignmentsApproved, projectStatus, examScore };
+  };
+
   // Aggregated metrics
   const activeTracksCount = user?.progresses?.filter((p: any) => p.progress > 0 && p.progress < 100).length || 0;
   const completedTracksCount = user?.progresses?.filter((p: any) => p.progress === 100).length || 0;
@@ -341,6 +363,14 @@ const Dashboard = () => {
           <p className="text-slate-400 text-xs sm:text-sm max-w-xl font-medium leading-relaxed">
             Welcome to Edunexus. Study complete professional tracks, solve practice tests, and secure certifications.
           </p>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <span className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
+              🔥 <span className="font-mono">{user?.streak || 0}</span> Day Streak
+            </span>
+            <span className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
+              ⚡ <span className="font-mono">{user?.points || 0}</span> XP Points
+            </span>
+          </div>
         </div>
         
         <div className="flex flex-wrap gap-2.5 text-[10px] font-black uppercase tracking-wider items-center">
@@ -468,6 +498,77 @@ const Dashboard = () => {
               })}
             </div>
 
+            {/* Achievements & Badges Panel */}
+            <div className="p-6 bg-slate-900/40 backdrop-blur-md border border-slate-850 rounded-[2rem] space-y-4">
+              <h4 className="text-sm font-black uppercase tracking-wider text-slate-350 flex items-center gap-2">
+                <Trophy size={16} className="text-emerald-400" /> Earned Achievement Badges
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Badge 1: Weekly Achievement */}
+                {(() => {
+                  const weeklyPassed = (user?.moduleProgresses?.filter((p: any) => p.quizPassed).length || 0) >= 5 || (user?.assignments?.length || 0) >= 1;
+                  return (
+                    <div className={`p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 ${
+                      weeklyPassed 
+                        ? 'bg-slate-950/60 border-emerald-500/30 text-white shadow-[0_0_15px_-3px_rgba(16,185,129,0.1)]' 
+                        : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-50'
+                    }`}>
+                      <div className={`p-3 rounded-xl ${weeklyPassed ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-900 text-slate-700 border border-slate-850'}`}>
+                        <Zap size={24} className={weeklyPassed ? 'animate-pulse' : ''} />
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider block text-slate-500">Weekly Achievement</span>
+                        <h5 className="text-xs font-extrabold">Weekly Milestone</h5>
+                        <p className="text-[9px] text-slate-400 leading-snug">Pass 5 module quizzes or submit a weekly assignment.</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Badge 2: Top Performer */}
+                {(() => {
+                  const topPerformer = highestAccuracy >= 90;
+                  return (
+                    <div className={`p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 ${
+                      topPerformer 
+                        ? 'bg-slate-950/60 border-amber-500/30 text-white shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)]' 
+                        : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-50'
+                    }`}>
+                      <div className={`p-3 rounded-xl ${topPerformer ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-slate-900 text-slate-700 border border-slate-850'}`}>
+                        <Star size={24} className={topPerformer ? 'animate-bounce' : ''} />
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider block text-slate-500">Top Performer</span>
+                        <h5 className="text-xs font-extrabold">Elite Performer</h5>
+                        <p className="text-[9px] text-slate-400 leading-snug">Achieve 90%+ score on any quiz or final exam.</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Badge 3: Completion */}
+                {(() => {
+                  const completedBadge = completedTracksCount >= 1;
+                  return (
+                    <div className={`p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 ${
+                      completedBadge 
+                        ? 'bg-slate-950/60 border-cyan-500/30 text-white shadow-[0_0_15px_-3px_rgba(6,182,212,0.1)]' 
+                        : 'bg-slate-950/20 border-slate-900 text-slate-600 opacity-50'
+                    }`}>
+                      <div className={`p-3 rounded-xl ${completedBadge ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'bg-slate-900 text-slate-700 border border-slate-850'}`}>
+                        <Award size={24} />
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider block text-slate-500">Completion</span>
+                        <h5 className="text-xs font-extrabold">Alumnus Badge</h5>
+                        <p className="text-[9px] text-slate-400 leading-snug">Successfully complete a 4-week industrial training track.</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
             {/* Search & Category Filter Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-slate-850">
               <div className="flex flex-wrap gap-1.5 bg-slate-950/60 p-1 border border-slate-850 rounded-2xl">
@@ -503,6 +604,7 @@ const Dashboard = () => {
                 const grade = getBestGrade(course.id);
 
                 const isPaid = payments.includes(course.id);
+                const detailed = getDetailedCourseProgress(course.id);
 
                 return (
                   <motion.div
@@ -541,6 +643,31 @@ const Dashboard = () => {
                         </div>
                         <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-850">
                           <div className={`h-full ${course.barColor}`} style={{ width: `${progress.progress}%` }}></div>
+                        </div>
+                      </div>
+
+                      {/* Detailed Progress Milestones */}
+                      <div className="grid grid-cols-2 gap-2 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                        <div className="flex items-center gap-1.5 bg-slate-950/30 p-2 rounded-xl border border-slate-850/50">
+                          <span>📚</span>
+                          <span>Modules: <span className="text-slate-200">{detailed.modulesPassed}/20</span></span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-slate-950/30 p-2 rounded-xl border border-slate-850/50">
+                          <span>📝</span>
+                          <span>Tasks: <span className="text-slate-200">{detailed.assignmentsApproved}/4</span></span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-slate-950/30 p-2 rounded-xl border border-slate-850/50">
+                          <span>⚙️</span>
+                          <span>Project: <span className={
+                            detailed.projectStatus === 'APPROVED' ? 'text-emerald-450' :
+                            detailed.projectStatus === 'PENDING' ? 'text-amber-500' : 'text-slate-550'
+                          }>{detailed.projectStatus}</span></span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-slate-950/30 p-2 rounded-xl border border-slate-850/50">
+                          <span>🏆</span>
+                          <span>Exam: <span className={detailed.examScore !== null ? 'text-emerald-450' : 'text-slate-550'}>
+                            {detailed.examScore !== null ? `${detailed.examScore}%` : 'N/A'}
+                          </span></span>
                         </div>
                       </div>
 

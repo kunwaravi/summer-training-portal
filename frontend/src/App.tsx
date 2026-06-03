@@ -14,6 +14,9 @@ const Quiz = React.lazy(() => import('./pages/Quiz'));
 const Certificate = React.lazy(() => import('./pages/Certificate'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 const PracticeArena = React.lazy(() => import('./pages/PracticeArena'));
+const Terms = React.lazy(() => import('./pages/Terms'));
+const Privacy = React.lazy(() => import('./pages/Privacy'));
+const Refund = React.lazy(() => import('./pages/Refund'));
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -54,6 +57,9 @@ function AppRoutes() {
             <Route path="/verify" element={<Verify />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/refund" element={<Refund />} />
           </Routes>
         </Suspense>
       </div>

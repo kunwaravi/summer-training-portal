@@ -45,6 +45,100 @@ router.get('/:courseId/module/:order', authenticateToken, async (req: any, res: 
   }
 });
 
+// GET /api/courses/:courseId/progress - Detailed user progress overview
+router.get('/:courseId/progress', authenticateToken, async (req: any, res: Response): Promise<any> => {
+  try {
+    const userId = req.user.id;
+    const { courseId } = req.params as any;
+
+    // 1. Fetch module progress details
+    const modules = await prisma.module.findMany({
+      where: { courseId },
+      orderBy: { order: 'asc' }
+    });
+
+    const moduleProgresses = await prisma.moduleProgress.findMany({
+      where: { userId, courseId }
+    });
+
+    const detailedModules = modules.map(m => {
+      const prog = moduleProgresses.find(p => p.moduleId === m.id);
+      return {
+        id: m.id,
+        order: m.order,
+        title: m.title,
+        description: m.description,
+        completed: prog ? prog.completed : false,
+        quizPassed: prog ? prog.quizPassed : false,
+        quizScore: prog ? prog.quizScore : null
+      };
+    });
+
+    const modulesPassedCount = detailedModules.filter(m => m.quizPassed).length;
+
+    // 2. Fetch weekly assignment submissions
+    const assignmentSubmissions = await prisma.assignmentSubmission.findMany({
+      where: { userId, courseId },
+      orderBy: { weekNumber: 'asc' }
+    });
+
+    const assignmentsApprovedCount = assignmentSubmissions.filter(a => a.status === 'APPROVED').length;
+
+    // 3. Fetch project submission
+    const projectSubmission = await prisma.projectSubmission.findUnique({
+      where: { userId_courseId: { userId, courseId } }
+    });
+
+    // 4. Fetch final exam results (best passed/any)
+    const examResults = await prisma.quizResult.findMany({
+      where: { userId, courseId }
+    });
+
+    const finalExamPassed = examResults.some(r => r.passed);
+    const bestExamResult = examResults.length > 0
+      ? examResults.reduce((prev, curr) => (prev.accuracy > curr.accuracy) ? prev : curr)
+      : null;
+
+    // 5. Payment status
+    const payment = await prisma.payment.findFirst({
+      where: { userId, courseId, status: 'SUCCESS' }
+    });
+
+    res.json({
+      courseId,
+      paid: !!payment || req.user.role === 'ADMIN',
+      modulesPassed: modulesPassedCount,
+      totalModules: modules.length,
+      assignmentsApproved: assignmentsApprovedCount,
+      projectStatus: projectSubmission ? projectSubmission.status : 'NOT_SUBMITTED',
+      projectFeedback: projectSubmission ? projectSubmission.feedback : null,
+      projectDetails: projectSubmission ? {
+        title: projectSubmission.title,
+        description: projectSubmission.description,
+        sourceCodeUrl: projectSubmission.sourceCodeUrl,
+        reportUrl: projectSubmission.reportUrl,
+        githubUrl: projectSubmission.githubUrl,
+        submittedAt: projectSubmission.submittedAt
+      } : null,
+      finalExamPassed,
+      finalExamScore: bestExamResult ? bestExamResult.accuracy : null,
+      detailedModules,
+      assignmentSubmissions: assignmentSubmissions.map(a => ({
+        id: a.id,
+        weekNumber: a.weekNumber,
+        status: a.status,
+        feedback: a.feedback,
+        fileName: a.fileName,
+        fileUrl: a.fileUrl,
+        submittedAt: a.submittedAt
+      }))
+    });
+  } catch (error: any) {
+    logger.error('Fetch detailed course progress error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // ADMIN CRUD - POST /api/courses (Create new Course)
 router.post('/', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   try {

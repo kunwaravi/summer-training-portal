@@ -250,7 +250,7 @@ const Verify = () => {
                 </div>
                 <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
                   <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-bold">Audit Grade</span>
-                  <span className="font-bold text-emerald-400 mt-0.5 block">OUTSTANDING (GRADE {result.grade})</span>
+                  <span className="font-bold text-emerald-400 mt-0.5 block">GRADE {result.grade}</span>
                 </div>
                 <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
                   <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-bold">Date of Certification</span>

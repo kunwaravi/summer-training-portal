@@ -22,6 +22,7 @@ const Quiz = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState(3600); // 60 minutes in seconds
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -39,6 +40,47 @@ const Quiz = () => {
     };
     fetchQuestions();
   }, [id]);
+
+  useEffect(() => {
+    if (loading || questions.length === 0 || result || submitting) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleAutoSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [loading, questions.length, result, submitting, answers]);
+
+  const handleAutoSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const res = await api.post('/quiz/submit', {
+        courseId: id,
+        answers
+      });
+      setResult(res.data);
+      await refreshUser();
+      alert("Time is up! Your exam has been automatically submitted.");
+    } catch (err: any) {
+      console.error('Auto submit error:', err);
+      alert("Time expired. Failed to auto-submit, please contact support.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleOptionSelect = (questionId: number, option: string) => {
     setAnswers(prev => ({
@@ -84,6 +126,7 @@ const Quiz = () => {
   const handleRetry = () => {
       setAnswers({});
       setResult(null);
+      setTimeLeft(3600);
       window.scrollTo(0,0);
   }
 
@@ -115,8 +158,21 @@ const Quiz = () => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="py-8 max-w-4xl mx-auto px-4 space-y-8"
+      className="py-8 max-w-4xl mx-auto px-4 space-y-8 relative"
     >
+      {/* Sticky floating timer banner */}
+      {!result && !loading && questions.length > 0 && (
+        <div className="sticky top-4 z-40 flex justify-end">
+          <div className={`px-5 py-3 rounded-2xl border font-mono text-sm font-black flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all duration-300 ${
+            timeLeft < 300 
+              ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 animate-pulse shadow-rose-900/10' 
+              : 'bg-slate-900/80 border-slate-800 text-emerald-450 shadow-emerald-950/10'
+          }`}>
+            <span>⏱️ Time Remaining:</span>
+            <span>{formatTime(timeLeft)}</span>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <button 
           onClick={() => navigate(`/course/${id}`)} 

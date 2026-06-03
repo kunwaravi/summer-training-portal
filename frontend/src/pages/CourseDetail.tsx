@@ -25,7 +25,7 @@ const CourseDetail = () => {
   const [expandedModules, setExpandedModules] = useState<Record<number, boolean>>({ 0: true });
   
   // Navigation tabs in Right area
-  const [activeContentTab, setActiveContentTab] = useState<'notes' | 'pdfs' | 'assignment' | 'discussion'>('notes');
+  const [activeContentTab, setActiveContentTab] = useState<'notes' | 'pdfs' | 'assignment' | 'project' | 'discussion'>('notes');
 
   const [readTopics, setReadTopics] = useState<string[]>([]); // Track completed topic IDs: "moduleOrder-topicIndex"
   const [copiedText, setCopiedText] = useState<string | null>(null);
@@ -95,6 +95,14 @@ const CourseDetail = () => {
   // Assignment states
   const [assignmentSubmitted, setAssignmentSubmitted] = useState(false);
   const [uploadingAssignment, setUploadingAssignment] = useState(false);
+
+  // Module Quiz States
+  const [showQuizOverlay, setShowQuizOverlay] = useState(false);
+  const [quizModuleId, setQuizModuleId] = useState<number | null>(null);
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
+  const [gradingQuiz, setGradingQuiz] = useState(false);
+  const [quizResult, setQuizResult] = useState<any>(null);
 
   // Q&A / Topic Discussion states
   const [comments, setComments] = useState<any[]>([
@@ -285,13 +293,22 @@ const CourseDetail = () => {
 
     if (activeTopicIndex < currentTopicsLength - 1) {
       setActiveTopicIndex(activeTopicIndex + 1);
-    } else if (activeModuleIndex < modules.length - 1) {
-      setActiveModuleIndex(activeModuleIndex + 1);
-      setActiveTopicIndex(0);
-      setExpandedModules(prev => ({ ...prev, [activeModuleIndex + 1]: true }));
     } else {
-      // Last topic of the last module reached
-      navigate(`/quiz/${id}`);
+      // Last topic of the module reached. Must check module quiz passed!
+      const passed = isCurrentModuleQuizPassed();
+      if (!passed && user?.role !== 'ADMIN') {
+        alert("Module complete! You must pass the module quiz with at least 60% score to unlock the next module.");
+        startModuleQuiz(currentModule.id);
+      } else {
+        if (activeModuleIndex < modules.length - 1) {
+          setActiveModuleIndex(activeModuleIndex + 1);
+          setActiveTopicIndex(0);
+          setExpandedModules(prev => ({ ...prev, [activeModuleIndex + 1]: true }));
+        } else {
+          // Last topic of the last module reached
+          navigate(`/quiz/${id}`);
+        }
+      }
     }
   };
 
@@ -425,12 +442,38 @@ const CourseDetail = () => {
     }
   };
 
-  const handleUploadAssignment = async () => {
-    setUploadingAssignment(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setAssignmentSubmitted(true);
-    setUploadingAssignment(false);
-    confetti({ particleCount: 50, spread: 40 });
+  // Module Quiz Logic & Sequential Lock helpers
+  const startModuleQuiz = async (moduleId: number) => {
+    setGradingQuiz(false);
+    setQuizResult(null);
+    setQuizAnswers({});
+    try {
+      const res = await api.get(`/quiz/module/${moduleId}`);
+      setQuizQuestions(res.data);
+      setQuizModuleId(moduleId);
+      setShowQuizOverlay(true);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to load module quiz. Make sure you have completed previous modules.');
+    }
+  };
+
+  const isCurrentModuleQuizPassed = () => {
+    if (user?.role === 'ADMIN') return true;
+    const moduleId = activeModuleDetail?.id;
+    if (!moduleId) return false;
+    const progress = user?.moduleProgresses?.find((p: any) => p.moduleId === moduleId);
+    return progress?.quizPassed || false;
+  };
+
+  const isModuleLocked = (modIdx: number) => {
+    if (user?.role === 'ADMIN') return false;
+    if (modIdx === 0) return false;
+    const prevMod = modules[modIdx - 1];
+    if (!prevMod) return false;
+    const prevProgress = user?.moduleProgresses?.find(
+      (p: any) => p.moduleId === prevMod.id && p.quizPassed
+    );
+    return !prevProgress;
   };
 
   const handleAddComment = (e: React.FormEvent) => {
@@ -508,22 +551,41 @@ const CourseDetail = () => {
           <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
             {modules.map((mod, modIdx) => {
               const isExpanded = expandedModules[modIdx] || false;
+              const isLocked = isModuleLocked(modIdx);
               
               return (
                 <div key={modIdx} className="border border-slate-850 rounded-2xl overflow-hidden bg-slate-950/40">
                   {/* Module Accordion Trigger */}
                   <button
-                    onClick={() => toggleModuleAccordion(modIdx)}
-                    className={`w-full flex items-center justify-between p-4 text-left transition-all ${isExpanded ? 'bg-slate-900/60 text-emerald-400' : 'text-slate-350 hover:bg-slate-900/30'}`}
+                    onClick={() => {
+                      if (isLocked) {
+                        alert(`Locked module: You must pass the quiz for Module ${mod.order - 1} before unlocking Module ${mod.order}.`);
+                        return;
+                      }
+                      toggleModuleAccordion(modIdx);
+                    }}
+                    className={`w-full flex items-center justify-between p-4 text-left transition-all ${
+                      isLocked 
+                        ? 'opacity-40 cursor-not-allowed text-slate-500' 
+                        : isExpanded 
+                          ? 'bg-slate-900/60 text-emerald-455' 
+                          : 'text-slate-350 hover:bg-slate-900/30'
+                    }`}
                   >
                     <div className="flex items-center gap-3">
-                      <BookOpen size={16} className={isExpanded ? 'text-emerald-400' : 'text-slate-500'} />
+                      {isLocked ? (
+                        <Lock size={16} className="text-slate-500" />
+                      ) : (
+                        <BookOpen size={16} className={isExpanded ? 'text-emerald-400' : 'text-slate-500'} />
+                      )}
                       <div>
-                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Module {mod.order}</p>
+                        <p className="text-[9px] text-slate-550 font-black uppercase tracking-widest">
+                          Module {mod.order} {isLocked && '🔒 Locked'}
+                        </p>
                         <h4 className="text-xs font-black truncate max-w-[180px] mt-0.5">{mod.title}</h4>
                       </div>
                     </div>
-                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {isLocked ? null : isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </button>
 
                   {/* Expanded Nested Topics list */}
@@ -636,11 +698,12 @@ const CourseDetail = () => {
           ) : (
             <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-2xl space-y-6">
             {/* Tab switch navigation */}
-            <div className="flex gap-2 border-b border-slate-850 pb-2">
+            <div className="flex gap-2 border-b border-slate-850 pb-2 overflow-x-auto">
               {[
                 { id: 'notes', label: 'Article / Notes', icon: FileText },
                 { id: 'pdfs', label: 'PDF Handouts', icon: Award },
                 { id: 'assignment', label: 'Assignment', icon: UploadCloud },
+                { id: 'project', label: 'Final Project', icon: Cpu },
                 { id: 'discussion', label: 'QA / Discussion', icon: MessageSquare }
               ].map(tab => {
                 const Icon = tab.icon;
@@ -857,42 +920,308 @@ const CourseDetail = () => {
                 </div>
               )}
 
-              {activeContentTab === 'assignment' && (
+              {activeContentTab === 'assignment' && (() => {
+                  const moduleOrder = activeModuleDetail?.order || 1;
+                  const isAssignmentModule = moduleOrder % 5 === 0;
+                  const weekNum = moduleOrder / 5;
+
+                  if (!isAssignmentModule) {
+                    return (
+                      <div className="p-8 text-center space-y-4 bg-slate-950/20 border border-slate-850 rounded-2xl">
+                        <UploadCloud className="mx-auto text-slate-650" size={36} />
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">No Weekly Assignment Here</h4>
+                        <p className="text-xs text-slate-550 max-w-sm mx-auto leading-relaxed">
+                          Weekly assignments are hosted at the end of each training week: Module 5 (Week 1), Module 10 (Week 2), Module 15 (Week 3), and Module 20 (Week 4).
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  const submission = user?.assignments?.find(
+                    (a: any) => a.courseId === id && a.weekNumber === weekNum
+                  );
+
+                  return (
+                    <div className="space-y-6 animate-in fade-in duration-200">
+                      <div className="space-y-2">
+                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 tracking-wider">
+                          Week {weekNum} Homework
+                        </span>
+                        <h3 className="text-xl font-black text-slate-100 uppercase tracking-tight">Weekly Industrial Assignment</h3>
+                        <p className="text-slate-400 text-xs">
+                          Complete the core practical assignment for Week {weekNum} and submit your project package for instructor evaluation.
+                        </p>
+                      </div>
+
+                      <div className="p-6 rounded-3xl border border-slate-855 bg-slate-955/40 space-y-6">
+                        {submission ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b border-slate-850 pb-3">
+                              <span className="text-xs font-black text-slate-350 uppercase">Submission Status</span>
+                              <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase border tracking-wider shadow ${
+                                submission.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                submission.status === 'REJECTED' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                                'bg-amber-500/10 text-amber-405 border-amber-500/20'
+                              }`}>
+                                {submission.status}
+                              </span>
+                            </div>
+                            <div className="text-xs space-y-2">
+                              <p className="font-bold text-slate-300">File Submitted: <span className="text-slate-400 font-mono">{submission.fileName}</span></p>
+                              <p className="text-slate-500 font-bold">Timestamp: {new Date(submission.submittedAt).toLocaleString()}</p>
+                              
+                              {submission.feedback && (
+                                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-850 mt-4 space-y-1">
+                                  <h5 className="font-black uppercase text-[10px] text-emerald-400">Instructor Feedback:</h5>
+                                  <p className="text-slate-350 leading-relaxed text-xs">{submission.feedback}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {submission.status === 'REJECTED' && (
+                              <button
+                                onClick={() => {
+                                  if (window.confirm("Do you want to submit a new version?")) {
+                                    setAssignmentSubmitted(false);
+                                  }
+                                }}
+                                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-black uppercase tracking-wider rounded-xl text-white transition"
+                              >
+                                Submit New Version
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            const form = e.currentTarget;
+                            const fileInput = form.elements.namedItem('assignmentFile') as HTMLInputElement;
+                            if (!fileInput || !fileInput.value) {
+                              alert("Please select a file to upload.");
+                              return;
+                            }
+                            
+                            const filename = fileInput.value.split('\\').pop() || 'submission.zip';
+                            setUploadingAssignment(true);
+                            try {
+                              await api.post('/assignments/submit', {
+                                courseId: id,
+                                weekNumber: weekNum,
+                                fileName: filename,
+                                fileUrl: `/uploads/${id}_week${weekNum}_${filename}`
+                              });
+                              await refreshUser();
+                              confetti({ particleCount: 100, spread: 60 });
+                              alert("Week " + weekNum + " Assignment submitted successfully!");
+                            } catch (err: any) {
+                              alert(err.response?.data?.message || "Failed to submit assignment.");
+                            } finally {
+                              setUploadingAssignment(false);
+                            }
+                          }} className="space-y-4">
+                            <div className="space-y-1">
+                              <label className="text-xs font-black uppercase tracking-wider text-slate-300 block">Select Project ZIP / PDF Report</label>
+                              <input 
+                                type="file" 
+                                name="assignmentFile"
+                                required
+                                className="w-full text-xs text-slate-400 bg-slate-900 border border-slate-850 rounded-xl p-3 file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-slate-950 file:text-emerald-450 hover:file:bg-slate-850 cursor-pointer"
+                              />
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-bold font-mono">Supported formats: ZIP, PDF, C, CPP, DOCX. Max size: 10MB.</p>
+                            
+                            <button
+                              type="submit"
+                              disabled={uploadingAssignment}
+                              className="w-full sm:w-auto px-6 py-3 bg-emerald-500 disabled:bg-slate-800 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:opacity-95 transition flex items-center justify-center gap-2"
+                            >
+                              <UploadCloud size={14} /> 
+                              {uploadingAssignment ? 'Submitting Solution...' : 'Submit Week Solution'}
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+              {activeContentTab === 'project' && (
                 <div className="space-y-6 animate-in fade-in duration-200">
                   <div className="space-y-2">
-                    <h3 className="text-xl font-black text-slate-100 uppercase tracking-tight">Module Tasks & Homework</h3>
-                    <p className="text-slate-400 text-xs">Complete the practical tasks below and upload your solution package (PDF, zip, or source file).</p>
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 tracking-wider">
+                      Industrial Capstone
+                    </span>
+                    <h3 className="text-xl font-black text-slate-100 uppercase tracking-tight">Final Capstone Project</h3>
+                    <p className="text-slate-400 text-xs">
+                      Submit your final project implementation to secure your certified industrial training credentials.
+                    </p>
                   </div>
 
-                  <div className="p-6 rounded-2xl border border-slate-800 bg-slate-950/40 space-y-4">
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full tracking-wider">Required Task</span>
-                      <h4 className="text-sm font-bold text-white pt-2">Task 1: Design and verify a modular loop framework for {activeTopic.title}.</h4>
-                      <p className="text-xs text-slate-400 leading-relaxed pt-1">
-                        Implement the procedural structures detailed in this module. Verify clock cycles, optimize variables mappings, and test dynamic outputs.
-                      </p>
-                    </div>
+                  {(() => {
+                    const completedModulesCount = user?.moduleProgresses?.filter(
+                      (p: any) => p.courseId === id && p.quizPassed
+                    ).length || 0;
 
-                    <div className="pt-4 border-t border-slate-850 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      {assignmentSubmitted ? (
-                        <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase">
-                          <CheckCircle2 size={16} /> Assignment Submitted Successfully!
+                    if (completedModulesCount < 20 && user?.role !== 'ADMIN') {
+                      return (
+                        <div className="p-8 text-center space-y-4 bg-slate-950/30 border border-slate-850 rounded-[2rem] flex flex-col justify-center items-center">
+                          <div className="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-lg">
+                            <Lock size={20} />
+                          </div>
+                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-350">Final Project Locked</h4>
+                          <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
+                            You must pass the quiz for all 20 modules before unlocking the Capstone Project. Current Progress: {completedModulesCount}/20 Modules.
+                          </p>
                         </div>
-                      ) : (
-                        <>
-                          <p className="text-[10px] text-slate-500 font-bold">Files supported: .zip, .c, .cpp, .pdf • Max 5MB</p>
-                          <button
-                            onClick={handleUploadAssignment}
-                            disabled={uploadingAssignment}
-                            className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:opacity-90 transition flex items-center justify-center gap-2"
-                          >
-                            <UploadCloud size={14} /> 
-                            {uploadingAssignment ? 'Uploading...' : 'Upload Solution'}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                      );
+                    }
+
+                    const project = user?.projects?.find((p: any) => p.courseId === id);
+
+                    return (
+                      <div className="p-6 rounded-3xl border border-slate-850 bg-slate-950/40 space-y-6">
+                        {project ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b border-slate-850 pb-3">
+                              <span className="text-xs font-black text-slate-355 uppercase">Project Review Status</span>
+                              <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase border tracking-wider shadow ${
+                                project.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-450 border-emerald-500/20' :
+                                project.status === 'REJECTED' ? 'bg-rose-500/10 text-rose-455 border-rose-500/20' :
+                                'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              }`}>
+                                {project.status}
+                              </span>
+                            </div>
+                            <div className="text-xs space-y-2">
+                              <h4 className="text-sm font-black text-white">{project.title}</h4>
+                              <p className="text-slate-400 text-xs leading-relaxed pt-1">{project.description}</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-[10px] font-black uppercase text-slate-400">
+                                <p>Source ZIP: <span className="text-slate-300 font-mono block truncate">{project.sourceCodeUrl}</span></p>
+                                <p>Report PDF: <span className="text-slate-300 font-mono block truncate">{project.reportUrl}</span></p>
+                                {project.githubUrl && <p>GitHub Link: <span className="text-cyan-400 font-mono block truncate">{project.githubUrl}</span></p>}
+                              </div>
+
+                              {project.feedback && (
+                                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-850 mt-4 space-y-1">
+                                  <h5 className="font-black uppercase text-[10px] text-emerald-400">Instructor Review Feedback:</h5>
+                                  <p className="text-slate-350 leading-relaxed text-xs">{project.feedback}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {project.status === 'REJECTED' && (
+                              <button
+                                onClick={() => {
+                                  if (window.confirm("Do you want to re-submit your final capstone project?")) {
+                                    // Set status back to not submitted locally to show form
+                                  }
+                                }}
+                                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-black uppercase tracking-wider rounded-xl text-white transition"
+                              >
+                                Resubmit Project
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            const form = e.currentTarget;
+                            const title = (form.elements.namedItem('projectTitle') as HTMLInputElement).value;
+                            const description = (form.elements.namedItem('projectDesc') as HTMLTextAreaElement).value;
+                            const githubUrl = (form.elements.namedItem('projectGithub') as HTMLInputElement).value;
+                            const zipFile = form.elements.namedItem('projectZip') as HTMLInputElement;
+                            const pdfFile = form.elements.namedItem('projectPdf') as HTMLInputElement;
+
+                            if (!zipFile.value || !pdfFile.value) {
+                              alert("Please select both the Source Code ZIP and the Report PDF.");
+                              return;
+                            }
+
+                            const zipName = zipFile.value.split('\\').pop() || 'code.zip';
+                            const pdfName = pdfFile.value.split('\\').pop() || 'report.pdf';
+
+                            setUploadingAssignment(true);
+                            try {
+                              await api.post('/projects/submit', {
+                                courseId: id,
+                                title,
+                                description,
+                                sourceCodeUrl: `/uploads/projects_${id}_${zipName}`,
+                                reportUrl: `/uploads/projects_${id}_${pdfName}`,
+                                githubUrl: githubUrl || undefined
+                              });
+                              await refreshUser();
+                              confetti({ particleCount: 155, spread: 85 });
+                              alert("Final capstone project submitted successfully!");
+                            } catch (err: any) {
+                              alert(err.response?.data?.message || "Failed to submit project.");
+                            } finally {
+                              setUploadingAssignment(false);
+                            }
+                          }} className="space-y-4">
+                            <div className="space-y-1">
+                              <label className="text-xs font-black uppercase tracking-wider text-slate-350 block">Project Title</label>
+                              <input 
+                                type="text" 
+                                name="projectTitle"
+                                required
+                                placeholder="e.g. Automated Smart Irrigation System with RTOS scheduling"
+                                className="w-full text-xs text-slate-200 bg-slate-900 border border-slate-850 rounded-xl p-3 placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-black uppercase tracking-wider text-slate-350 block">Project Description</label>
+                              <textarea 
+                                name="projectDesc"
+                                required
+                                rows={3}
+                                placeholder="Detail your project architecture, registers configured, peripherals used, and results..."
+                                className="w-full text-xs text-slate-200 bg-slate-900 border border-slate-855 rounded-xl p-3 placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <label className="text-xs font-black uppercase tracking-wider text-slate-350 block">Source Code ZIP</label>
+                                <input 
+                                  type="file" 
+                                  name="projectZip"
+                                  required
+                                  className="w-full text-xs text-slate-400 bg-slate-900 border border-slate-850 rounded-xl p-3 file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-slate-950 file:text-cyan-400 hover:file:bg-slate-850 cursor-pointer"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs font-black uppercase tracking-wider text-slate-350 block">Report PDF</label>
+                                <input 
+                                  type="file" 
+                                  name="projectPdf"
+                                  required
+                                  className="w-full text-xs text-slate-400 bg-slate-900 border border-slate-850 rounded-xl p-3 file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-slate-950 file:text-cyan-400 hover:file:bg-slate-850 cursor-pointer"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-black uppercase tracking-wider text-slate-350 block">GitHub Repository URL (Optional)</label>
+                              <input 
+                                type="url" 
+                                name="projectGithub"
+                                placeholder="https://github.com/yourusername/project"
+                                className="w-full text-xs text-slate-200 bg-slate-900 border border-slate-850 rounded-xl p-3 placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                              />
+                            </div>
+
+                            <button
+                              type="submit"
+                              disabled={uploadingAssignment}
+                              className="w-full sm:w-auto px-6 py-3 bg-cyan-500 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:opacity-95 transition flex items-center justify-center gap-2"
+                            >
+                              <UploadCloud size={14} /> 
+                              {uploadingAssignment ? 'Uploading Capstone...' : 'Submit Capstone Project'}
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -1068,6 +1397,173 @@ const CourseDetail = () => {
         upiUtr={upiUtr}
         onChangeUpiUtr={setUpiUtr}
       />
+
+      {/* Module Quiz Assessment Modal */}
+      <AnimatePresence>
+        {showQuizOverlay && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-slate-900 border border-slate-850 rounded-[2.5rem] w-full max-w-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto text-white font-sans"
+            >
+              <div className="flex items-center justify-between border-b border-slate-850 pb-4">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full tracking-wider">
+                    MODULE QUIZ
+                  </span>
+                  <h3 className="text-lg font-black text-white uppercase tracking-tight mt-1">
+                    {activeModuleDetail?.title || "Module"} Assessment
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setShowQuizOverlay(false)}
+                  className="text-slate-500 hover:text-white transition font-black text-xs uppercase tracking-wider bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-850"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {!quizResult ? (
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (Object.keys(quizAnswers).length < quizQuestions.length) {
+                    alert("Please answer all questions before submitting.");
+                    return;
+                  }
+                  setGradingQuiz(true);
+                  try {
+                    const res = await api.post(`/quiz/module/${quizModuleId}/submit`, {
+                      answers: quizAnswers
+                    });
+                    setQuizResult(res.data);
+                    await refreshUser();
+                  } catch (err: any) {
+                    alert(err.response?.data?.message || "Failed to submit quiz.");
+                  } finally {
+                    setGradingQuiz(false);
+                  }
+                }} className="space-y-6">
+                  <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-2">
+                    {quizQuestions.map((q, idx) => (
+                      <div key={q.id} className="p-5 rounded-2xl bg-slate-950/40 border border-slate-850 space-y-3">
+                        <p className="text-xs font-black text-slate-200 leading-relaxed">
+                          <span className="text-emerald-400 mr-1.5 font-mono">Q{idx + 1}.</span>
+                          {q.text}
+                        </p>
+                        <div className="grid grid-cols-1 gap-2.5">
+                          {q.options.map((opt: string) => {
+                            const isSelected = quizAnswers[q.id] === opt;
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: opt }))}
+                                className={`text-left px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+                                  isSelected 
+                                    ? 'bg-emerald-500 text-slate-950 shadow border border-emerald-400' 
+                                    : 'bg-slate-900 text-slate-350 hover:bg-slate-850 hover:text-white border border-slate-800'
+                                }`}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-850">
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                      Minimum 60% score required to pass
+                    </p>
+                    <button
+                      type="submit"
+                      disabled={gradingQuiz}
+                      className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-widest hover:opacity-90 transition shadow"
+                    >
+                      {gradingQuiz ? "Grading..." : "Submit Answers"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="text-center space-y-6 py-4">
+                  <div className="flex justify-center">
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center border shadow-lg ${
+                      quizResult.passed 
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                        : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                    }`}>
+                      {quizResult.passed ? <CheckCircle size={32} /> : <ShieldAlert size={32} />}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-xl font-black text-white">
+                      {quizResult.passed ? "Assessment Passed!" : "Assessment Failed"}
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      You scored <span className="font-bold text-white">{quizResult.score}/10</span> ({quizResult.accuracy}%) on the module quiz.
+                    </p>
+                  </div>
+
+                  {quizResult.passed ? (
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl max-w-sm mx-auto">
+                      <p className="text-xs text-emerald-400 font-bold">
+                        🎉 Next module unlocked! +10 XP points awarded.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl max-w-sm mx-auto">
+                      <p className="text-xs text-rose-455 font-bold">
+                        ❌ Minimum 60% required. Review the material and try again.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="pt-6 border-t border-slate-850 flex justify-center gap-4">
+                    {!quizResult.passed ? (
+                      <button
+                        onClick={() => {
+                          setQuizResult(null);
+                          setQuizAnswers({});
+                        }}
+                        className="px-5 py-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-black uppercase tracking-wider rounded-xl text-white transition"
+                      >
+                        Try Again
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setShowQuizOverlay(false);
+                          // Auto-advance to next module
+                          if (activeModuleIndex < modules.length - 1) {
+                            setActiveModuleIndex(activeModuleIndex + 1);
+                            setActiveTopicIndex(0);
+                            setExpandedModules(prev => ({ ...prev, [activeModuleIndex + 1]: true }));
+                          } else {
+                            navigate(`/quiz/${id}`);
+                          }
+                        }}
+                        className="px-6 py-3.5 bg-emerald-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-widest hover:opacity-95 transition shadow animate-pulse"
+                      >
+                        Continue to Next Module
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </motion.div>
   );

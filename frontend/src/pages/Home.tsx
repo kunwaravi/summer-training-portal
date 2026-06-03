@@ -458,9 +458,18 @@ const Home = () => {
               Empowering the next generation of engineers with high-fidelity hardware expertise, computer science logic, and accredited certifications.
             </p>
           </div>
-          <div className="flex flex-col items-center md:items-end gap-2">
-            <p className="text-emerald-400 font-black uppercase tracking-[0.2em] text-[10px]">ISO 9001:2015 Accredited Organization</p>
-            <p className="text-slate-500 text-[10px] font-bold">© 2026 Edunexus Automation Labs • Ballia, UP</p>
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="flex gap-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+              <Link to="/terms" className="hover:text-emerald-400 transition-colors">Terms</Link>
+              <span>•</span>
+              <Link to="/privacy" className="hover:text-emerald-400 transition-colors">Privacy</Link>
+              <span>•</span>
+              <Link to="/refund" className="hover:text-emerald-400 transition-colors">Refund Policy</Link>
+            </div>
+            <div className="flex flex-col items-center md:items-end gap-2">
+              <p className="text-emerald-400 font-black uppercase tracking-[0.2em] text-[10px]">ISO 9001:2015 Accredited Organization</p>
+              <p className="text-slate-500 text-[10px] font-bold">© 2026 Edunexus Automation Labs • Faridabad, Haryana</p>
+            </div>
           </div>
         </div>
 

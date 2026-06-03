@@ -11,6 +11,8 @@ import certificateRoutes from './routes/certificate';
 import paymentRoutes from './routes/payment';
 import practiceRoutes from './routes/practice';
 import forumRoutes from './routes/forum';
+import assignmentRoutes from './routes/assignment';
+import projectRoutes from './routes/project';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -58,6 +60,8 @@ app.use('/api/certificate', certificateRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/practice', practiceRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api/assignments', assignmentRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Health Check Instrumentation Endpoint (Issue #8)
 app.get('/health', async (req, res) => {

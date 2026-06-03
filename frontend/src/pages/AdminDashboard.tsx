@@ -43,7 +43,29 @@ interface Course {
 }
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'metrics'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'metrics' | 'assignments' | 'projects' | 'exams'>('transactions');
+
+  // Assignments management states
+  const [pendingAssignments, setPendingAssignments] = useState<any[]>([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [assignmentFeedback, setAssignmentFeedback] = useState('');
+  const [evaluatingAssignmentId, setEvaluatingAssignmentId] = useState<number | null>(null);
+
+  // Projects management states
+  const [pendingProjects, setPendingProjects] = useState<any[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [projectFeedback, setProjectFeedback] = useState('');
+  const [evaluatingProjectId, setEvaluatingProjectId] = useState<number | null>(null);
+
+  // Final Exam management states
+  const [examQuestions, setExamQuestions] = useState<any[]>([]);
+  const [loadingExamQuestions, setLoadingExamQuestions] = useState(false);
+  const [selectedExamCourse, setSelectedExamCourse] = useState('C');
+  const [editingExamQuestion, setEditingExamQuestion] = useState<any | null>(null);
+  const [isNewExamQuestion, setIsNewExamQuestion] = useState(false);
+  const [examQuestionText, setExamQuestionText] = useState('');
+  const [examQuestionOptions, setExamQuestionOptions] = useState<string[]>(['', '', '', '']);
+  const [examQuestionCorrect, setExamQuestionCorrect] = useState('');
   
   // User Registry states
   const [users, setUsers] = useState<any[]>([]);
@@ -100,11 +122,116 @@ const AdminDashboard = () => {
     }
     try {
       await api.put(`/payments/admin/verify/${paymentId}`);
-      alert('Payment successfully verified! The course has been unlocked for the student.');
+      alert('Payment transaction verified and approved successfully!');
       fetchTransactions(currentPage);
     } catch (err: any) {
-      console.error('Failed to verify payment:', err);
-      alert(err.response?.data?.message || 'Failed to verify payment.');
+      alert(err.response?.data?.message || 'Verification approval failed.');
+    }
+  };
+
+  const fetchPendingAssignments = async () => {
+    setLoadingAssignments(true);
+    try {
+      const res = await api.get('/assignments/admin/pending');
+      setPendingAssignments(res.data.pending || res.data);
+    } catch (err) {
+      console.error('Failed to fetch pending assignments:', err);
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
+  const handleEvaluateAssignment = async (id: number, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      await api.put(`/assignments/admin/evaluate/${id}`, {
+        status,
+        feedback: assignmentFeedback
+      });
+      alert(`Assignment successfully ${status.toLowerCase()}!`);
+      setEvaluatingAssignmentId(null);
+      setAssignmentFeedback('');
+      fetchPendingAssignments();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Evaluation failed.');
+    }
+  };
+
+  const fetchPendingProjects = async () => {
+    setLoadingProjects(true);
+    try {
+      const res = await api.get('/projects/admin/pending');
+      setPendingProjects(res.data.pending || res.data);
+    } catch (err) {
+      console.error('Failed to fetch pending projects:', err);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  const handleEvaluateProject = async (id: number, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      await api.put(`/projects/admin/evaluate/${id}`, {
+        status,
+        feedback: projectFeedback
+      });
+      alert(`Project successfully ${status.toLowerCase()}!`);
+      setEvaluatingProjectId(null);
+      setProjectFeedback('');
+      fetchPendingProjects();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Evaluation failed.');
+    }
+  };
+
+  const fetchExamQuestions = async (courseId: string) => {
+    setLoadingExamQuestions(true);
+    try {
+      const res = await api.get(`/quiz/admin/exam-questions/${courseId}`);
+      setExamQuestions(res.data);
+    } catch (err) {
+      console.error('Failed to fetch exam questions:', err);
+    } finally {
+      setLoadingExamQuestions(false);
+    }
+  };
+
+  const handleSaveExamQuestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!examQuestionText.trim() || examQuestionOptions.some(o => !o.trim()) || !examQuestionCorrect.trim()) {
+      alert("Please fill in all question fields, options, and correct answer.");
+      return;
+    }
+
+    try {
+      if (isNewExamQuestion) {
+        await api.post(`/quiz/exam/${selectedExamCourse}/question`, {
+          text: examQuestionText,
+          options: examQuestionOptions,
+          correctAnswer: examQuestionCorrect
+        });
+      } else {
+        await api.put(`/quiz/exam/question/${editingExamQuestion.id}`, {
+          text: examQuestionText,
+          options: examQuestionOptions,
+          correctAnswer: examQuestionCorrect
+        });
+      }
+      setEditingExamQuestion(null);
+      fetchExamQuestions(selectedExamCourse);
+      alert("Question saved successfully!");
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to save exam question.");
+    }
+  };
+
+  const handleDeleteExamQuestion = async (questionId: number) => {
+    if (!window.confirm("Are you sure you want to delete this final exam question?")) return;
+    try {
+      await api.delete(`/quiz/exam/question/${questionId}`);
+      fetchExamQuestions(selectedExamCourse);
+      alert("Question deleted successfully!");
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to delete question.");
     }
   };
 
@@ -189,9 +316,24 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (activeTab === 'users') {
-      fetchUsers();
+       fetchUsers();
+    }
+    if (activeTab === 'assignments') {
+      fetchPendingAssignments();
+    }
+    if (activeTab === 'projects') {
+      fetchPendingProjects();
+    }
+    if (activeTab === 'exams') {
+      fetchExamQuestions(selectedExamCourse);
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'exams') {
+      fetchExamQuestions(selectedExamCourse);
+    }
+  }, [selectedExamCourse, activeTab]);
 
   // Fetch all topics and quiz questions for a module once expanded
   const handleToggleExpandModule = async (moduleId: number, courseId: string, week: number) => {
@@ -475,6 +617,36 @@ const AdminDashboard = () => {
           }`}
         >
           <BarChart3 size={16} /> Platform Metrics
+        </button>
+        <button
+          onClick={() => setActiveTab('assignments')}
+          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'assignments'
+              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <FileText size={16} /> Weekly Assignments
+        </button>
+        <button
+          onClick={() => setActiveTab('projects')}
+          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'projects'
+              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Plus size={16} /> Capstone Projects
+        </button>
+        <button
+          onClick={() => setActiveTab('exams')}
+          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'exams'
+              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Award size={16} /> Exam Questions
         </button>
       </div>
 
@@ -817,6 +989,310 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {activeTab === 'assignments' && (
+          <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-xl space-y-6">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">
+                Weekly Assignment Submissions
+              </h3>
+              <button 
+                onClick={fetchPendingAssignments}
+                className="p-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white rounded-xl transition"
+              >
+                <RefreshCw size={16} />
+              </button>
+            </div>
+
+            {loadingAssignments ? (
+              <div className="py-12 text-center text-slate-500 font-semibold text-sm">Loading pending assignments...</div>
+            ) : pendingAssignments.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 text-xs">No pending assignments to evaluate. Great job!</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[9px] font-bold">
+                      <th className="py-3 px-4">Student</th>
+                      <th className="py-3 px-4">Course</th>
+                      <th className="py-3 px-4">Week</th>
+                      <th className="py-3 px-4">Submitted File</th>
+                      <th className="py-3 px-4">Submitted At</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingAssignments.map((a) => (
+                      <tr key={a.id} className="border-b border-slate-850/60 hover:bg-slate-950/20 transition">
+                        <td className="py-4 px-4 font-bold text-white">{a.user?.name || `Student #${a.userId}`}</td>
+                        <td className="py-4 px-4 uppercase font-bold text-slate-400">{a.courseId}</td>
+                        <td className="py-4 px-4 font-bold">Week {a.weekNumber}</td>
+                        <td className="py-4 px-4 font-mono text-cyan-400">
+                          <a href={a.fileUrl} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
+                            <FileText size={12} /> {a.fileName}
+                          </a>
+                        </td>
+                        <td className="py-4 px-4 text-slate-500 font-bold">{new Date(a.submittedAt).toLocaleString()}</td>
+                        <td className="py-4 px-4 text-right">
+                          {evaluatingAssignmentId === a.id ? (
+                            <div className="space-y-2 text-left bg-slate-950 p-4 rounded-xl border border-slate-850 inline-block min-w-[250px]">
+                              <label className="text-[9px] font-black uppercase text-slate-500 block">Feedback / Evaluation</label>
+                              <textarea
+                                value={assignmentFeedback}
+                                onChange={(e) => setAssignmentFeedback(e.target.value)}
+                                placeholder="Write mentor feedback..."
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white placeholder-slate-650 focus:outline-none"
+                              />
+                              <div className="flex justify-end gap-2 pt-2">
+                                <button 
+                                  onClick={() => setEvaluatingAssignmentId(null)}
+                                  className="px-2 py-1.5 border border-slate-800 text-slate-400 rounded-lg hover:text-white text-[10px] font-bold"
+                                >
+                                  Cancel
+                                </button>
+                                <button 
+                                  onClick={() => handleEvaluateAssignment(a.id, 'REJECTED')}
+                                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[10px] font-black uppercase"
+                                >
+                                  Reject
+                                </button>
+                                <button 
+                                  onClick={() => handleEvaluateAssignment(a.id, 'APPROVED')}
+                                  className="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-[10px] font-black uppercase"
+                                >
+                                  Approve
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setEvaluatingAssignmentId(a.id);
+                                setAssignmentFeedback('');
+                              }}
+                              className="px-4 py-2 bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-lg shadow hover:opacity-90 transition"
+                            >
+                              Evaluate
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'projects' && (
+          <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-xl space-y-6">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">
+                Capstone Projects for Evaluation
+              </h3>
+              <button 
+                onClick={fetchPendingProjects}
+                className="p-2 bg-slate-955 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white rounded-xl transition"
+              >
+                <RefreshCw size={16} />
+              </button>
+            </div>
+
+            {loadingProjects ? (
+              <div className="py-12 text-center text-slate-500 font-semibold text-sm">Loading pending projects...</div>
+            ) : pendingProjects.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 text-xs">No pending projects to review.</div>
+            ) : (
+              <div className="space-y-6">
+                {pendingProjects.map((p) => (
+                  <div key={p.id} className="p-6 bg-slate-950/40 border border-slate-850 rounded-2xl space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-900 pb-3">
+                      <div>
+                        <h4 className="text-base font-black text-white">{p.title}</h4>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                          By {p.user?.name || `Student #${p.userId}`} • Course {p.courseId}
+                        </p>
+                      </div>
+                      <span className="text-[10px] px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold uppercase tracking-wider">
+                        Pending Review
+                      </span>
+                    </div>
+
+                    <div className="text-xs space-y-3">
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">Description</span>
+                        <p className="text-slate-350 leading-relaxed pt-0.5">{p.description}</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-850">
+                          <span className="text-[9px] text-slate-500 uppercase block font-bold">Source ZIP URL</span>
+                          <a href={p.sourceCodeUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline font-mono truncate block mt-0.5">
+                            {p.sourceCodeUrl}
+                          </a>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-850">
+                          <span className="text-[9px] text-slate-500 uppercase block font-bold">Report PDF URL</span>
+                          <a href={p.reportUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline font-mono truncate block mt-0.5">
+                            {p.reportUrl}
+                          </a>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-850">
+                          <span className="text-[9px] text-slate-500 uppercase block font-bold">GitHub Repo Link</span>
+                          {p.githubUrl ? (
+                            <a href={p.githubUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline font-mono truncate block mt-0.5">
+                              {p.githubUrl}
+                            </a>
+                          ) : (
+                            <span className="text-slate-600 block mt-0.5 font-bold">N/A</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-900 flex justify-end">
+                      {evaluatingProjectId === p.id ? (
+                        <div className="space-y-3 text-left bg-slate-950 p-4 rounded-xl border border-slate-850 w-full sm:max-w-md">
+                          <label className="text-[9px] font-black uppercase text-slate-500 block">Feedback / Evaluation</label>
+                          <textarea
+                            value={projectFeedback}
+                            onChange={(e) => setProjectFeedback(e.target.value)}
+                            placeholder="Write project review feedback..."
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white placeholder-slate-650 focus:outline-none"
+                          />
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button 
+                              onClick={() => setEvaluatingProjectId(null)}
+                              className="px-2.5 py-1.5 border border-slate-800 text-slate-400 rounded-lg hover:text-white text-[10px] font-bold"
+                            >
+                              Cancel
+                            </button>
+                            <button 
+                              onClick={() => handleEvaluateProject(p.id, 'REJECTED')}
+                              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[10px] font-black uppercase"
+                            >
+                              Reject
+                            </button>
+                            <button 
+                              onClick={() => handleEvaluateProject(p.id, 'APPROVED')}
+                              className="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-[10px] font-black uppercase"
+                            >
+                              Approve
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEvaluatingProjectId(p.id);
+                            setProjectFeedback('');
+                          }}
+                          className="px-5 py-2.5 bg-emerald-500 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl shadow hover:opacity-90 transition"
+                        >
+                          Evaluate Project
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'exams' && (
+          <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-3 border-b border-slate-800">
+              <div className="space-y-1">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">
+                  Final Exam Questions Manager
+                </h3>
+                <p className="text-[10px] text-slate-500">Add, edit, or delete the 50 final examination questions for each course.</p>
+              </div>
+              <div className="flex gap-2">
+                <select
+                  value={selectedExamCourse}
+                  onChange={(e) => setSelectedExamCourse(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500"
+                >
+                  <option value="C">C Curriculum</option>
+                  <option value="C++">C++ Curriculum</option>
+                  <option value="IoT">IoT Curriculum</option>
+                  <option value="Embedded">Embedded Systems</option>
+                </select>
+                <button 
+                  onClick={() => {
+                    setIsNewExamQuestion(true);
+                    setEditingExamQuestion({});
+                    setExamQuestionText('');
+                    setExamQuestionOptions(['', '', '', '']);
+                    setExamQuestionCorrect('');
+                  }}
+                  className="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-1.5"
+                >
+                  <Plus size={14} /> Add Exam Q
+                </button>
+              </div>
+            </div>
+
+            {loadingExamQuestions ? (
+              <div className="py-12 text-center text-slate-500 font-semibold text-sm">Loading final exam questions...</div>
+            ) : examQuestions.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 text-xs">No exam questions defined. Click 'Add Exam Q' to build the exam pool.</div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-500 px-2">
+                  <span>Questions in pool ({selectedExamCourse})</span>
+                  <span className="text-cyan-400 font-mono">{examQuestions.length}/50 Questions</span>
+                </div>
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                  {examQuestions.map((q, idx) => (
+                    <div key={q.id} className="p-4 bg-slate-955/40 border border-slate-850 rounded-2xl flex justify-between items-start gap-4 animate-in fade-in">
+                      <div className="space-y-2 text-xs">
+                        <p className="font-bold text-slate-200">
+                          <span className="text-cyan-400 font-black font-mono mr-1.5">Q{idx + 1}.</span>
+                          {q.text}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] text-slate-400">
+                          {q.options.map((opt: string, oIdx: number) => (
+                            <span key={oIdx} className={q.correctAnswer === opt ? "text-emerald-450 font-bold" : ""}>
+                              [{String.fromCharCode(65 + oIdx)}] {opt}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-[9px] text-slate-500 font-mono pt-1">
+                          Correct Answer: <span className="text-emerald-450 font-black font-mono">{q.correctAnswer}</span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => {
+                            setIsNewExamQuestion(false);
+                            setEditingExamQuestion(q);
+                            setExamQuestionText(q.text);
+                            setExamQuestionOptions([...q.options]);
+                            setExamQuestionCorrect(q.correctAnswer);
+                          }}
+                          className="p-1.5 bg-slate-950 border border-slate-850 hover:border-emerald-500 text-slate-500 hover:text-emerald-400 rounded-lg transition"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteExamQuestion(q.id)}
+                          className="p-1.5 bg-slate-950 border border-slate-855 hover:border-red-500 text-slate-500 hover:text-red-400 rounded-lg transition"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
         {activeTab === 'metrics' && (
           <div className="space-y-6">
             {/* Top row cards */}
@@ -1000,6 +1476,92 @@ const AdminDashboard = () => {
         )}
       </AnimatePresence>
 
+      {/* Final Exam Question CRUD Modal */}
+      <AnimatePresence>
+        {editingExamQuestion && (
+          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-slate-955 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl p-6 text-left space-y-5 text-white"
+            >
+              <div className="flex items-center gap-2 text-cyan-400 pb-2 border-b border-slate-900">
+                <Award size={18} />
+                <h3 className="text-sm font-black uppercase tracking-wider">
+                  {isNewExamQuestion ? 'Create Final Exam Question' : 'Modify Final Exam Question'}
+                </h3>
+              </div>
+
+              <form onSubmit={handleSaveExamQuestion} className="space-y-4">
+                {/* Question Statement */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Question Statement</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="e.g. Which logic gate outputs true if input is false?"
+                    value={examQuestionText}
+                    onChange={(e) => setExamQuestionText(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 transition"
+                  />
+                </div>
+
+                {/* Multiple choice Options */}
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Answer Options</label>
+                  {examQuestionOptions.map((opt, oIdx) => (
+                    <div key={oIdx} className="flex gap-2 items-center">
+                      <span className="text-[10px] font-black text-slate-650 w-4 font-mono">[{String.fromCharCode(65 + oIdx)}]</span>
+                      <input 
+                        type="text"
+                        required
+                        placeholder={`Option ${String.fromCharCode(65 + oIdx)} text`}
+                        value={opt}
+                        onChange={(e) => {
+                          const newOpts = [...examQuestionOptions];
+                          newOpts[oIdx] = e.target.value;
+                          setExamQuestionOptions(newOpts);
+                        }}
+                        className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 transition"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Correct Answer */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Correct Answer (Must match correct Option string exactly)</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="Exact option content..."
+                    value={examQuestionCorrect}
+                    onChange={(e) => setExamQuestionCorrect(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-emerald-450 focus:outline-none focus:border-emerald-500 transition font-mono font-bold"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-900">
+                  <button 
+                    type="button"
+                    onClick={() => setEditingExamQuestion(null)}
+                    className="px-4 py-2 border border-slate-800 hover:border-slate-750 text-slate-400 hover:text-white rounded-xl text-xs font-bold uppercase transition"
+                  >
+                    Discard
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
+                  >
+                    Save Question
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
