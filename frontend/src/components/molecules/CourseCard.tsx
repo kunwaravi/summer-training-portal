@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { LucideIcon, BookOpen, ChevronUp, ChevronDown } from 'lucide-react';
+import { BookOpen, ChevronUp, ChevronDown } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Card from '../atoms/Card';
 import Badge from '../atoms/Badge';
