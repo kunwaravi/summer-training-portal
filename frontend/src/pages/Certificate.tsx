@@ -279,24 +279,16 @@ const Certificate = () => {
             color: #94a3b8;
         }
 
-        /* Golden Badge */
-        .badge {
+        /* Golden Badge Logo */
+        .cert-badge-logo {
             position: absolute;
-            top: 40px;
-            right: 50px;
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 10px;
-            font-weight: bold;
-            color: #000;
-            text-align: center;
-            box-shadow: 0 0 15px rgba(212,175,55,0.4);
+            top: 35px;
+            right: 45px;
+            width: 75px;
+            height: 75px;
+            object-fit: contain;
             z-index: 10;
+            filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.35));
         }
 
         /* Landscape A4 Print Optimization */
@@ -392,7 +384,7 @@ const Certificate = () => {
             <div className="corner bottom-left"></div>
             <div className="corner bottom-right"></div>
 
-            <div className="badge">PROUD<br />MEMBER</div>
+            <img src="/logo.png" alt="Edunexus Logo" className="cert-badge-logo" />
 
             <div className="content">
                 <div>
