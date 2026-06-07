@@ -42,4 +42,21 @@ router.get('/admin/users', authenticateToken, isAdmin, async (req: any, res: Res
   }
 });
 
+// DELETE /api/auth/admin/users/:userId - Delete a user (restricted to ADMIN, prevent self-deletion)
+router.delete('/admin/users/:userId', authenticateToken, isAdmin, async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const targetUserId = parseInt(req.params.userId as string);
+    const currentUserId = req.user.id;
+
+    if (currentUserId === targetUserId) {
+      return res.status(400).json({ message: 'Self-deletion is blocked. You cannot delete your own admin account.' });
+    }
+
+    await authService.deleteUser(targetUserId);
+    res.json({ success: true, message: 'User account and all associated records deleted successfully.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

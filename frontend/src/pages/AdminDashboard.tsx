@@ -41,7 +41,7 @@ interface Course {
 }
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'transactions' | 'cms'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users'>('transactions');
   
   // Transaction logs states
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -86,7 +86,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fetch all registered users for certificate generator
+  // Fetch all registered users for certificate generator & directory
   const fetchUsers = async () => {
     try {
       const res = await api.get('/auth/admin/users');
@@ -96,6 +96,21 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       console.error('Failed to load users for dropdown:', err);
+    }
+  };
+
+  // Delete candidate account and all dependencies
+  const handleDeleteUser = async (userId: number, userName: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user "${userName}"? All their progress, results, certificates, and submissions will be permanently wiped out.`)) {
+      return;
+    }
+    try {
+      await api.delete(`/auth/admin/users/${userId}`);
+      alert(`User "${userName}" was successfully deleted.`);
+      fetchUsers(); // Refresh the users list
+    } catch (err: any) {
+      console.error('Failed to delete user:', err);
+      alert(err.response?.data?.message || 'Failed to delete user.');
     }
   };
 
@@ -384,6 +399,16 @@ const AdminDashboard = () => {
         >
           <BookOpen size={16} /> Course Syllabus CMS
         </button>
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'users'
+              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Users size={16} /> User Management
+        </button>
       </div>
 
       {/* Content Area */}
@@ -651,6 +676,80 @@ const AdminDashboard = () => {
               )}
             </div>
 
+          </div>
+        )}
+
+        {activeTab === 'users' && (
+          <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-6 space-y-4 animate-fade-in">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
+              <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <Users size={18} className="text-cyan-400" /> Registered Candidate Directory
+              </h3>
+              <span className="text-[10px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold">
+                {users.length} Candidates Registered
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
+                    <th className="py-3 px-4">Student ID</th>
+                    <th className="py-3 px-4">Candidate Name</th>
+                    <th className="py-3 px-4">Academic Details</th>
+                    <th className="py-3 px-4">Role</th>
+                    <th className="py-3 px-4">Registration Date</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-850">
+                  {users.map((u) => (
+                    <tr key={u.id} className="hover:bg-slate-900/40 text-slate-300 transition">
+                      <td className="py-3.5 px-4 font-mono text-[10px] text-cyan-400">#{u.id}</td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-white">{u.name}</div>
+                        <div className="text-[10px] text-slate-500 font-mono">{u.email}</div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {u.collegeName ? (
+                          <>
+                            <div className="font-semibold text-slate-350">{u.collegeName}</div>
+                            <div className="text-[10px] text-slate-500 uppercase font-bold">{u.branchName || 'N/A'} Branch</div>
+                          </>
+                        ) : (
+                          <span className="text-slate-600 italic">No academic profiles updated</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                          u.role === 'ADMIN'
+                            ? 'bg-red-500/10 text-red-400 border border-red-500/25'
+                            : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/25'
+                        }`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-500 font-mono">
+                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        }) : 'N/A'}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          onClick={() => handleDeleteUser(u.id, u.name)}
+                          className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition active:scale-90"
+                          title="Remove Candidate"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

@@ -85,10 +85,22 @@ export const getAllUsers = async () => {
     select: {
       id: true,
       name: true,
-      email: true
+      email: true,
+      role: true,
+      createdAt: true,
+      collegeName: true,
+      branchName: true
     },
     orderBy: {
       name: 'asc'
     }
   });
+};
+
+export const deleteUser = async (userId: number) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+  return await prisma.user.delete({ where: { id: userId } });
 };
