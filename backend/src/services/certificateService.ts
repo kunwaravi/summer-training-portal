@@ -77,41 +77,23 @@ export class CertificateService {
     const displayCourseName = this.getDisplayCourseName(courseId);
     const credentialId = this.generateCredentialId(user.id, user.name, courseId);
 
-    const completionDate = progress
-      ? new Date(progress.updatedAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
-      : new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
+    const baseDate = new Date(user.createdAt);
+    const startDateObj = new Date(baseDate);
+    const endDateObj = new Date(baseDate.getTime() + 28 * 24 * 60 * 60 * 1000); // 28 days later
 
-    const startDate = progress
-      ? new Date(progress.createdAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
-      : new Date(user.createdAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
+    const startDate = startDateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
 
-    const endDate = progress
-      ? new Date(progress.updatedAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
-      : new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
+    const endDate = endDateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const completionDate = endDate;
 
     return {
       name: user.name,
@@ -174,6 +156,15 @@ export class CertificateService {
     const grade = this.calculateGrade(user.results, courseId);
     const displayCourseName = this.getDisplayCourseName(courseId);
 
+    const baseDate = new Date(user.createdAt);
+    const endDateObj = new Date(baseDate.getTime() + 28 * 24 * 60 * 60 * 1000);
+
+    const completionDate = endDateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
     return {
       verified: true,
       auditStatus: "ACTIVE / VERIFIED",
@@ -183,11 +174,7 @@ export class CertificateService {
       branchName: user.branchName,
       courseName: displayCourseName,
       grade,
-      completionDate: new Date(progress.updatedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
+      completionDate,
       accreditationRegistry: "NEXUS EMBEDDED SYSTEMS CORPORATE REGISTRY (CIN: U72900DL2026PTC394820)",
       compliance: "ISO 9001:2015 & ISO/IEC 27001 Certified System Standards"
     };

@@ -20,10 +20,10 @@ I have successfully implemented the Admin Course Syllabus CMS fix, added securit
    - Added a trash button to permanently delete any candidate's account (protected with a confirm modal).
 
 ### Backend Changes
-1. **Certificate Service Admin Bypass:**
+1. **Certificate Service Admin Bypass & Stable Duration:**
    - Enhanced `generateCertificate` in [certificateService.ts](file:///home/abhi/repo/summer-training-portal/backend/src/services/certificateService.ts) with an `isAdmin` boolean flag.
    - If `isAdmin` is `true`, it bypasses the course week completion (4 weeks) and payment status checks.
-   - Gracefully handles missing/undefined student progress by defaulting to their account registration date and today's date for course duration.
+   - Calculations use the user's registration date (`user.createdAt`) as `startDate` and add exactly 28 days (4 weeks) to compute a stable `endDate` and `completionDate`. This ensures any student can download their certificate anytime, and it always displays the exact 4-week duration.
    - Included `startDate` and `endDate` fields in the generated payload to populate certificate metadata on the frontend.
 2. **Certificate Routes & Access Control:**
    - Updated [certificate.ts](file:///home/abhi/repo/summer-training-portal/backend/src/routes/certificate.ts).
