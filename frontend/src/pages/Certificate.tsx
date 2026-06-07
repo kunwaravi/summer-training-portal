@@ -14,14 +14,18 @@ const Certificate = () => {
   const [error, setError] = useState('');
   const certRef = useRef<HTMLDivElement>(null);
 
-  // Extract courseId from URL query parameter: e.g. /certificate?courseId=C
+  // Extract courseId and optional userId from URL query parameters: e.g. /certificate?courseId=C&userId=123
   const query = new URLSearchParams(window.location.search);
   const courseId = query.get('courseId') || 'C';
+  const targetUserId = query.get('userId');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await api.get(`/certificate/${courseId}`);
+        const endpoint = targetUserId 
+          ? `/certificate/${targetUserId}/${courseId}`
+          : `/certificate/${courseId}`;
+        const res = await api.get(endpoint);
         setData(res.data);
       } catch (err: any) {
         console.error(err);
@@ -33,7 +37,7 @@ const Certificate = () => {
     if (user?.id) {
       fetchData();
     }
-  }, [user?.id, courseId]);
+  }, [user?.id, courseId, targetUserId]);
 
   if (loading) {
     return (

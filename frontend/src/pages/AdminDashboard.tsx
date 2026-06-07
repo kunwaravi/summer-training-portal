@@ -87,11 +87,11 @@ const AdminDashboard = () => {
     try {
       const res = await api.get('/courses');
       // Format backend schema structure
-      const formatted: Course[] = Object.keys(res.data).map(key => ({
-        id: key,
-        title: key === 'C' ? 'C & Systems Programming' : key === 'C++' ? 'C++ & OOP' : key === 'IoT' ? 'IoT Interfacing' : 'Embedded Systems',
-        description: 'Relational database course',
-        modules: res.data[key]
+      const formatted: Course[] = res.data.map((c: any) => ({
+        id: c.id,
+        title: c.title,
+        description: c.description || '',
+        modules: c.modules || []
       }));
       setCourses(formatted);
       if (formatted.length > 0) {

@@ -38,7 +38,7 @@ export class CertificateService {
     return "A";
   }
 
-  static async generateCertificate(userId: number, courseId: string) {
+  static async generateCertificate(userId: number, courseId: string, isAdmin = false) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -52,27 +52,66 @@ export class CertificateService {
     }
 
     const progress = user.progresses.find(p => p.courseId === courseId);
-    if (!progress || progress.weekCompleted < 4) {
-      throw new AppError(`Training track '${courseId}' not completed yet. Complete all 4 weeks to unlock.`, 403);
-    }
 
-    const successPayment = await prisma.payment.findFirst({
-      where: {
-        userId,
-        courseId,
-        status: 'SUCCESS'
+    if (!isAdmin) {
+      if (!progress || progress.weekCompleted < 4) {
+        throw new AppError(`Training track '${courseId}' not completed yet. Complete all 4 weeks to unlock.`, 403);
       }
-    });
 
-    if (!successPayment) {
-      const error = new AppError(`Payment clearance required to generate certified credentials for '${courseId}'.`, 402);
-      (error as any).paymentRequired = true;
-      throw error;
+      const successPayment = await prisma.payment.findFirst({
+        where: {
+          userId,
+          courseId,
+          status: 'SUCCESS'
+        }
+      });
+
+      if (!successPayment) {
+        const error = new AppError(`Payment clearance required to generate certified credentials for '${courseId}'.`, 402);
+        (error as any).paymentRequired = true;
+        throw error;
+      }
     }
 
     const grade = this.calculateGrade(user.results, courseId);
     const displayCourseName = this.getDisplayCourseName(courseId);
     const credentialId = this.generateCredentialId(user.id, user.name, courseId);
+
+    const completionDate = progress
+      ? new Date(progress.updatedAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+    const startDate = progress
+      ? new Date(progress.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : new Date(user.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+    const endDate = progress
+      ? new Date(progress.updatedAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
 
     return {
       name: user.name,
@@ -83,11 +122,9 @@ export class CertificateService {
       courseName: displayCourseName,
       grade: grade,
       credentialId,
-      completionDate: new Date(progress.updatedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
+      completionDate,
+      startDate,
+      endDate,
       signatures: {
         chiefAcademicOfficer: "Prof. Vinayak Singh",
         technicalDirector: "Er. Gaurav Singh"

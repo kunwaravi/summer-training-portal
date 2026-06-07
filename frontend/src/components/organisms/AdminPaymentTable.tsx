@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 interface Transaction {
   id: string;
   user: {
+    id?: number;
     name: string;
     email: string;
   };
@@ -47,6 +48,7 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Gateway Reference</th>
                 <th className="py-3 px-4">Date</th>
+                <th className="py-3 px-4 text-right">Certificate</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-850">
@@ -70,6 +72,20 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                   </td>
                   <td className="py-3.5 px-4 font-mono text-slate-450 text-[10px]">{t.reference || 'N/A'}</td>
                   <td className="py-3.5 px-4 text-slate-500 font-mono">{new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td className="py-3.5 px-4 text-right">
+                    {t.user?.id ? (
+                      <a 
+                        href={`/certificate?courseId=${t.courseId}&userId=${t.user.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 rounded-lg text-[10px] font-bold uppercase transition"
+                      >
+                        View / Issue
+                      </a>
+                    ) : (
+                      <span className="text-slate-600 font-semibold">N/A</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
