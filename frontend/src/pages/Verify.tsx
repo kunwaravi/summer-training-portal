@@ -175,7 +175,7 @@ const Verify = () => {
             NEXUS EMBEDDED SYSTEMS & IoT SOLUTIONS
           </h2>
           <p className="text-slate-450 text-[10px] font-bold uppercase tracking-widest">
-            ISO 9001:2015 & ISO/IEC 27001 Certified Academic Audit Console
+            Online Academic & Corporate Verification Registry
           </p>
         </div>
 
@@ -294,7 +294,7 @@ const Verify = () => {
         <p>NEXUS Embedded Systems & IoT Solutions Corporate Registry Console</p>
         <p>CIN: U72900DL2026PTC394820 | Registered Industrial Training Hub</p>
         <p className="text-[9px] text-slate-650 mt-1 uppercase font-mono tracking-tighter">
-          ISO 9001:2015 & ISO/IEC 27001 Certified System Operations
+          Secure Cryptographic Verification Audit Console
         </p>
         <p className="text-[8px] text-slate-500 italic mt-2 max-w-md mx-auto leading-relaxed">
           * Disclaimer: This application is a simulated academic student training portal. All certifications, corporate registrations (CIN), ISO standards, and verification registries presented here are educational simulations and do not represent active real-world operations or accreditations.

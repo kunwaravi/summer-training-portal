@@ -54,8 +54,8 @@ export class CertificateService {
     const progress = user.progresses.find(p => p.courseId === courseId);
 
     if (!isAdmin) {
-      if (!progress || progress.weekCompleted < 4) {
-        throw new AppError(`Training track '${courseId}' not completed yet. Complete all 4 weeks to unlock.`, 403);
+      if (!progress || progress.weekCompleted < 20) {
+        throw new AppError(`Training track '${courseId}' not completed yet. Complete all 20 chapters to unlock.`, 403);
       }
 
       const successPayment = await prisma.payment.findFirst({
@@ -144,7 +144,7 @@ export class CertificateService {
     else if (credentialId.toUpperCase().includes("C_SYSTEMS")) courseId = "C";
 
     const progress = user.progresses.find(p => p.courseId === courseId);
-    if (!progress || progress.weekCompleted < 4) {
+    if (!progress || progress.weekCompleted < 20) {
       throw new AppError('Credential is still active/uncompleted in database.', 403);
     }
 
@@ -176,7 +176,7 @@ export class CertificateService {
       grade,
       completionDate,
       accreditationRegistry: "NEXUS EMBEDDED SYSTEMS CORPORATE REGISTRY (CIN: U72900DL2026PTC394820)",
-      compliance: "ISO 9001:2015 & ISO/IEC 27001 Certified System Standards"
+      compliance: "Industry Standard & Secure Digitally Verified System Credentials"
     };
   }
 }

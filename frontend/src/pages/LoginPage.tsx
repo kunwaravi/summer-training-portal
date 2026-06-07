@@ -131,7 +131,7 @@ const LoginPage = () => {
         </Card>
         
         <p className="mt-8 text-center text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em]">
-          Secure Infrastructure &bull; ISO 9001:2015
+          Secure Infrastructure &bull; Verified Credentials
         </p>
       </motion.div>
     </div>

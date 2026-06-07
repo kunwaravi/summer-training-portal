@@ -127,7 +127,7 @@ const Home = () => {
           className="flex-1 text-center lg:text-left space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-black uppercase tracking-wider shadow-sm">
-            <ShieldCheck size={14} /> ISO 9001:2015 Accredited Portal
+            <ShieldCheck size={14} /> Live Verifiable Training Portal
           </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight text-white">
@@ -244,7 +244,7 @@ const Home = () => {
         <h3 className="text-xs font-black uppercase tracking-widest text-center text-slate-500 border-b border-slate-800 pb-4">Accreditation & Quality Standards</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { title: 'ISO Certified', desc: 'Complies with ISO 9001:2015 & ISO/IEC 27001 secure operation baselines.' },
+            { title: 'Verifiable Registry', desc: 'Secure database verification system with unique tracking IDs.' },
             { title: 'Secure Verification', desc: 'Each student gets a unique scannable QR Code and verifiable Registry ID.' },
             { title: 'Hands-on Labs', desc: 'Learn dynamically with real codes, timing maps, and ESP microcontroller drivers.' },
             { title: '100% Free Access', desc: 'No enrollment fees or payments for learning curriculum.' }

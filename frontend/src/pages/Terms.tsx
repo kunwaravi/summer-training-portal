@@ -69,7 +69,7 @@ const Terms = () => {
               4. Certification Policy
             </h2>
             <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
-              Our ISO 9001:2015 accredited certificates are issued only when you complete all course topics, score the required passing marks in quizzes, and clear manual payment audits. Every certificate has a unique ID that can be verified live on our site.
+              Our verified training certificates are issued only when you complete all course topics, score the required passing marks in quizzes, and clear manual payment audits. Every certificate has a unique ID that can be verified live on our site.
             </p>
           </div>
 

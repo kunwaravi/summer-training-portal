@@ -87,15 +87,15 @@ export const submitQuiz = async (userId: number, courseId: string, week: number,
         },
         update: {
           weekCompleted: week,
-          progress: week * 25,
-          completed: week >= 4
+          progress: Math.min(Math.round((week / 20) * 100), 100),
+          completed: week >= 20
         },
         create: {
           userId,
           courseId,
           weekCompleted: week,
-          progress: week * 25,
-          completed: week >= 4
+          progress: Math.min(Math.round((week / 20) * 100), 100),
+          completed: week >= 20
         }
       });
     }

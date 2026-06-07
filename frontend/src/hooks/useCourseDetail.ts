@@ -26,7 +26,7 @@ export const useCourseDetail = (courseId: string | undefined) => {
       const courseWeeks = course?.modules || [];
       setWeeks(courseWeeks);
       
-      const activeIndex = Math.min(currentWeek, 3);
+      const activeIndex = Math.min(currentWeek, Math.max(0, courseWeeks.length - 1));
       setActiveWeekIndex(activeIndex);
     } catch (err) {
       console.error('Failed to fetch course syllabus:', err);

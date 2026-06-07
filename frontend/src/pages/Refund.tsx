@@ -39,7 +39,7 @@ const Refund = () => {
               1. Digital Content Unlock Rules
             </h2>
             <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
-              Because our premium video recordings, hardware notes, codes, and verified ISO certifications are instantly unlocked upon payment verification, all completed activations are final and <strong>non-refundable</strong>.
+              Because our premium video recordings, hardware notes, codes, and verified training certifications are instantly unlocked upon payment verification, all completed activations are final and <strong>non-refundable</strong>.
             </p>
           </div>
 

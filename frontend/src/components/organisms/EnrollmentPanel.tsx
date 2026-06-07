@@ -149,7 +149,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] text-slate-300 font-bold bg-slate-900/50 p-4 rounded-xl border border-slate-800/80">
               {[
-                "ISO 9001:2015 Accredited Standards",
+                "Industry Standard Curriculum",
                 "Verifiable Online Registry Entry",
                 "One-Click Shareable to LinkedIn",
                 "Durable High-Res Printable Format"
@@ -180,7 +180,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-yellow-400 tracking-tight">Credentials Verified & Active! 🎓</h2>
           <p className="text-slate-300 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-            Your payment was verified by our team and your secure certification credentials have been generated. You can now download, print, or share your ISO-compliant certificate.
+            Your payment was verified by our team and your secure certification credentials have been generated. You can now download, print, or share your verifiable training certificate.
           </p>
           <button
             onClick={() => navigate(`/certificate?courseId=${courseId}`)}
