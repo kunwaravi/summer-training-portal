@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import * as authService from '../services/authService';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, isAdmin } from '../middleware/auth';
 import { validate, registerSchema, loginSchema } from '../middleware/validation';
 
 const router = Router();
@@ -27,6 +27,16 @@ router.post('/login', validate(loginSchema), async (req: Request, res: Response,
 router.get('/me', authenticateToken, async (req: any, res: Response, next: NextFunction) => {
   try {
     res.json(req.user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/auth/admin/users - Fetch all users for admin dashboard dropdown
+router.get('/admin/users', authenticateToken, isAdmin, async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const users = await authService.getAllUsers();
+    res.json(users);
   } catch (error) {
     next(error);
   }

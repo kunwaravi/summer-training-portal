@@ -79,3 +79,16 @@ export const getUserById = async (userId: number) => {
   const { password: _, ...userWithoutPassword } = user;
   return userWithoutPassword;
 };
+
+export const getAllUsers = async () => {
+  return await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true
+    },
+    orderBy: {
+      name: 'asc'
+    }
+  });
+};

@@ -68,6 +68,11 @@ const AdminDashboard = () => {
   const [mockAssetUrl, setMockAssetUrl] = useState('');
   const [uploadingAsset, setUploadingAsset] = useState(false);
 
+  // Direct certificate states
+  const [users, setUsers] = useState<any[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('C');
+
   // Fetch initial payment transactions for audit dashboard
   const fetchTransactions = async () => {
     setLoadingTransactions(true);
@@ -78,6 +83,19 @@ const AdminDashboard = () => {
       console.error('Failed to fetch payment list:', err);
     } finally {
       setLoadingTransactions(false);
+    }
+  };
+
+  // Fetch all registered users for certificate generator
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get('/auth/admin/users');
+      setUsers(res.data);
+      if (res.data.length > 0) {
+        setSelectedStudentId(res.data[0].id.toString());
+      }
+    } catch (err) {
+      console.error('Failed to load users for dropdown:', err);
     }
   };
 
@@ -108,6 +126,7 @@ const AdminDashboard = () => {
     const timer = setTimeout(() => {
       fetchTransactions();
       fetchCmsCourses();
+      fetchUsers();
     }, 0);
     return () => clearTimeout(timer);
   }, []);
@@ -371,10 +390,62 @@ const AdminDashboard = () => {
       <div className="space-y-6">
         
         {activeTab === 'transactions' && (
-          <AdminPaymentTable 
-            transactions={transactions} 
-            loading={loadingTransactions} 
-          />
+          <div className="space-y-6 animate-fade-in">
+            {/* Direct Certificate Access Console */}
+            <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-6 space-y-4">
+              <div className="pb-2 border-b border-slate-800/80">
+                <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <Award size={18} className="text-cyan-400" /> Direct Certificate Access Console
+                </h3>
+                <p className="text-slate-400 text-xs mt-1">Select any registered student and track to generate/preview their certificate instantly, bypassing payment & completion rules.</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex-1 space-y-1.5">
+                  <label className="text-[10px] uppercase font-black tracking-wider text-slate-400">Select Student</label>
+                  <select
+                    value={selectedStudentId}
+                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-cyan-500"
+                  >
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="w-full sm:w-1/3 space-y-1.5">
+                  <label className="text-[10px] uppercase font-black tracking-wider text-slate-400">Select Track</label>
+                  <select
+                    value={selectedCourseId}
+                    onChange={(e) => setSelectedCourseId(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-cyan-500"
+                  >
+                    <option value="C">C & Systems Programming</option>
+                    <option value="C++">C++ & OOP</option>
+                    <option value="IoT">IoT Interfacing</option>
+                    <option value="Embedded">Embedded Systems</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => {
+                    if (selectedStudentId) {
+                      window.open(`/certificate?courseId=${selectedCourseId}&userId=${selectedStudentId}`, '_blank');
+                    }
+                  }}
+                  className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-750 text-white font-black text-xs uppercase tracking-widest rounded-xl transition shadow active:scale-95 disabled:opacity-50"
+                  disabled={!selectedStudentId}
+                >
+                  View Certificate
+                </button>
+              </div>
+            </div>
+
+            <AdminPaymentTable 
+              transactions={transactions} 
+              loading={loadingTransactions} 
+            />
+          </div>
         )}
 
         {activeTab === 'cms' && (
