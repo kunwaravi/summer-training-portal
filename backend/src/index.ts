@@ -84,7 +84,7 @@ app.get('/health', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Summer Training Portal API is running');
+  res.send('EduNexus Pro API is running');
 });
 
 // Centralized error handler

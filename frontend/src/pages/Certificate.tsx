@@ -388,7 +388,7 @@ const Certificate = () => {
 
             <div className="content">
                 <div>
-                    <div className="logo-area">EDUNEXUS LAB</div>
+                    <div className="logo-area">EDUNEXUS PRO</div>
                     <div className="sub-logo">Advanced Research & Innovation Portal</div>
 
                     <div className="cert-title">SUMMER TRAINING COMPLETION CREDENTIALS</div>
@@ -434,7 +434,7 @@ const Certificate = () => {
                         <img src="/Vinayak_sign-removebg-preview.png" alt="Vinayak Singh Signature" className="ceo-signature" />
                         <hr className="signature-line" />
                         <div className="sig-title">Vinayak Singh</div>
-                        <div className="sig-company">CEO & Co-Founder, Edunexus Lab</div>
+                        <div className="sig-company">CEO & Co-Founder, EduNexus Pro</div>
                     </div>
                 </div>
             </div>

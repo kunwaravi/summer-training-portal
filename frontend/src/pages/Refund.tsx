@@ -67,7 +67,7 @@ const Refund = () => {
               3. Duplicate Payments
             </h2>
             <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
-              If you paid twice for the same training track by mistake due to internet network issues, email us at <a href="mailto:billing@edunexus.kibm.in" className="font-bold underline">billing@edunexus.kibm.in</a> or message the Telegram group. We will verify the duplicate entry and return the extra amount back to your UPI/bank source within <strong>7-10 working days</strong>.
+              If you paid twice for the same training track by mistake due to internet network issues, email us at <a href="mailto:billing@edunexus.in" className="font-bold underline">billing@edunexus.in</a> or message the Telegram group. We will verify the duplicate entry and return the extra amount back to your UPI/bank source within <strong>7-10 working days</strong>.
             </p>
           </div>
 
@@ -77,8 +77,8 @@ const Refund = () => {
         <div className="text-center pt-4 border-t border-slate-900 text-xs text-slate-400 space-y-2">
           <p>Need support or refund clarification?</p>
           <div className="flex justify-center gap-4">
-            <a href="mailto:billing@edunexus.kibm.in" className="font-semibold text-red-400 hover:underline">
-              billing@edunexus.kibm.in
+            <a href="mailto:billing@edunexus.in" className="font-semibold text-red-400 hover:underline">
+              billing@edunexus.in
             </a>
             <span>•</span>
             <a href="https://t.me/+tCapxtLwxNNlZjY1" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-400 hover:underline">
