@@ -5,7 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import api from '../../api';
 
 // ── Payment constants ────────────────────────────────────────────────────────
-const UPI_ID = 'avinashkunwar07@ptyes';
+const UPI_ID = 'edunexuss@ptyes';
 const PAYEE_NAME = 'Gaurav Singh';
 // ─────────────────────────────────────────────────────────────────────────────
 
