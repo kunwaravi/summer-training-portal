@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { 
   LogIn, UserPlus, Mail, Lock, User, GraduationCap, 
-  ShieldCheck, CheckCircle2 
+  ShieldCheck, CheckCircle2, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/atoms/Button';
@@ -357,6 +357,35 @@ const Home = () => {
               </button>
             </div>
           </Card>
+
+          {/* Prominent Technical Support Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="mt-6 text-center bg-slate-900/40 border border-slate-900/60 rounded-2xl p-4 max-w-md mx-auto"
+          >
+            <p className="text-xs text-slate-400 font-medium">
+              Having trouble? Need help with activation?
+            </p>
+            <div className="flex justify-center items-center gap-6 mt-3">
+              <a 
+                href="mailto:support@edunexus.in" 
+                className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider transition-colors"
+              >
+                <Mail size={14} /> support@edunexus.in
+              </a>
+              <span className="text-slate-800">•</span>
+              <a 
+                href="https://t.me/+tCapxtLwxNNlZjY1" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-wider transition-colors"
+              >
+                <Send size={14} /> Telegram Help
+              </a>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
 

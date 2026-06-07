@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
-import { LogOut, LayoutDashboard, ShieldCheck, Sun, Moon, Send, Menu, X } from 'lucide-react';
+import { LogOut, LayoutDashboard, ShieldCheck, Sun, Moon, Send, Menu, X, Mail } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Button from './atoms/Button';
 
@@ -68,6 +68,14 @@ const Navbar = () => {
               >
                 <Send size={14} />
                 Support Group
+              </a>
+
+              <a 
+                href="mailto:support@edunexus.in" 
+                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors text-xs font-bold uppercase tracking-widest"
+              >
+                <Mail size={14} />
+                Email Support
               </a>
 
               {hasCompletedAny && (
@@ -150,6 +158,12 @@ const Navbar = () => {
                     <ShieldCheck size={18} /> Admin Portal
                   </Link>
                 )}
+                <a href="https://t.me/+tCapxtLwxNNlZjY1" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl text-sm font-bold uppercase tracking-widest text-slate-350">
+                  <Send size={18} /> Support Group
+                </a>
+                <a href="mailto:support@edunexus.in" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl text-sm font-bold uppercase tracking-widest text-slate-350">
+                  <Mail size={18} /> Email Support
+                </a>
                 <button onClick={handleLogout} className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-sm font-bold uppercase tracking-widest text-red-400">
                   <LogOut size={18} /> Sign Out
                 </button>
