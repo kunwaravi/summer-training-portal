@@ -6,7 +6,7 @@ import api from '../../api';
 
 // ── Payment constants ────────────────────────────────────────────────────────
 const UPI_ID = 'edunexuss@ptyes';
-const PAYEE_NAME = 'Gaurav Singh';
+const PAYEE_NAME = 'Anjali Singh';
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface EnrollmentPanelProps {
@@ -199,7 +199,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 20, opacity: 0 }}
-              className="bg-slate-950 border border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-6 relative"
+              className="bg-slate-950 border border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setShowCheckoutModal(false)}
