@@ -1,6 +1,6 @@
-# Walkthrough - Admin CMS & Certificate Upgrades
+# Walkthrough - Admin CMS, Certificate & User Management Upgrades
 
-I have successfully implemented the Admin Course Syllabus CMS fix, added security-gated certificate retrieval for administrators, and deployed the updates to the Hostinger VPS.
+I have successfully implemented the Admin Course Syllabus CMS fix, added security-gated certificate retrieval for administrators, added a comprehensive User Management dashboard, and deployed all updates to the Hostinger VPS.
 
 ## Changes Made
 
@@ -14,6 +14,10 @@ I have successfully implemented the Admin Course Syllabus CMS fix, added securit
 3. **Certificate Page Integration:**
    - Modified [Certificate.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/Certificate.tsx) to parse an optional `userId` query parameter.
    - If `userId` is present, it fetches the certificate details for that user and course using the secure backend admin endpoint.
+4. **User Management Dashboard Tab:**
+   - Added a new **User Management** tab to the Admin Dashboard ([AdminDashboard.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/AdminDashboard.tsx)).
+   - Renders a responsive list of all registered candidates in the system (showing name, email, college, branch, role, and registration date).
+   - Added a trash button to permanently delete any candidate's account (protected with a confirm modal).
 
 ### Backend Changes
 1. **Certificate Service Admin Bypass:**
@@ -25,6 +29,9 @@ I have successfully implemented the Admin Course Syllabus CMS fix, added securit
    - Updated [certificate.ts](file:///home/abhi/repo/summer-training-portal/backend/src/routes/certificate.ts).
    - Added `GET /api/certificate/:courseId` for standard users to fetch their own certificates.
    - Gated `GET /api/certificate/:userId/:courseId` to prevent unauthorized users from viewing others' certificates (now only accessible by `ADMIN` or the user themselves), and forwarded their admin status to the service layer.
+3. **User Management Directory & Account Deletion:**
+   - Updated `getAllUsers` and added `deleteUser` inside [authService.ts](file:///home/abhi/repo/summer-training-portal/backend/src/services/authService.ts) to select detailed candidate profiles and handle deletions.
+   - Added `DELETE /api/auth/admin/users/:userId` endpoint inside [auth.ts](file:///home/abhi/repo/summer-training-portal/backend/src/routes/auth.ts) to process student deletion requests with safeguards to block self-deletion.
 
 ---
 
@@ -33,3 +40,4 @@ I have successfully implemented the Admin Course Syllabus CMS fix, added securit
 - Both frontend and backend builds successfully completed locally.
 - Seeding and container rebuild on Hostinger VPS (`edunexus.kibm.in`) completed with zero errors.
 - Verified that all five co-tenant environments on the VPS remain fully operational.
+
