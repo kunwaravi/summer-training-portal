@@ -211,7 +211,7 @@ const Home = () => {
         <div className="text-center space-y-2 max-w-xl mx-auto">
           <h2 className="text-3xl font-extrabold tracking-tight text-white uppercase">Accredited Course Catalog</h2>
           <p className="text-slate-500 text-sm font-medium leading-relaxed">
-            Expand our specialized weekly modules. Click the Syllabus accordion on any track to preview what you will learn.
+            Explore our specialized 20-chapter curriculum. Click the Syllabus accordion on any track to preview what you will learn.
           </p>
         </div>
 

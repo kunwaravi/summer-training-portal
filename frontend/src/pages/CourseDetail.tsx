@@ -143,7 +143,7 @@ const CourseDetail = () => {
         <text x="190" y="104" textAnchor="middle" className="fill-cyan-400 text-[10px] font-bold">Registers</text>
         <path d="M 230 100 L 280 100" stroke={strokeColor} strokeWidth="2" />
         <circle cx="290" cy="100" r="10" fill="#10b981" />
-        <text x="190" y="50" textAnchor="middle" className="fill-amber-400 text-[9px] font-black">Week {weekNum} Logic Flow</text>
+        <text x="190" y="50" textAnchor="middle" className="fill-amber-400 text-[9px] font-black">Chapter {weekNum} Concept</text>
       </svg>
     );
   };
@@ -214,7 +214,7 @@ const CourseDetail = () => {
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <div className="inline-block text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
-                      Module {selectedWeek.week} Study Material
+                      Chapter {selectedWeek.week} Study Material
                     </div>
                     <div className="text-[9px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
                       ⏱ {readingTime} Min Read
@@ -305,7 +305,7 @@ const CourseDetail = () => {
                     <div className="flex items-center gap-3 text-emerald-400">
                       <CheckCircle2 size={24} />
                       <div>
-                        <p className="text-sm font-bold">Week {selectedWeek.week} Completed!</p>
+                        <p className="text-sm font-bold">Chapter {selectedWeek.week} Completed!</p>
                         <p className="text-xs text-slate-400">You passed the quiz. Re-take it to improve your score.</p>
                       </div>
                       <button 
@@ -325,7 +325,7 @@ const CourseDetail = () => {
                           className="mt-0.5 w-4 h-4 text-cyan-600 rounded bg-slate-800 border-slate-700"
                         />
                         <span className="group-hover:text-slate-200 transition">
-                          I have read and understood all the study concepts for Week {selectedWeek.week}. I am ready to attempt the quiz.
+                          I have read and understood all the study concepts for Chapter {selectedWeek.week}. I am ready to attempt the quiz.
                         </span>
                       </label>
                       <button 
@@ -335,13 +335,13 @@ const CourseDetail = () => {
                           hasReadMaterial ? 'bg-gradient-to-r from-cyan-600 to-blue-600' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                         }`}
                       >
-                        <Play size={16} /> Unlock & Start Week {selectedWeek.week} Quiz
+                        <Play size={16} /> Unlock & Start Chapter {selectedWeek.week} Quiz
                       </button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 text-slate-500 text-xs">
                       <Lock size={18} />
-                      <span>Complete Week {currentWeek + 1} quiz to unlock these materials.</span>
+                      <span>Complete Chapter {currentWeek + 1} quiz to unlock these materials.</span>
                     </div>
                   )}
                 </div>

@@ -468,7 +468,8 @@ const AdminDashboard = () => {
 
             <AdminPaymentTable 
               transactions={transactions} 
-              loading={loadingTransactions} 
+              loading={loadingTransactions}
+              onVerified={fetchTransactions}
             />
           </div>
         )}

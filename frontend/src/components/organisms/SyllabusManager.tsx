@@ -29,7 +29,7 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
 
   return (
     <div className="w-full lg:w-1/3 bg-slate-900/40 border border-slate-800 rounded-2xl p-4 space-y-3.5 shrink-0">
-      <h2 className="text-lg font-extrabold tracking-tight px-2 pb-2 border-b border-slate-800 text-white">Weekly Modules</h2>
+      <h2 className="text-lg font-extrabold tracking-tight px-2 pb-2 border-b border-slate-800 text-white">Course Chapters</h2>
       
       {/* Circular Progress Widget in Sidebar */}
       <div className="flex items-center gap-3.5 p-3 bg-slate-900/60 border border-slate-800/85 rounded-xl shadow-inner">
@@ -61,7 +61,7 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
         </div>
         <div>
           <h3 className="text-xs font-black text-slate-100 uppercase tracking-wider">Track Progress</h3>
-          <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{currentWeek} of {weeks.length} Modules Completed</p>
+          <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{currentWeek} of {weeks.length} Chapters Completed</p>
         </div>
       </div>
       
@@ -98,7 +98,7 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
                   {isCompleted ? <CheckCircle size={18} className="text-emerald-400" /> : isUnlocked ? <BookOpen size={18} /> : <Lock size={18} />}
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Week {week.week}</p>
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Chapter {week.week}</p>
                   <h4 className="text-sm font-bold truncate max-w-[170px]">{week.title}</h4>
                 </div>
               </div>

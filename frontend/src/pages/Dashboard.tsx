@@ -161,7 +161,7 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <h3 className="text-2xl font-bold text-white tracking-tight">{latestActiveCourse.title}</h3>
                 <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
-                  You are currently on Week {latestActiveCourse.weekCompleted + 1} module. Resume your studies and clear the weekly assessment to proceed!
+                  You are currently on Chapter {latestActiveCourse.weekCompleted + 1}. Resume your studies and clear the chapter assessment to proceed!
                 </p>
                 <div className="space-y-3 pt-2">
                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -180,7 +180,7 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <h3 className="text-2xl font-bold text-white tracking-tight">Ready to start your journey?</h3>
                 <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
-                  Choose a specialized engineering track below, study the industrial-focused weekly curriculum, and claim your accredited certifications!
+                  Choose a specialized engineering track below, study the industrial-focused curriculum chapters, and claim your accredited certifications!
                 </p>
               </div>
             )}
@@ -203,9 +203,9 @@ const Dashboard = () => {
           
           <div className="grid grid-cols-2 gap-4 pt-1">
             {[
-              { emoji: '🚀', label: 'First Step', sub: 'Passed W1', active: hasWeek1, color: 'blue' },
-              { emoji: '🎯', label: 'Quiz Ace', sub: 'Passed W2', active: hasWeek2, color: 'purple' },
-              { emoji: '🛡', label: 'Specialist', sub: 'Passed W3', active: hasWeek3, color: 'orange' },
+              { emoji: '🚀', label: 'First Step', sub: 'Passed Ch.1', active: hasWeek1, color: 'blue' },
+              { emoji: '🎯', label: 'Quiz Ace', sub: 'Passed Ch.5', active: hasWeek2, color: 'purple' },
+              { emoji: '🛡', label: 'Specialist', sub: 'Passed Ch.10', active: hasWeek3, color: 'orange' },
               { emoji: '🎓', label: 'Graduate', sub: 'Certified', active: hasCompleted, color: 'emerald' },
             ].map((badge, idx) => (
               <div key={idx} className={`p-4 rounded-2xl border flex flex-col items-center justify-center text-center transition-all duration-300 ${
@@ -271,11 +271,11 @@ const Dashboard = () => {
         </div>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
           {[
-            "The training is structured into 4 weeks per course.",
-            "Each week has dedicated study material that must be reviewed before unlocking quizzes.",
-            "A quiz is mandatory at the end of each week to unlock the next. You need at least 60% in each quiz to pass.",
+            "The training is structured into 20 chapters per course.",
+            "Each chapter has dedicated study material that must be reviewed before unlocking the quiz.",
+            "A quiz is mandatory at the end of each chapter to unlock the next. You need at least 60% to pass.",
             "Progress is tracked separately for all tracks, allowing you to study multiple tracks simultaneously!",
-            "Complete all 4 weeks of any track to generate and print your official certified certificate.",
+            "Complete all 20 chapters of any track to generate and print your official certified certificate.",
             "Quizzes can be retaken if you don't pass on your first attempt."
           ].map((text, idx) => (
             <li key={idx} className="flex items-start gap-3 text-slate-400 text-xs leading-relaxed">

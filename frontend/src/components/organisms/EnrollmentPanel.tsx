@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { Award, Check, ShieldAlert, Sparkles, CreditCard, QrCode, Clipboard, CheckCircle2 } from 'lucide-react';
+import { Award, Check, ShieldAlert, Sparkles, QrCode, Clipboard, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import confetti from 'canvas-confetti';
 import api from '../../api';
+
+// ── Payment constants ────────────────────────────────────────────────────────
+const UPI_ID = 'avinashkunwar07@ptyes';
+const PAYEE_NAME = 'Gaurav Singh';
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface EnrollmentPanelProps {
   courseId: string | undefined;
@@ -22,15 +26,13 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
 }) => {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [processingCheckout, setProcessingCheckout] = useState(false);
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
   const [upiCopied, setUpiCopied] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [couponError, setCouponError] = useState('');
   const [isCouponApplied, setIsCouponApplied] = useState(false);
+  // After submit: show pending confirmation instead of closing modal
+  const [paymentSubmitted, setPaymentSubmitted] = useState(false);
 
   const BASE_PRICE = 499;
   const currentPrice = Math.round(BASE_PRICE * (1 - discount));
@@ -38,7 +40,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
   const handleApplyCoupon = () => {
     setCouponError('');
     const code = couponCode.toUpperCase();
-    
+
     if (code === 'SAVI10') {
       setDiscount(1);
       setIsCouponApplied(true);
@@ -55,13 +57,8 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
     }
   };
 
-  const handleMockCheckoutSubmit = async (e: React.FormEvent) => {
+  const handleSubmitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentPrice > 0 && paymentMethod === 'card' && (!cardNumber || !cardExpiry || !cardCvv)) {
-      alert('Please fill out all credentials to capture mock payment!');
-      return;
-    }
-
     setProcessingCheckout(true);
     try {
       const orderRes = await api.post('/payments/create-order', {
@@ -70,17 +67,12 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
       });
 
       const { orderId, mockSignature } = orderRes.data;
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1200));
 
       const randomSuffix = Math.random().toString(36).substring(2, 9).toUpperCase();
-      let gatewayRef = '';
-      if (currentPrice === 0) {
-        gatewayRef = `REF_COUPON_FREE_${randomSuffix}`;
-      } else {
-        gatewayRef = paymentMethod === 'card' 
-          ? `REF_MOCK_CARD_${randomSuffix}`
-          : `REF_MOCK_UPI_${randomSuffix}`;
-      }
+      const gatewayRef = currentPrice === 0
+        ? `REF_COUPON_FREE_${randomSuffix}`
+        : `UPI_REF_${randomSuffix}`;
 
       const verifyRes = await api.post('/payments/verify', {
         orderId,
@@ -89,17 +81,18 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
       });
 
       if (verifyRes.data.success) {
-        onPaymentSuccess();
-        setShowCheckoutModal(false);
-        confetti({
-          particleCount: 150,
-          spread: 80,
-          origin: { y: 0.6 }
-        });
+        if (currentPrice === 0) {
+          // Free via coupon — treat as immediately verified for UX continuity
+          onPaymentSuccess();
+          setShowCheckoutModal(false);
+        } else {
+          // Paid via UPI — goes to pending verification
+          setPaymentSubmitted(true);
+        }
       }
     } catch (err: any) {
-      console.error('Checkout verification failed:', err);
-      alert(err.response?.data?.message || 'Payment system clearance failed. Please try again.');
+      console.error('Payment submission failed:', err);
+      alert(err.response?.data?.message || 'Payment submission failed. Please try again.');
     } finally {
       setProcessingCheckout(false);
     }
@@ -111,8 +104,10 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
     setTimeout(() => setUpiCopied(false), 2000);
   };
 
+  const upiPaymentString = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${currentPrice}&cu=INR`;
+
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       className="mt-10 p-8 rounded-2xl relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-yellow-500/30 shadow-xl shadow-yellow-500/5"
@@ -166,14 +161,14 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
               ))}
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-              <button 
-                onClick={() => setShowCheckoutModal(true)}
+              <button
+                onClick={() => { setShowCheckoutModal(true); setPaymentSubmitted(false); }}
                 className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-950 font-black rounded-xl shadow-lg shadow-yellow-500/10 hover:shadow-yellow-500/25 transition duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-xs uppercase tracking-widest"
               >
-                Unlock Official Credentials (₹499)
+                Unlock Official Credentials (₹{BASE_PRICE})
               </button>
               <div className="flex items-center gap-1.5 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                <ShieldAlert size={14} /> Encrypted Gateway
+                <ShieldAlert size={14} /> UPI Payment
               </div>
             </div>
           </div>
@@ -185,9 +180,9 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-yellow-400 tracking-tight">Credentials Verified & Active! 🎓</h2>
           <p className="text-slate-300 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-            Thank you! Your payment cleared successfully and your secure certification credentials have been generated. You can now download, print, or share your ISO-compliant certificate.
+            Your payment was verified by our team and your secure certification credentials have been generated. You can now download, print, or share your ISO-compliant certificate.
           </p>
-          <button 
+          <button
             onClick={() => navigate(`/certificate?courseId=${courseId}`)}
             className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-950 font-black rounded-xl shadow-lg shadow-yellow-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-sm"
           >
@@ -196,170 +191,169 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
         </div>
       )}
 
-      {/* Checkout Modal */}
+      {/* UPI Checkout Modal */}
       <AnimatePresence>
         {showCheckoutModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 20, opacity: 0 }}
               className="bg-slate-950 border border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-6 relative"
             >
-              <button 
+              <button
                 onClick={() => setShowCheckoutModal(false)}
                 className="absolute right-4 top-4 text-slate-500 hover:text-white transition"
               >
                 ✕
               </button>
 
-              <div className="text-center space-y-1">
-                <div className="flex items-center justify-center gap-1.5 text-cyan-400 text-sm font-extrabold uppercase tracking-widest">
-                  <CreditCard size={18} /> Nexus Billing checkout
-                </div>
-                <h3 className="text-lg font-black text-white">Complete Certificate Payment</h3>
-                <p className="text-xs text-slate-400">Mock Stripe-Razorpay Sandbox Payment Portal</p>
-              </div>
-
-              <form onSubmit={handleMockCheckoutSubmit} className="space-y-4">
-                <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                  <span className="text-slate-400 font-bold uppercase">Acceridatión Fee</span>
-                  <div className="flex flex-col items-end">
-                    {discount > 0 && (
-                      <span className="text-slate-500 line-through text-[10px]">₹499.00</span>
-                    )}
-                    <span className="text-cyan-400 font-black text-sm">₹{currentPrice.toFixed(2)}</span>
+              {paymentSubmitted ? (
+                /* ── Pending Confirmation Screen ─────────────────────────────── */
+                <div className="text-center space-y-5 py-4">
+                  <div className="w-16 h-16 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto">
+                    <Clock size={32} className="text-amber-400 animate-pulse" />
                   </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Discount Coupon</label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Enter 6-digit code"
-                      maxLength={6}
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono uppercase"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleApplyCoupon}
-                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-[10px] font-bold uppercase rounded-xl border border-slate-700 transition"
-                    >
-                      Apply
-                    </button>
+                  <div>
+                    <h3 className="text-lg font-black text-white">Payment Submitted!</h3>
+                    <p className="text-amber-400 text-xs font-bold uppercase tracking-wider mt-1">Awaiting Admin Verification</p>
                   </div>
-                  {couponError && <p className="text-[9px] text-red-500 font-bold ml-1">{couponError}</p>}
-                  {isCouponApplied && <p className="text-[9px] text-green-500 font-bold ml-1">Coupon Applied: {Math.round(discount * 100)}% OFF!</p>}
+                  <p className="text-slate-400 text-xs leading-relaxed">
+                    Your UPI payment has been recorded. Our team will verify your transaction and unlock your certificate shortly. You will see the download button once approved.
+                  </p>
+                  <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                    <AlertCircle size={16} className="text-amber-400 shrink-0" />
+                    <p className="text-amber-300 text-[10px] font-bold text-left">
+                      Please keep your UPI transaction screenshot handy. Verification usually takes less than 24 hours.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCheckoutModal(false)}
+                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition"
+                  >
+                    Close
+                  </button>
                 </div>
+              ) : (
+                /* ── Payment Form ─────────────────────────────────────────────── */
+                <>
+                  <div className="text-center space-y-1">
+                    <div className="flex items-center justify-center gap-1.5 text-cyan-400 text-sm font-extrabold uppercase tracking-widest">
+                      <QrCode size={18} /> UPI Payment
+                    </div>
+                    <h3 className="text-lg font-black text-white">Complete Certificate Payment</h3>
+                    <p className="text-xs text-slate-400">Scan QR or use UPI ID to pay</p>
+                  </div>
 
-                {currentPrice > 0 ? (
-                  <>
-                    <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('card')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${paymentMethod === 'card' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
-                      >
-                        <CreditCard size={14} /> Card
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('upi')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${paymentMethod === 'upi' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
-                      >
-                        <QrCode size={14} /> UPI / QR
-                      </button>
+                  <form onSubmit={handleSubmitPayment} className="space-y-4">
+                    {/* Price display */}
+                    <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                      <span className="text-slate-400 font-bold uppercase">Accreditation Fee</span>
+                      <div className="flex flex-col items-end">
+                        {discount > 0 && (
+                          <span className="text-slate-500 line-through text-[10px]">₹499.00</span>
+                        )}
+                        <span className="text-cyan-400 font-black text-sm">₹{currentPrice.toFixed(2)}</span>
+                      </div>
                     </div>
 
-                    {paymentMethod === 'card' ? (
-                      <div className="space-y-4 animate-in fade-in duration-300">
-                        <div className="space-y-1 text-left">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">Card Number</label>
-                          <div className="relative">
-                            <input 
-                              type="text" 
-                              required
-                              placeholder="4111 2222 3333 4444"
-                              value={cardNumber}
-                              onChange={(e) => setCardNumber(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
-                            />
-                            <CreditCard size={16} className="absolute right-3.5 top-3 text-slate-500" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1 text-left">
-                            <label className="text-[10px] uppercase font-bold text-slate-400">Expiry Date</label>
-                            <input 
-                              type="text" 
-                              required
-                              placeholder="MM/YY"
-                              value={cardExpiry}
-                              onChange={(e) => setCardExpiry(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
-                            />
-                          </div>
-                          <div className="space-y-1 text-left">
-                            <label className="text-[10px] uppercase font-bold text-slate-400">CVV</label>
-                            <input 
-                              type="password" 
-                              required
-                              placeholder="•••"
-                              maxLength={3}
-                              value={cardCvv}
-                              onChange={(e) => setCardCvv(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono"
-                            />
-                          </div>
-                        </div>
+                    {/* Coupon */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-slate-400">Discount Coupon</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Enter 6-digit code"
+                          maxLength={6}
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono uppercase"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-[10px] font-bold uppercase rounded-xl border border-slate-700 transition"
+                        >
+                          Apply
+                        </button>
                       </div>
-                    ) : (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      {couponError && <p className="text-[9px] text-red-500 font-bold ml-1">{couponError}</p>}
+                      {isCouponApplied && <p className="text-[9px] text-green-500 font-bold ml-1">Coupon Applied: {Math.round(discount * 100)}% OFF!</p>}
+                    </div>
+
+                    {currentPrice > 0 ? (
+                      /* ── QR / UPI Section ─────────────────────────────────── */
+                      <div className="space-y-4 animate-in fade-in duration-300">
+                        {/* QR Code */}
                         <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl">
-                          <QRCodeSVG 
-                            value={`upi://pay?pa=avinashkunwar07@ptyes&pn=Gaurav%20Singh&am=${currentPrice}&cu=INR`} 
-                            size={160}
+                          <QRCodeSVG
+                            value={upiPaymentString}
+                            size={170}
                             level="H"
                             includeMargin={true}
                           />
-                          <p className="text-slate-900 text-[10px] font-black uppercase tracking-tighter mt-2">Scan to pay ₹{currentPrice} with UPI</p>
+                          <p className="text-slate-900 text-[10px] font-black uppercase tracking-tighter mt-2">
+                            Scan to pay ₹{currentPrice} via UPI
+                          </p>
                         </div>
+
+                        {/* UPI ID copy row */}
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase font-bold text-slate-400">UPI ID</label>
                           <div className="relative">
                             <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono">
-                              avinashkunwar07@ptyes
+                              {UPI_ID}
                             </div>
                             <button
                               type="button"
-                              onClick={() => copyToClipboard('avinashkunwar07@ptyes')}
+                              onClick={() => copyToClipboard(UPI_ID)}
                               className="absolute right-2 top-1.5 p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-cyan-400 transition"
+                              title="Copy UPI ID"
                             >
-                              {upiCopied ? <Check size={14} /> : <Clipboard size={14} />}
+                              {upiCopied ? <CheckCircle2 size={14} className="text-green-400" /> : <Clipboard size={14} />}
                             </button>
                           </div>
                         </div>
+
+                        {/* Payee name */}
+                        <div className="flex items-center justify-between px-3 py-2 bg-slate-900/60 border border-slate-800 rounded-xl text-xs">
+                          <span className="text-slate-500 font-bold uppercase">Pay to</span>
+                          <span className="text-white font-black">{PAYEE_NAME}</span>
+                        </div>
+
+                        {/* Instructions */}
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 space-y-1.5">
+                          <p className="text-blue-300 text-[10px] font-black uppercase tracking-wide">How to pay:</p>
+                          <ol className="text-slate-400 text-[10px] space-y-1 list-decimal list-inside">
+                            <li>Open any UPI app (PhonePe, GPay, Paytm, etc.)</li>
+                            <li>Scan the QR code above or enter the UPI ID</li>
+                            <li>Pay ₹{currentPrice} and note your transaction ID</li>
+                            <li>Click "Confirm Payment Submitted" below</li>
+                          </ol>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex flex-col items-center justify-center space-y-3">
+                        <Sparkles className="text-cyan-400 animate-pulse" size={32} />
+                        <p className="text-white font-black uppercase text-sm">Full Discount Applied!</p>
+                        <p className="text-slate-400 text-[10px]">No payment required — click below to claim your free certificate.</p>
                       </div>
                     )}
-                  </>
-                ) : (
-                  <div className="p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex flex-col items-center justify-center space-y-3">
-                    <Sparkles className="text-cyan-400 animate-pulse" size={32} />
-                    <p className="text-white font-black uppercase text-sm">Full Discount Applied!</p>
-                  </div>
-                )}
 
-                <button 
-                  type="submit"
-                  disabled={processingCheckout}
-                  className="w-full mt-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-slate-800 text-white font-extrabold rounded-xl shadow-lg transition duration-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2"
-                >
-                  {processingCheckout ? 'Processing...' : (currentPrice === 0 ? 'Claim Free Certificate' : 'Complete Payment')}
-                </button>
-              </form>
+                    <button
+                      type="submit"
+                      disabled={processingCheckout}
+                      className="w-full mt-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-slate-800 text-white font-extrabold rounded-xl shadow-lg transition duration-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                      {processingCheckout
+                        ? 'Processing...'
+                        : currentPrice === 0
+                          ? 'Claim Free Certificate'
+                          : 'Confirm Payment Submitted ✓'}
+                    </button>
+                  </form>
+                </>
+              )}
             </motion.div>
           </div>
         )}

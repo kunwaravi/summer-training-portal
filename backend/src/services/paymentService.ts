@@ -20,12 +20,13 @@ export const getAllPayments = async () => {
   });
 };
 
+// A payment is considered "paid" only when Admin has manually verified it
 export const getPaymentStatus = async (userId: number, courseId: string) => {
   const payment = await prisma.payment.findFirst({
     where: {
       userId,
       courseId,
-      status: 'SUCCESS'
+      status: 'VERIFIED'
     }
   });
   return payment;
@@ -55,7 +56,12 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
   };
 };
 
-export const verifyPayment = async (orderId: string, mockSignature: string, gatewayReference?: string) => {
+// Student submits payment proof — sets status to PENDING_VERIFICATION for admin review
+export const submitPaymentForVerification = async (
+  orderId: string,
+  mockSignature: string,
+  gatewayReference?: string
+) => {
   const payment = await prisma.payment.findUnique({
     where: { id: orderId }
   });
@@ -76,12 +82,33 @@ export const verifyPayment = async (orderId: string, mockSignature: string, gate
     return { error: 'Security Check: Cryptographic payment signature spoofing detected!', status: 403 };
   }
 
+  // Mark as pending verification — admin must approve before certificate is unlocked
   const updatedPayment = await prisma.payment.update({
     where: { id: orderId },
     data: {
-      status: 'SUCCESS',
-      reference: gatewayReference || `PAY_MOCK_${crypto.randomBytes(6).toString('hex').toUpperCase()}`
+      status: 'PENDING_VERIFICATION',
+      reference: gatewayReference || `UPI_REF_${crypto.randomBytes(6).toString('hex').toUpperCase()}`
     }
+  });
+
+  return { success: true, payment: updatedPayment };
+};
+
+// Admin manually verifies and approves a payment — unlocks certificate for student
+export const adminVerifyPayment = async (paymentId: string) => {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId }
+  });
+
+  if (!payment) return { error: 'Payment not found', status: 404 };
+
+  if (payment.status === 'VERIFIED') {
+    return { error: 'Payment is already verified', status: 400 };
+  }
+
+  const updatedPayment = await prisma.payment.update({
+    where: { id: paymentId },
+    data: { status: 'VERIFIED' }
   });
 
   return { success: true, payment: updatedPayment };

@@ -15,6 +15,26 @@ router.get('/admin/all', authenticateToken, isAdmin, async (req: any, res: any, 
   }
 });
 
+// POST /api/payments/admin/verify/:paymentId - Admin manually approves a payment
+router.post('/admin/verify/:paymentId', authenticateToken, isAdmin, async (req: any, res: any, next: any) => {
+  try {
+    const { paymentId } = req.params;
+    const result = await paymentService.adminVerifyPayment(paymentId);
+
+    if ('error' in result) {
+      return res.status(result.status || 500).json({ message: result.error });
+    }
+
+    res.json({
+      success: true,
+      message: 'Payment verified by admin. Student certificate is now unlocked.',
+      payment: result.payment
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/payments/status/:courseId - Get current payment status for active user
 router.get('/status/:courseId', authenticateToken, async (req: any, res: any, next: any) => {
   try {
@@ -45,12 +65,12 @@ router.post('/create-order', authenticateToken, validate(createOrderSchema), asy
   }
 });
 
-// POST /api/payments/verify - Cryptographically verify webhook/transaction and update DB
+// POST /api/payments/verify - Student submits UPI payment proof, sets PENDING_VERIFICATION
 router.post('/verify', authenticateToken, validate(verifyPaymentSchema), async (req: any, res: any, next: any) => {
   try {
     const { orderId, mockSignature, gatewayReference } = req.body;
 
-    const verificationResult = await paymentService.verifyPayment(orderId, mockSignature, gatewayReference);
+    const verificationResult = await paymentService.submitPaymentForVerification(orderId, mockSignature, gatewayReference);
 
     if ('error' in verificationResult) {
       return res.status(verificationResult.status || 500).json({ message: verificationResult.error });
@@ -58,7 +78,7 @@ router.post('/verify', authenticateToken, validate(verifyPaymentSchema), async (
 
     res.json({
       success: true,
-      message: 'Payment verified and captured successfully.',
+      message: 'Payment submitted for admin verification. Your certificate will be unlocked once approved.',
       payment: verificationResult.payment
     });
   } catch (error) {
