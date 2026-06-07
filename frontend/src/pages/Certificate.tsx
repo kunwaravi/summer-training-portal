@@ -283,7 +283,7 @@ const Certificate = () => {
             color: #94a3b8;
         }
 
-        /* Golden Badge Logo */
+        /* Badge Logo - Blue to match website */
         .cert-badge-logo {
             position: absolute;
             top: 35px;
@@ -292,7 +292,7 @@ const Certificate = () => {
             height: 75px;
             object-fit: contain;
             z-index: 10;
-            filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.35));
+            filter: brightness(0) saturate(100%) invert(35%) sepia(90%) saturate(600%) hue-rotate(190deg) brightness(110%) drop-shadow(0 0 14px rgba(59, 130, 246, 0.5));
         }
 
         /* Landscape A4 Print Optimization */
