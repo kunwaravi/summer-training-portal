@@ -116,7 +116,16 @@ const Home = () => {
   };
 
   return (
-    <div className="space-y-24 py-12 px-4 max-w-7xl mx-auto">
+    <div className="space-y-16 py-12 px-4 max-w-7xl mx-auto">
+      
+      {/* Desktop Optimization Notice Banner */}
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 flex items-center gap-3 text-left">
+        <span className="text-xl">💻</span>
+        <div className="text-xs sm:text-sm text-slate-350">
+          <strong className="text-blue-400 block sm:inline mr-1">Desktop Recommended:</strong>
+          For the best experience, including interactive code sandboxes and high-resolution certificate printing, we recommend using a Desktop or Laptop browser.
+        </div>
+      </div>
       
       {/* 1. Hero & Branding Introduction Block */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-12 min-h-[65vh]">

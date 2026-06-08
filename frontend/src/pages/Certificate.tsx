@@ -445,7 +445,18 @@ const Certificate = () => {
       </div>
 
       {/* Action Printing controls */}
-      <div className="w-full flex justify-center gap-4 no-print pt-2">
+      <div className="w-full flex flex-col items-center gap-4 no-print pt-2">
+        <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-4 max-w-xl text-center space-y-2">
+          <p className="text-[11px] text-amber-400 font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5">
+            ⚠️ Certificate Download Instructions
+          </p>
+          <p className="text-xs text-slate-350 leading-relaxed">
+            Please use a <strong>Desktop or Laptop computer</strong> to download the certificate. 
+            When the print dialog opens, set the layout orientation to <strong>Landscape (A4)</strong> and check the 
+            <strong>"Background graphics"</strong> option for high-resolution graphics formatting. 
+            Mobile download is not supported.
+          </p>
+        </div>
         <button 
           onClick={() => window.print()}
           className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-8 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition text-sm active:scale-95 shadow-amber-500/10"
