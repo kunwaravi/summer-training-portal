@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCourses } from '../hooks/useCourses';
-import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp } from 'lucide-react';
+import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target } from 'lucide-react';
 import CourseCard from '../components/molecules/CourseCard';
 import Spinner from '../components/atoms/Spinner';
+import SkillRadar from '../components/molecules/SkillRadar';
+import ProjectStatusCard from '../components/molecules/ProjectStatusCard';
 
 const courseMetadata: Record<string, any> = {
   'C': { 
@@ -55,6 +57,20 @@ const Dashboard = () => {
   const completedTracksCount = user?.progresses?.filter((p: any) => p.progress === 100).length || 0;
   const totalQuizzesPassed = user?.results?.filter((r: any) => r.passed).length || 0;
 
+  // Calculate mock skills based on progress
+  const getSkillValue = (trackId: string) => {
+    const p = getCourseProgress(trackId);
+    return Math.min(Math.round(p.progress * 0.8 + (p.weekCompleted * 2)), 100);
+  };
+
+  const skills = [
+    { label: 'C Logic', value: getSkillValue('C') || 15, color: '#3b82f6' },
+    { label: 'OOP / C++', value: getSkillValue('C++') || 10, color: '#a855f7' },
+    { label: 'IoT Networking', value: getSkillValue('IoT') || 5, color: '#10b981' },
+    { label: 'Embedded HW', value: getSkillValue('Embedded') || 5, color: '#f59e0b' },
+    { label: 'System Design', value: Math.min(totalQuizzesPassed * 5, 100) || 10, color: '#06b6d4' },
+  ];
+
   const getGreeting = () => {
     const hr = new Date().getHours();
     if (hr < 12) return "Good Morning";
@@ -63,11 +79,6 @@ const Dashboard = () => {
   };
 
   const streakDays = totalQuizzesPassed > 0 ? (totalQuizzesPassed * 2 + 1) : activeTracksCount > 0 ? 1 : 0;
-
-  const hasWeek1 = user?.progresses?.some((p: any) => p.weekCompleted >= 1) || false;
-  const hasWeek2 = user?.progresses?.some((p: any) => p.weekCompleted >= 2) || false;
-  const hasWeek3 = user?.progresses?.some((p: any) => p.weekCompleted >= 3) || false;
-  const hasCompleted = user?.progresses?.some((p: any) => p.completed) || false;
 
   const activeTracks = user?.progresses?.filter((p: any) => p.progress > 0 && p.progress < 100) || [];
   const latestProgressInfo = activeTracks.length > 0 ? activeTracks[0] : null;
@@ -105,22 +116,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Staff Privileges Banner */}
-      {user?.role === 'ADMIN' && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-lg shadow-red-950/20">
-          <div className="flex items-center gap-2">
-            <span className="text-sm">🛡</span>
-            <span>STAFF PRIVILEGES ACTIVE: You have complete administrative privileges over course contents, transactions, and quizzes.</span>
-          </div>
-          <button 
-            onClick={() => navigate('/admin')}
-            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-lg transition-all active:scale-[0.98] uppercase tracking-wider text-[10px]"
-          >
-            Open CMS Editor Panel
-          </button>
-        </div>
-      )}
-
       {/* Analytics Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
@@ -141,7 +136,7 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Dynamic Mid-Section: Quick Resume & Milestone Badges */}
+      {/* Dynamic Mid-Section: Quick Resume & Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column (2/3 width): Quick Resume Card */}
@@ -197,32 +192,52 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Right Column (1/3 width): Gamified Badges Panel */}
-        <div className="p-8 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-3xl space-y-6 shadow-sm">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-800 pb-4">Milestone Badges</h3>
-          
-          <div className="grid grid-cols-2 gap-4 pt-1">
-            {[
-              { emoji: '🚀', label: 'First Step', sub: 'Passed Ch.1', active: hasWeek1, color: 'blue' },
-              { emoji: '🎯', label: 'Quiz Ace', sub: 'Passed Ch.5', active: hasWeek2, color: 'purple' },
-              { emoji: '🛡', label: 'Specialist', sub: 'Passed Ch.10', active: hasWeek3, color: 'orange' },
-              { emoji: '🎓', label: 'Graduate', sub: 'Certified', active: hasCompleted, color: 'emerald' },
-            ].map((badge, idx) => (
-              <div key={idx} className={`p-4 rounded-2xl border flex flex-col items-center justify-center text-center transition-all duration-300 ${
-                badge.active 
-                  ? `bg-${badge.color}-500/5 border-${badge.color}-500/20 text-amber-400 shadow-sm` 
-                  : 'bg-slate-950/20 border-slate-800 text-slate-600 opacity-60'
-              }`}>
-                <span className={`text-3xl mb-2 filter ${badge.active ? 'drop-shadow-lg' : 'grayscale opacity-40'}`}>{badge.emoji}</span>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-200">{badge.label}</h4>
-                <p className={`text-[8px] mt-1 font-black uppercase tracking-tighter ${badge.active ? 'text-amber-500/80' : 'text-slate-600'}`}>
-                  {badge.active ? badge.sub : "Locked"}
-                </p>
-              </div>
-            ))}
+        {/* Right Column (1/3 width): Skill Analytics Radar */}
+        <div className="p-6 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-3xl space-y-4 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+            <Zap size={16} className="text-amber-400" />
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-300">Industrial Skill Matrix</h3>
           </div>
+          
+          <SkillRadar skills={skills} />
         </div>
 
+      </div>
+
+      {/* Task & Submission Tracker Row */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+            <Target size={20} />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-white uppercase tracking-wider">Milestone Submissions</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <ProjectStatusCard 
+            type="Assignment"
+            week={1}
+            title="Binary System & Bitwise Macros"
+            status={user?.progresses?.some((p: any) => p.weekCompleted >= 1) ? 'APPROVED' : 'NOT_SUBMITTED'}
+          />
+          <ProjectStatusCard 
+            type="Assignment"
+            week={2}
+            title="Modular Pointers & Array Logic"
+            status={user?.progresses?.some((p: any) => p.weekCompleted >= 2) ? 'APPROVED' : 'NOT_SUBMITTED'}
+          />
+          <ProjectStatusCard 
+            type="Assignment"
+            week={3}
+            title="Hardware Structs & Register Mapping"
+            status={user?.progresses?.some((p: any) => p.weekCompleted >= 3) ? 'APPROVED' : 'NOT_SUBMITTED'}
+          />
+          <ProjectStatusCard 
+            type="Final Project"
+            title="Embedded OS Implementation"
+            status={completedTracksCount > 0 ? 'PENDING' : 'NOT_SUBMITTED'}
+          />
+        </div>
       </div>
 
       {/* Courses/Tracks Grid */}
@@ -259,31 +274,6 @@ const Dashboard = () => {
             );
           })}
         </div>
-      </div>
-
-      {/* Training Guidelines */}
-      <div className="p-8 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-3xl relative overflow-hidden shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-            <CheckCircle2 size={20} />
-          </div>
-          <h2 className="text-xl font-bold tracking-tight text-white">Training Guidelines</h2>
-        </div>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-          {[
-            "The training is structured into 20 chapters per course.",
-            "Each chapter has dedicated study material that must be reviewed before unlocking the quiz.",
-            "A quiz is mandatory at the end of each chapter to unlock the next. You need at least 60% to pass.",
-            "Progress is tracked separately for all tracks, allowing you to study multiple tracks simultaneously!",
-            "Complete all 20 chapters of any track to generate and print your official certified certificate.",
-            "Quizzes can be retaken if you don't pass on your first attempt."
-          ].map((text, idx) => (
-            <li key={idx} className="flex items-start gap-3 text-slate-400 text-xs leading-relaxed">
-              <span className="text-blue-500 font-bold">0{idx + 1}</span>
-              <span>{text}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );

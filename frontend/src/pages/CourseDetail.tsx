@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCourseDetail } from '../hooks/useCourseDetail';
 import { 
   Lock, Play, Clipboard, 
-  CheckCircle2, Zap, Eye 
+  CheckCircle2, Zap, Eye, Code2, Briefcase, FileText
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -14,6 +14,7 @@ import CourseHero from '../components/organisms/CourseHero';
 import SyllabusManager from '../components/organisms/SyllabusManager';
 import EnrollmentPanel from '../components/organisms/EnrollmentPanel';
 import Spinner from '../components/atoms/Spinner';
+import CodePlayground from '../components/molecules/CodePlayground';
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -36,6 +37,8 @@ const CourseDetail = () => {
   const [hasReadMaterial, setHasReadMaterial] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<React.ReactNode | null>(null);
+  const [activeTab, setActiveTab] = useState<'material' | 'project'>('material');
+  const [activePlayground, setActivePlayground] = useState<number | null>(null);
 
   const handleCopyCode = (code: string, topicIndex: number) => {
     navigator.clipboard.writeText(code);
@@ -175,196 +178,312 @@ const CourseDetail = () => {
           setActiveWeekIndex={setActiveWeekIndex}
           currentWeek={currentWeek}
           completedPercentage={completedPercentage}
-          onWeekChange={() => setHasReadMaterial(false)}
+          onWeekChange={() => {
+            setHasReadMaterial(false);
+            setActivePlayground(null);
+          }}
         />
 
         {/* Right Column: Dynamic E-Learning Viewer Console */}
         <div className="flex-1 w-full bg-slate-900/30 border border-slate-800 rounded-2xl p-6 lg:p-8 space-y-6 overflow-hidden">
           
-          {loadingDetails ? (
-            <div className="space-y-6 animate-pulse py-4">
-              <div className="flex gap-2">
-                <div className="h-6 w-32 bg-slate-800 rounded"></div>
-                <div className="h-6 w-20 bg-slate-800 rounded"></div>
+          {/* Tab Navigation */}
+          <div className="flex gap-4 border-b border-slate-800 pb-1">
+            <button 
+              onClick={() => setActiveTab('material')}
+              className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
+                activeTab === 'material' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <FileText size={14} /> Study Material
               </div>
-              <div className="h-8 w-2/3 bg-slate-800 rounded"></div>
-              <div className="h-4 w-full bg-slate-800 rounded"></div>
-              <div className="space-y-6 pt-10 border-t border-slate-850">
-                {[1, 2].map((i) => (
-                  <div key={i} className="space-y-3 pl-8 relative">
-                    <div className="absolute left-0 top-0 h-6 w-6 rounded-full bg-slate-800"></div>
-                    <div className="h-6 w-40 bg-slate-800 rounded"></div>
-                    <div className="h-4 w-full bg-slate-800 rounded"></div>
-                    <div className="h-24 w-full bg-slate-850 rounded-xl"></div>
-                  </div>
-                ))}
+              {activeTab === 'material' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+            </button>
+            <button 
+              onClick={() => setActiveTab('project')}
+              className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
+                activeTab === 'project' ? 'text-purple-400' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Briefcase size={14} /> Project & Assignment
               </div>
-            </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeWeekIndex}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-6"
-              >
-                {/* Header block */}
-                <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <div className="inline-block text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
-                      Chapter {selectedWeek.week} Study Material
-                    </div>
-                    <div className="text-[9px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
-                      ⏱ {readingTime} Min Read
-                    </div>
-                  </div>
-                  <h2 className="text-2xl font-extrabold tracking-tight text-white">{selectedWeek.title}</h2>
-                  <p className="text-slate-400 text-sm mt-1">{selectedWeek.description}</p>
-                </div>
+              {activeTab === 'project' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
+            </button>
+          </div>
 
-                {/* Curriculum Topics List */}
-                <div className="space-y-8 pt-4 border-t border-slate-800/80">
-                  {activeModuleDetail?.topics?.map((topic: any, idx: number) => (
-                    <div key={idx} className="space-y-3.5 group">
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center text-xs font-bold shrink-0">
-                          {idx + 1}
-                        </span>
-                        <h3 className="text-lg font-bold text-slate-200 tracking-tight group-hover:text-white transition">
-                          {topic.title}
-                        </h3>
+          {activeTab === 'material' ? (
+            <>
+              {loadingDetails ? (
+                <div className="space-y-6 animate-pulse py-4">
+                  <div className="h-6 w-32 bg-slate-800 rounded"></div>
+                  <div className="h-8 w-2/3 bg-slate-800 rounded"></div>
+                  <div className="h-4 w-full bg-slate-800 rounded"></div>
+                  <div className="space-y-6 pt-10 border-t border-slate-850">
+                    {[1, 2].map((i) => (
+                      <div key={i} className="space-y-3 pl-8 relative">
+                        <div className="absolute left-0 top-0 h-6 w-6 rounded-full bg-slate-800"></div>
+                        <div className="h-6 w-40 bg-slate-800 rounded"></div>
+                        <div className="h-4 w-full bg-slate-800 rounded"></div>
                       </div>
-                      <div className="pl-8 prose prose-invert prose-sm max-w-none text-slate-300">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {topic.text}
-                        </ReactMarkdown>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeWeekIndex}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-6"
+                  >
+                    {/* Header block */}
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <div className="inline-block text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
+                          Chapter {selectedWeek.week} Study Material
+                        </div>
+                        <div className="text-[9px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
+                          ⏱ {readingTime} Min Read
+                        </div>
                       </div>
-                      {topic.code && (
-                        <div className="ml-0 sm:ml-8 rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner">
-                          <button
-                            onClick={() => handleCopyCode(topic.code, idx)}
-                            className="absolute right-3 top-3 p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all text-xs flex items-center gap-1.5 opacity-0 group-hover/code:opacity-100 focus:opacity-100"
+                      <h2 className="text-2xl font-extrabold tracking-tight text-white">{selectedWeek.title}</h2>
+                      <p className="text-slate-400 text-sm mt-1">{selectedWeek.description}</p>
+                    </div>
+
+                    {/* Curriculum Topics List */}
+                    <div className="space-y-8 pt-4 border-t border-slate-800/80">
+                      {activeModuleDetail?.topics?.map((topic: any, idx: number) => (
+                        <div key={idx} className="space-y-3.5 group">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center text-xs font-bold shrink-0">
+                              {idx + 1}
+                            </span>
+                            <h3 className="text-lg font-bold text-slate-200 tracking-tight group-hover:text-white transition">
+                              {topic.title}
+                            </h3>
+                          </div>
+                          <div className="pl-8 prose prose-invert prose-sm max-w-none text-slate-300">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {topic.text}
+                            </ReactMarkdown>
+                          </div>
+                          
+                          {topic.code && (
+                            <div className="ml-0 sm:ml-8 space-y-3">
+                              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner">
+                                <div className="absolute right-3 top-3 flex gap-2 opacity-0 group-hover/code:opacity-100 focus-within:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => setActivePlayground(idx)}
+                                    className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"
+                                  >
+                                    <Code2 size={12} /> Try it out
+                                  </button>
+                                  <button
+                                    onClick={() => handleCopyCode(topic.code, idx)}
+                                    className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"
+                                  >
+                                    <Clipboard size={12} />
+                                    {copiedText === `${idx}` ? 'Copied!' : 'Copy'}
+                                  </button>
+                                </div>
+                                <div className="overflow-x-auto w-full">
+                                  <pre className="p-4 text-xs font-mono text-cyan-400 leading-relaxed min-w-[300px]">
+                                    <code>{topic.code}</code>
+                                  </pre>
+                                </div>
+                              </div>
+
+                              {/* Inline Playground Toggle */}
+                              <AnimatePresence>
+                                {activePlayground === idx && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                  >
+                                    <CodePlayground 
+                                      initialCode={topic.code} 
+                                      language={id === 'C' || id === 'C++' ? 'C/C++' : 'MicroPython'} 
+                                    />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )}
+
+                          {topic.note && (
+                            <div className="ml-0 sm:ml-8 p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-teal-300 text-xs leading-relaxed flex items-start gap-3">
+                              <span className="text-lg leading-none select-none">💡</span>
+                              <div>
+                                <strong className="text-teal-200 block mb-0.5">Core Takeaway</strong>
+                                {topic.note}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Concept Visualized Blueprint */}
+                    <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 ml-0 sm:ml-8">
+                      <div className="flex items-center gap-2 text-cyan-400">
+                        <Zap size={18} className="animate-pulse" />
+                        <h4 className="text-xs font-black uppercase tracking-widest">Concept Visualized Blueprint</h4>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        <div className="space-y-2 text-slate-350 text-xs leading-relaxed">
+                          <p className="font-bold text-slate-200">Interactive Blueprint Visualization</p>
+                          <p>Study this visual schematic representation of the concepts introduced this week.</p>
+                          <button 
+                            onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek.week))}
+                            className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-white font-extrabold uppercase rounded text-[9px] border border-slate-700/60 transition"
                           >
-                            <Clipboard size={14} />
-                            {copiedText === `${idx}` ? 'Copied!' : 'Copy'}
+                            <Eye size={12} /> Click Diagram to Expand
                           </button>
-                          <div className="overflow-x-auto w-full">
-                            <pre className="p-4 text-xs font-mono text-cyan-400 leading-relaxed min-w-[300px]">
-                              <code>{topic.code}</code>
-                            </pre>
+                        </div>
+                        <div 
+                          onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek.week))}
+                          className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/80 hover:bg-slate-950/20 transition duration-300 cursor-pointer flex justify-center items-center group shadow-md"
+                        >
+                          <div className="transform group-hover:scale-[1.02] transition duration-300 w-full max-w-[280px]">
+                            {renderWeeklyDiagram(id as string, selectedWeek.week)}
                           </div>
                         </div>
-                      )}
-                      {topic.note && (
-                        <div className="ml-0 sm:ml-8 p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-teal-300 text-xs leading-relaxed flex items-start gap-3">
-                          <span className="text-lg leading-none select-none">💡</span>
+                      </div>
+                    </div>
+
+                    {/* Module Verification */}
+                    <div className="mt-10 p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-300">Module Verification</h4>
+                      {activeWeekIndex < currentWeek ? (
+                        <div className="flex items-center gap-3 text-emerald-400">
+                          <CheckCircle2 size={24} />
                           <div>
-                            <strong className="text-teal-200 block mb-0.5">Core Takeaway</strong>
-                            {topic.note}
+                            <p className="text-sm font-bold">Chapter {selectedWeek.week} Completed!</p>
+                            <p className="text-xs text-slate-400">You passed the quiz. Re-take it to improve your score.</p>
                           </div>
+                          <button 
+                            onClick={() => navigate(`/quiz/${id}/${selectedWeek.week}`)}
+                            className="ml-auto text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-lg text-slate-300 font-semibold transition"
+                          >
+                            Retry Quiz
+                          </button>
+                        </div>
+                      ) : activeWeekIndex === currentWeek ? (
+                        <div className="space-y-4">
+                          <label className="flex items-start gap-3 cursor-pointer group text-xs text-slate-400 select-none">
+                            <input 
+                              type="checkbox"
+                              checked={hasReadMaterial}
+                              onChange={(e) => setHasReadMaterial(e.target.checked)}
+                              className="mt-0.5 w-4 h-4 text-cyan-600 rounded bg-slate-800 border-slate-700"
+                            />
+                            <span className="group-hover:text-slate-200 transition">
+                              I have read and understood all the study concepts for Chapter {selectedWeek.week}. I am ready to attempt the quiz.
+                            </span>
+                          </label>
+                          <button 
+                            disabled={!hasReadMaterial}
+                            onClick={() => navigate(`/quiz/${id}/${selectedWeek.week}`)}
+                            className={`w-full py-3 rounded-xl font-extrabold text-sm transition flex items-center justify-center gap-2 text-white shadow-lg ${
+                              hasReadMaterial ? 'bg-gradient-to-r from-cyan-600 to-blue-600' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            }`}
+                          >
+                            <Play size={16} /> Unlock & Start Chapter {selectedWeek.week} Quiz
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3 text-slate-500 text-xs">
+                          <Lock size={18} />
+                          <span>Complete Chapter {currentWeek + 1} quiz to unlock these materials.</span>
                         </div>
                       )}
                     </div>
-                  ))}
-                </div>
-
-                {/* Concept Visualized Blueprint */}
-                <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 ml-0 sm:ml-8">
-                  <div className="flex items-center gap-2 text-cyan-400">
-                    <Zap size={18} className="animate-pulse" />
-                    <h4 className="text-xs font-black uppercase tracking-widest">Concept Visualized Blueprint</h4>
+                  </motion.div>
+                </AnimatePresence>
+              )}
+            </>
+          ) : (
+            /* Project & Assignment Tab Content */
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="py-4 space-y-8"
+            >
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 border-l-4 border-l-purple-500">
+                <h3 className="text-xl font-bold text-white mb-2">Industrial Project Submission</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  As part of your training, you are required to submit a practical implementation of the concepts learned. 
+                  This is mandatory for generating your final certificate.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-4">
+                  <div className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-300">
+                    Status: <span className="text-amber-400">Pending Eligibility</span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                    <div className="space-y-2 text-slate-350 text-xs leading-relaxed">
-                      <p className="font-bold text-slate-200">Interactive Blueprint Visualization</p>
-                      <p>Study this visual schematic representation of the concepts introduced this week.</p>
-                      <button 
-                        onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek.week))}
-                        className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-white font-extrabold uppercase rounded text-[9px] border border-slate-700/60 transition"
-                      >
-                        <Eye size={12} /> Click Diagram to Expand
-                      </button>
-                    </div>
-                    <div 
-                      onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek.week))}
-                      className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/80 hover:bg-slate-950/20 transition duration-300 cursor-pointer flex justify-center items-center group shadow-md"
-                    >
-                      <div className="transform group-hover:scale-[1.02] transition duration-300 w-full max-w-[280px]">
-                        {renderWeeklyDiagram(id as string, selectedWeek.week)}
-                      </div>
-                    </div>
+                  <div className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-300">
+                    Required: 20/20 Modules
                   </div>
                 </div>
+              </div>
 
-                {/* Module Verification */}
-                <div className="mt-10 p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-slate-300">Module Verification</h4>
-                  {activeWeekIndex < currentWeek ? (
-                    <div className="flex items-center gap-3 text-emerald-400">
-                      <CheckCircle2 size={24} />
-                      <div>
-                        <p className="text-sm font-bold">Chapter {selectedWeek.week} Completed!</p>
-                        <p className="text-xs text-slate-400">You passed the quiz. Re-take it to improve your score.</p>
-                      </div>
-                      <button 
-                        onClick={() => navigate(`/quiz/${id}/${selectedWeek.week}`)}
-                        className="ml-auto text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-lg text-slate-300 font-semibold transition"
-                      >
-                        Retry Quiz
-                      </button>
-                    </div>
-                  ) : activeWeekIndex === currentWeek ? (
-                    <div className="space-y-4">
-                      <label className="flex items-start gap-3 cursor-pointer group text-xs text-slate-400 select-none">
-                        <input 
-                          type="checkbox"
-                          checked={hasReadMaterial}
-                          onChange={(e) => setHasReadMaterial(e.target.checked)}
-                          className="mt-0.5 w-4 h-4 text-cyan-600 rounded bg-slate-800 border-slate-700"
-                        />
-                        <span className="group-hover:text-slate-200 transition">
-                          I have read and understood all the study concepts for Chapter {selectedWeek.week}. I am ready to attempt the quiz.
-                        </span>
-                      </label>
-                      <button 
-                        disabled={!hasReadMaterial}
-                        onClick={() => navigate(`/quiz/${id}/${selectedWeek.week}`)}
-                        className={`w-full py-3 rounded-xl font-extrabold text-sm transition flex items-center justify-center gap-2 text-white shadow-lg ${
-                          hasReadMaterial ? 'bg-gradient-to-r from-cyan-600 to-blue-600' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                        }`}
-                      >
-                        <Play size={16} /> Unlock & Start Chapter {selectedWeek.week} Quiz
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3 text-slate-500 text-xs">
-                      <Lock size={18} />
-                      <span>Complete Chapter {currentWeek + 1} quiz to unlock these materials.</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bottom Navigation */}
-                <div className="flex justify-between items-center pt-6 border-t border-slate-800/80 mt-10">
-                  <button
-                    disabled={activeWeekIndex === 0}
-                    onClick={() => setActiveWeekIndex(activeWeekIndex - 1)}
-                    className="px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    ← Prev Module
-                  </button>
-                  <button
-                    disabled={activeWeekIndex >= Math.min(currentWeek, weeks.length - 1)}
-                    onClick={() => setActiveWeekIndex(activeWeekIndex + 1)}
-                    className="px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    Next Module →
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 space-y-4">
+                  <div className="flex items-center gap-2 text-blue-400">
+                    <FileText size={18} />
+                    <h4 className="text-sm font-black uppercase tracking-widest">Current Assignment</h4>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-white">Week {Math.floor(currentWeek / 5) + 1} Practical Task</p>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                      Implement a modular register-mapping header for a mock peripheral. Submit the .c file for review.
+                    </p>
+                  </div>
+                  <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-lg transition">
+                    Upload Solution
                   </button>
                 </div>
-              </motion.div>
-            </AnimatePresence>
+
+                <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 space-y-4">
+                  <div className="flex items-center gap-2 text-purple-400">
+                    <Briefcase size={18} />
+                    <h4 className="text-sm font-black uppercase tracking-widest">Final Project</h4>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-white">Full System Architect</p>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                      Unlocked after completing Chapter 20. Design a complete RTOS-based telemetry system.
+                    </p>
+                  </div>
+                  <button disabled className="w-full py-2 bg-slate-950 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg cursor-not-allowed">
+                    Locked until Chapter 20
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Bottom Navigation */}
+          {activeTab === 'material' && (
+            <div className="flex justify-between items-center pt-6 border-t border-slate-800/80 mt-10">
+              <button
+                disabled={activeWeekIndex === 0}
+                onClick={() => setActiveWeekIndex(activeWeekIndex - 1)}
+                className="px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ← Prev Module
+              </button>
+              <button
+                disabled={activeWeekIndex >= Math.min(currentWeek, weeks.length - 1)}
+                onClick={() => setActiveWeekIndex(activeWeekIndex + 1)}
+                className="px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Next Module →
+              </button>
+            </div>
           )}
         </div>
       </div>
