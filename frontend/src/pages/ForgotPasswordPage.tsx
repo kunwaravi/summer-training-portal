@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../api';
 import { useUI } from '../context/UIContext';
 import { Mail, ArrowLeft, ShieldAlert, KeyRound } from 'lucide-react';

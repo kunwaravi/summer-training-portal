@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, QrCode, Clipboard, Check, Sparkles } from 'lucide-react';
+import { CreditCard, Clipboard, Check, Sparkles } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -40,14 +40,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onApplyCoupon,
   couponError,
   isCouponApplied,
-  paymentMethod,
-  onChangePaymentMethod,
-  cardNumber,
-  onChangeCardNumber,
-  cardExpiry,
-  onChangeCardExpiry,
-  cardCvv,
-  onChangeCardCvv,
   processingCheckout,
   upiCopied,
   onCopyToClipboard,

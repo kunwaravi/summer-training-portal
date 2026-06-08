@@ -4,7 +4,6 @@ import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Card from '../atoms/Card';
 import Badge from '../atoms/Badge';
-import Button from '../atoms/Button';
 
 interface SyllabusItem {
   week: number;
@@ -40,7 +39,6 @@ const CourseCard: React.FC<CourseCardProps> = ({
   weekCompleted = 0,
   completed = false,
   difficulty,
-  tags = [],
   syllabus = [],
   type = 'dashboard',
   onAction,

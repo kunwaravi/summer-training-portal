@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { Award, Printer, ShieldCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 
 const Certificate = () => {

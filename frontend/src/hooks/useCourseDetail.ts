@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import confetti from 'canvas-confetti';
 
 export const useCourseDetail = (courseId: string | undefined) => {
   const { user } = useAuth();

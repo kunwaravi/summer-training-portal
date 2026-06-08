@@ -1,8 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
-import { LogOut, LayoutDashboard, ShieldCheck, Sun, Moon, Send, Menu, X, Mail } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { LogOut, LayoutDashboard, ShieldCheck, Send, Menu, X, Mail } from 'lucide-react';
+import { useState } from 'react';
 import Button from './atoms/Button';
 
 const Navbar = () => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Shield, Eye, Lock, FileKey } from 'lucide-react';
+import { ArrowLeft, Eye, Lock, FileKey } from 'lucide-react';
 
 const Privacy = () => {
   return (

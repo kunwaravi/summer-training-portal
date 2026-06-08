@@ -38,7 +38,7 @@ export const useQuiz = (courseId?: string, week?: string | number) => {
     } catch (err: any) {
       const errMsg = err.response?.data?.message || 'Failed to submit quiz';
       setError(errMsg);
-      throw new Error(errMsg);
+      throw new Error(errMsg, { cause: err });
     } finally {
       setLoading(false);
     }

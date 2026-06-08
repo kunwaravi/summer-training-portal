@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { Trophy, Timer, ChevronLeft, ChevronRight, CheckCircle2, XCircle, ArrowLeft, RefreshCw, Award } from 'lucide-react';
@@ -44,51 +44,15 @@ const PracticeArena = () => {
     breakdown: FeedbackItem[];
   } | null>(null);
 
-  // Fetch Questions
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const res = await api.get(`/practice/questions?category=${category}`);
-        setQuestions(res.data.questions);
-      } catch (err) {
-        console.error('Failed to fetch practice questions:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuestions();
-  }, [category]);
-
-  // Countdown Timer
-  useEffect(() => {
-    if (loading || results || timeLeft <= 0) {
-      if (timeLeft === 0 && !results && !submitting) {
-        // Auto-submit on timeout
-        handleAutoSubmit();
-      }
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [loading, results, timeLeft, submitting]);
-
-  const handleOptionSelect = (questionId: number, option: string) => {
+  // Callbacks defined first
+  const handleOptionSelect = useCallback((questionId: number, option: string) => {
     setAnswers((prev) => ({
       ...prev,
       [questionId]: option,
     }));
-  };
+  }, []);
 
-  const handleAutoSubmit = () => {
-    alert("Time is up! Your practice test is being submitted automatically.");
-    submitTest(true);
-  };
-
-  const submitTest = async (force = false) => {
+  const submitTest = useCallback(async (force = false) => {
     if (!force) {
       const answeredCount = Object.keys(answers).length;
       if (answeredCount < questions.length) {
@@ -125,7 +89,44 @@ const PracticeArena = () => {
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [answers, questions.length, category]);
+
+  const handleAutoSubmit = useCallback(() => {
+    alert("Time is up! Your practice test is being submitted automatically.");
+    submitTest(true);
+  }, [submitTest]);
+
+  // Fetch Questions
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const res = await api.get(`/practice/questions?category=${category}`);
+        setQuestions(res.data.questions);
+      } catch (err) {
+        console.error('Failed to fetch practice questions:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuestions();
+  }, [category]);
+
+  // Countdown Timer
+  useEffect(() => {
+    if (loading || results || timeLeft <= 0) {
+      if (timeLeft === 0 && !results && !submitting) {
+        // Auto-submit on timeout
+        handleAutoSubmit();
+      }
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [loading, results, timeLeft, submitting, handleAutoSubmit]);
 
   const handleRetry = () => {
     setAnswers({});

@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCourseDetail } from '../hooks/useCourseDetail';
 import { 
-  CheckCircle, Lock, BookOpen, Play, Clipboard, 
-  CheckCircle2, ChevronRight, Zap, Eye 
+  Lock, Play, Clipboard, 
+  CheckCircle2, Zap, Eye 
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import api from '../api';
 import { useUI } from '../context/UIContext';
 import { Lock, ShieldCheck, ArrowLeft, Target, KeyRound } from 'lucide-react';
@@ -9,7 +9,6 @@ import Input from '../components/atoms/Input';
 import Card from '../components/atoms/Card';
 
 const ResetPassword = () => {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
   const { addToast } = useUI();
