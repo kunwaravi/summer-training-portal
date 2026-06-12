@@ -709,6 +709,7 @@ const AdminDashboard = () => {
                     <th className="py-3 px-4">Student ID</th>
                     <th className="py-3 px-4">Candidate Name</th>
                     <th className="py-3 px-4">Academic Details</th>
+                    <th className="py-3 px-4">Pursuing Courses</th>
                     <th className="py-3 px-4">Role</th>
                     <th className="py-3 px-4">Registration Date</th>
                     <th className="py-3 px-4 text-right">Actions</th>
@@ -731,6 +732,23 @@ const AdminDashboard = () => {
                         ) : (
                           <span className="text-slate-600 italic">No academic profiles updated</span>
                         )}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-wrap gap-1">
+                          {u.progresses && u.progresses.length > 0 ? (
+                            u.progresses.map((p: any) => (
+                              <span
+                                key={p.courseId}
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-blue-500/20 bg-blue-500/5 text-blue-400 text-[9px] font-black uppercase tracking-wider"
+                                title={`Progress: ${p.progress}%`}
+                              >
+                                {p.courseId} ({p.progress}%)
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-slate-600 italic text-[10px]">Not Enrolled</span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${

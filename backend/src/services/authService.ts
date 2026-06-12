@@ -89,7 +89,13 @@ export const getAllUsers = async () => {
       role: true,
       createdAt: true,
       collegeName: true,
-      branchName: true
+      branchName: true,
+      progresses: {
+        select: {
+          courseId: true,
+          progress: true
+        }
+      }
     },
     orderBy: {
       name: 'asc'
