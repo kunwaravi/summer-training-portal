@@ -62,7 +62,7 @@ export class CertificateService {
         where: {
           userId,
           courseId,
-          status: 'SUCCESS'
+          status: 'VERIFIED'
         }
       });
 

@@ -493,7 +493,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => {
                     if (selectedStudentId) {
-                      window.open(`/certificate?courseId=${selectedCourseId}&userId=${selectedStudentId}`, '_blank');
+                      window.open(`/certificate?courseId=${encodeURIComponent(selectedCourseId)}&userId=${selectedStudentId}`, '_blank');
                     }
                   }}
                   className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-750 text-white font-black text-xs uppercase tracking-widest rounded-xl transition shadow active:scale-95 disabled:opacity-50"

@@ -183,7 +183,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
             Your payment was verified by our team and your secure certification credentials have been generated. You can now download, print, or share your verifiable training certificate.
           </p>
           <button
-            onClick={() => navigate(`/certificate?courseId=${courseId}`)}
+            onClick={() => navigate(`/certificate?courseId=${encodeURIComponent(courseId || '')}`)}
             className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-950 font-black rounded-xl shadow-lg shadow-yellow-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-sm"
           >
             Open High-Resolution Certificate

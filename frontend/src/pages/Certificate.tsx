@@ -14,9 +14,12 @@ const Certificate = () => {
   const certRef = useRef<HTMLDivElement>(null);
 
   // Extract courseId and optional userId from URL query parameters: e.g. /certificate?courseId=C&userId=123
-  const query = new URLSearchParams(window.location.search);
-  const courseId = query.get('courseId') || 'C';
-  const targetUserId = query.get('userId');
+  const getQueryParam = (name: string) => {
+    const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match ? decodeURIComponent(match[1]) : null;
+  };
+  const courseId = getQueryParam('courseId') || 'C';
+  const targetUserId = getQueryParam('userId');
 
   useEffect(() => {
     const fetchData = async () => {

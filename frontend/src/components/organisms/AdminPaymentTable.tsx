@@ -143,7 +143,7 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                       ) : t.status === 'VERIFIED' || t.status === 'SUCCESS' ? (
                         t.user?.id ? (
                           <a
-                            href={`/certificate?courseId=${t.courseId}&userId=${t.user.id}`}
+                            href={`/certificate?courseId=${encodeURIComponent(t.courseId)}&userId=${t.user.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 px-2.5 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 rounded-lg text-[10px] font-bold uppercase transition"
