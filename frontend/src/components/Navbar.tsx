@@ -1,12 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
-import { LogOut, LayoutDashboard, ShieldCheck, Send, Menu, X, Mail } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { LogOut, LayoutDashboard, ShieldCheck, Send, Menu, X, MessageCircle, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
 import Button from './atoms/Button';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { addToast } = useUI();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -67,15 +69,17 @@ const Navbar = () => {
                 className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors text-xs font-bold uppercase tracking-widest"
               >
                 <Send size={14} />
-                Support Group
+                Telegram Group
               </a>
 
               <a 
-                href="mailto:support@edunexus.in" 
-                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors text-xs font-bold uppercase tracking-widest"
+                href="https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar?s=cl&p=a&mlu=1" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-2 text-emerald-400 hover:text-emerald-350 transition-colors text-xs font-bold uppercase tracking-widest"
               >
-                <Mail size={14} />
-                Email Support
+                <MessageCircle size={14} />
+                WhatsApp Group
               </a>
 
               {hasCompletedAny && (
@@ -87,6 +91,14 @@ const Navbar = () => {
           )}
 
           <div className="flex items-center gap-4 border-l border-slate-850 pl-8">
+            <button
+              onClick={toggleTheme}
+              className="p-2 bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-300 hover:text-white rounded-lg transition-all active:scale-95"
+              title="Toggle Light/Dark Theme"
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+
             {user ? (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3 px-3 py-1.5 bg-slate-900/50 border border-slate-800 rounded-xl hover:bg-slate-900 transition-colors cursor-pointer group">
@@ -159,11 +171,18 @@ const Navbar = () => {
                   </Link>
                 )}
                 <a href="https://t.me/+tCapxtLwxNNlZjY1" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl text-sm font-bold uppercase tracking-widest text-slate-350">
-                  <Send size={18} /> Support Group
+                  <Send size={18} /> Telegram Group
                 </a>
-                <a href="mailto:support@edunexus.in" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl text-sm font-bold uppercase tracking-widest text-slate-350">
-                  <Mail size={18} /> Email Support
+                <a href="https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar?s=cl&p=a&mlu=1" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl text-sm font-bold uppercase tracking-widest text-emerald-400">
+                  <MessageCircle size={18} /> WhatsApp Group
                 </a>
+                <button 
+                  onClick={() => { toggleTheme(); setIsMenuOpen(false); }}
+                  className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl text-sm font-bold uppercase tracking-widest text-slate-300"
+                >
+                  {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />} 
+                  {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                </button>
                 <button onClick={handleLogout} className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-sm font-bold uppercase tracking-widest text-red-400">
                   <LogOut size={18} /> Sign Out
                 </button>

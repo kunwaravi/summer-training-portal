@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UIProvider } from './context/UIContext';
+import { ThemeProvider } from './context/ThemeContext';
 import React, { Suspense } from 'react';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
@@ -19,6 +20,7 @@ const Terms = React.lazy(() => import('./pages/Terms'));
 const Privacy = React.lazy(() => import('./pages/Privacy'));
 const Refund = React.lazy(() => import('./pages/Refund'));
 import Navbar from './components/Navbar';
+import FloatingSupportWidget from './components/atoms/FloatingSupportWidget';
 import './App.css';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -39,6 +41,7 @@ function AppRoutes() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-white">
       <Navbar />
+      <FloatingSupportWidget />
       <div className="container mx-auto px-4 py-8 flex-grow">
         <Suspense fallback={
           <div className="flex justify-center items-center h-64">
@@ -70,7 +73,7 @@ function AppRoutes() {
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-medium">
           <div className="flex flex-col gap-1 text-center sm:text-left">
             <p className="text-slate-400">© 2026 Edunexus Automation Labs. All rights reserved.</p>
-            <p className="text-[10px] text-slate-600">Technical Support: <a href="mailto:support@edunexus.in" className="text-blue-500 hover:underline">support@edunexus.in</a></p>
+            <p className="text-[10px] text-slate-600">Technical Support: Available via WhatsApp & Telegram Support Groups</p>
           </div>
           <div className="flex gap-4">
             <Link to="/terms" className="hover:text-slate-350 transition-colors">Terms of Service</Link>
@@ -89,9 +92,11 @@ function App() {
   return (
     <AuthProvider>
       <UIProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
+        <ThemeProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </ThemeProvider>
       </UIProvider>
     </AuthProvider>
   );

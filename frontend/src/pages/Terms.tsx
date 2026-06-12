@@ -79,8 +79,8 @@ const Terms = () => {
         <div className="text-center pt-4 border-t border-slate-900 text-xs text-slate-400 space-y-2">
           <p>Need any help or have questions about our terms?</p>
           <div className="flex justify-center gap-4">
-            <a href="mailto:support@edunexus.in" className="font-semibold text-indigo-400 hover:underline">
-              support@edunexus.in
+            <a href="https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar?s=cl&p=a&mlu=1" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-400 hover:underline">
+              WhatsApp Group Support
             </a>
             <span>•</span>
             <a href="https://t.me/+tCapxtLwxNNlZjY1" target="_blank" rel="noopener noreferrer" className="font-semibold text-emerald-400 hover:underline">

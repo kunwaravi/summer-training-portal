@@ -4,6 +4,7 @@ import api from '../api';
 import { Trophy, Timer, ChevronLeft, ChevronRight, CheckCircle2, XCircle, ArrowLeft, RefreshCw, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import CodePlayground from '../components/molecules/CodePlayground';
 
 interface Question {
   id: number;
@@ -25,7 +26,27 @@ interface FeedbackItem {
   isCorrect: boolean;
 }
 
+const codingTemplates = {
+  C: {
+    language: 'C',
+    initialCode: `#include <stdio.h>\n// System register masking exercise\n// Task: Set bit 3 and bit 0 of the Control Register (SYS_CTRL_REG)\n\nunsigned int mock_register = 0x00;\n#define SYS_CTRL_REG mock_register\n\nint main() {\n    // TODO: Write your register bitmasking solution here\n    SYS_CTRL_REG |= (1 << 3) | (1 << 0);\n    \n    printf("Registers configured. Value: 0x%X\\n", SYS_CTRL_REG);\n    return 0;\n}`,
+    expectedOutput: 'Registers configured. Value: 0x9'
+  },
+  'C++': {
+    language: 'C++',
+    initialCode: `#include <iostream>\n// OOP Embedded optimization exercise\n// Task: Instantiate TempSensor with a value of 24.5 and output it.\n\nclass TempSensor {\nprivate:\n    float temp;\npublic:\n    TempSensor(float t) : temp(t) {}\n    float getCelsius() const { return temp; }\n};\n\nint main() {\n    // TODO: Complete class instantiation\n    TempSensor sensor(24.5);\n    \n    std::cout << "Sensor temperature: " << sensor.getCelsius() << " C" << std::endl;\n    return 0;\n}`,
+    expectedOutput: 'Sensor temperature: 24.5 C'
+  },
+  IoT: {
+    language: 'C++ (IoT)',
+    initialCode: `#include <stdio.h>\n// ESP32 WiFi and MQTT publish simulation\n// Task: Initialize setup and print MQTT published event.\n\nvoid setup() {\n    printf("ESP32 setup: Initializing WiFi connection...\\n");\n    printf("ESP32 setup: Connecting to MQTT Broker...\\n");\n}\n\nint main() {\n    setup();\n    // TODO: Publish sensor payload\n    printf("MQTT Published: topic=sensors/temp payload=24.5\\n");\n    return 0;\n}`,
+    expectedOutput: 'MQTT Published: topic=sensors/temp payload=24.5'
+  }
+};
+
 const PracticeArena = () => {
+  const [mode, setMode] = useState<'mcq' | 'coding'>('mcq');
+  const [selectedLang, setSelectedLang] = useState<'C' | 'C++' | 'IoT'>('C');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const category = searchParams.get('category') || 'Programming';
@@ -205,8 +226,93 @@ const PracticeArena = () => {
         </p>
       </div>
 
+      {/* Mode Switcher */}
+      <div className="flex justify-center gap-4 bg-slate-900/30 border border-slate-900 p-2.5 rounded-2xl max-w-sm mx-auto">
+        <button
+          onClick={() => setMode('mcq')}
+          className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            mode === 'mcq'
+              ? 'bg-emerald-600 text-slate-950 shadow-md'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          Adaptive Quiz Mode
+        </button>
+        <button
+          onClick={() => setMode('coding')}
+          className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            mode === 'coding'
+              ? 'bg-emerald-600 text-slate-950 shadow-md'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          Interactive Coding Mode
+        </button>
+      </div>
+
       <AnimatePresence mode="wait">
-        {!results ? (
+        {mode === 'coding' ? (
+          <motion.div
+            key="coding-layout"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="space-y-6"
+          >
+            <div className="bg-slate-900 border border-slate-850 p-6 rounded-3xl space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-850 pb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Practice Coding Templates</h3>
+                  <p className="text-[10px] text-slate-500 mt-1">Select a track template and solve the inline debugging exercises.</p>
+                </div>
+                <div className="flex gap-2 bg-slate-950 border border-slate-850 p-1 rounded-xl">
+                  {(['C', 'C++', 'IoT'] as const).map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => setSelectedLang(lang)}
+                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                        selectedLang === lang
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {lang}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-950/40 border border-slate-850 rounded-2xl text-xs space-y-2">
+                <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Exercise Description:</span>
+                {selectedLang === 'C' && (
+                  <p className="text-slate-350 leading-relaxed font-medium">
+                    <strong>C bitmasking control register:</strong> You need to set bit 0 and bit 3 of the control register 
+                    using a bitwise OR operator. Complete the code by making sure <code>SYS_CTRL_REG</code> is correctly modified.
+                  </p>
+                )}
+                {selectedLang === 'C++' && (
+                  <p className="text-slate-350 leading-relaxed font-medium">
+                    <strong>C++ class instance allocation:</strong> Instantiate the <code>TempSensor</code> class with a starting temperature 
+                    of <code>24.5</code>. Ensure the printed output matches the target specification.
+                  </p>
+                )}
+                {selectedLang === 'IoT' && (
+                  <p className="text-slate-350 leading-relaxed font-medium">
+                    <strong>IoT publisher telemetry event:</strong> Trigger the ESP32 setup configuration, and then print 
+                    the telemetry publish event matching the required output format.
+                  </p>
+                )}
+              </div>
+
+              <CodePlayground
+                key={selectedLang}
+                initialCode={codingTemplates[selectedLang].initialCode}
+                language={codingTemplates[selectedLang].language}
+                expectedOutput={codingTemplates[selectedLang].expectedOutput}
+              />
+            </div>
+          </motion.div>
+        ) : !results ? (
           <motion.div
             key="quiz-layout"
             initial={{ opacity: 0, y: 15 }}

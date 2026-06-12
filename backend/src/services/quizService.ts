@@ -66,6 +66,32 @@ export const submitQuiz = async (userId: number, courseId: string, week: number,
   });
 
   if (passed) {
+    const userRecord = await prisma.user.findUnique({ where: { id: userId } });
+    if (userRecord) {
+      let xpToAward = 100;
+      if (score === 100) {
+        xpToAward += 50;
+      }
+
+      const currentBadges = userRecord.badges || [];
+      const newBadges = [...currentBadges];
+
+      if (score === 100 && !newBadges.includes('perfect_score')) {
+        newBadges.push('perfect_score');
+      }
+      if (week === 1 && !newBadges.includes('week_1_master')) {
+        newBadges.push('week_1_master');
+      }
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          points: userRecord.points + xpToAward,
+          badges: newBadges
+        }
+      });
+    }
+
     const currentProgress = await prisma.courseProgress.findUnique({
       where: {
         userId_courseId: {

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { 
   LogIn, UserPlus, Mail, Lock, User, GraduationCap, 
-  ShieldCheck, CheckCircle2, Send
+  ShieldCheck, CheckCircle2, Send, MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/atoms/Button';
@@ -391,17 +391,19 @@ const Home = () => {
             </p>
             <div className="flex justify-center items-center gap-6 mt-3">
               <a 
-                href="mailto:support@edunexus.in" 
-                className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider transition-colors"
+                href="https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar?s=cl&p=a&mlu=1" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-wider transition-colors"
               >
-                <Mail size={14} /> support@edunexus.in
+                <MessageSquare size={14} /> WhatsApp Help
               </a>
               <span className="text-slate-800">•</span>
               <a 
                 href="https://t.me/+tCapxtLwxNNlZjY1" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-wider transition-colors"
+                className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider transition-colors"
               >
                 <Send size={14} /> Telegram Help
               </a>

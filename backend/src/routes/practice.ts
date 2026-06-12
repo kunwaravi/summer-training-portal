@@ -104,17 +104,27 @@ router.post(
           },
         });
 
-        // Award points to the user
-        if (pointsEarned > 0) {
-          await tx.user.update({
-            where: { id: userId },
-            data: {
-              points: {
-                increment: pointsEarned,
-              },
-            },
-          });
+        // Fetch current badges and points
+        const userRecord = await tx.user.findUnique({
+          where: { id: userId },
+          select: { badges: true, points: true }
+        });
+
+        const currentBadges = userRecord?.badges || [];
+        const newBadges = [...currentBadges];
+
+        if (correctCount > 0 && !newBadges.includes('bug_hunter')) {
+          newBadges.push('bug_hunter');
         }
+
+        // Award points and badges to the user
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            points: (userRecord?.points || 0) + pointsEarned,
+            badges: newBadges
+          },
+        });
 
         return attempt;
       });

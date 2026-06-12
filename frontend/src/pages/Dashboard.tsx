@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCourses } from '../hooks/useCourses';
@@ -6,6 +7,7 @@ import CourseCard from '../components/molecules/CourseCard';
 import Spinner from '../components/atoms/Spinner';
 import SkillRadar from '../components/molecules/SkillRadar';
 import ProjectStatusCard from '../components/molecules/ProjectStatusCard';
+import LeaderboardTab from '../components/organisms/LeaderboardTab';
 
 const courseMetadata: Record<string, any> = {
   'C': { 
@@ -31,6 +33,7 @@ const courseMetadata: Record<string, any> = {
 };
 
 const Dashboard = () => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard'>('overview');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: coursesData, loading } = useCourses();
@@ -101,11 +104,31 @@ const Dashboard = () => {
           <p className="text-slate-450 text-sm">
             Welcome to your student academic console. Manage your industrial learning tracks below.
           </p>
+          {user?.badges && user.badges.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2 items-center">
+              <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Achievements:</span>
+              {user.badges.map((b: string) => {
+                const meta: Record<string, string> = {
+                  perfect_score: '💯 Perfect Score',
+                  week_1_master: '🎓 Week 1 Master',
+                  bug_hunter: '🐛 Bug Hunter'
+                };
+                return (
+                  <span key={b} className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[9px] font-black uppercase tracking-wider text-slate-300">
+                    {meta[b] || b}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
         
         <div className="flex flex-wrap gap-2 text-xs font-bold items-center">
           <span className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 shadow-sm">
             🔥 {streakDays}-Day Learn Streak
+          </span>
+          <span className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-400 flex items-center gap-1.5 shadow-sm">
+            ⚡ {user?.points || 0} XP
           </span>
           <span className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
             🏢 {user?.collegeName || 'Government Polytechnic'}
@@ -116,8 +139,36 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Analytics Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Navigation Tabs */}
+      <div className="flex border-b border-slate-900 gap-6 text-sm">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`pb-4 font-black uppercase tracking-widest text-[10px] sm:text-xs transition-colors relative ${
+            activeTab === 'overview' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-350'
+          }`}
+        >
+          Overview
+          {activeTab === 'overview' && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('leaderboard')}
+          className={`pb-4 font-black uppercase tracking-widest text-[10px] sm:text-xs transition-colors relative ${
+            activeTab === 'leaderboard' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-350'
+          }`}
+        >
+          Leaderboard
+          {activeTab === 'leaderboard' && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === 'overview' ? (
+        <>
+          {/* Analytics Metric Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { icon: BookOpen, label: 'Active Tracks', value: activeTracksCount, color: 'text-blue-400', bg: 'bg-blue-500/10' },
           { icon: CheckCircle2, label: 'Completed Tracks', value: completedTracksCount, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
@@ -275,6 +326,10 @@ const Dashboard = () => {
           })}
         </div>
       </div>
+      </>
+      ) : (
+        <LeaderboardTab currentUserId={user?.id} />
+      )}
     </div>
   );
 };

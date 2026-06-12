@@ -35,6 +35,7 @@ export const getLeaderboard = async (search: string, page: number, limit: number
         name: true,
         email: true,
         points: true,
+        badges: true,
         avatarUrl: true,
         collegeName: true,
         role: true,
