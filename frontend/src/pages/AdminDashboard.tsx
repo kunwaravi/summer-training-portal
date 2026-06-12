@@ -74,6 +74,33 @@ const AdminDashboard = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
   const [selectedCourseId, setSelectedCourseId] = useState<string>('C');
 
+  // Candidate sorting states
+  const [sortField, setSortField] = useState<'id' | 'name' | 'createdAt'>('id');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (field: 'id' | 'name' | 'createdAt') => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedUsers = [...users].sort((a, b) => {
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+    
+    if (sortField === 'createdAt') {
+      aVal = aVal ? new Date(aVal).getTime() : 0;
+      bVal = bVal ? new Date(bVal).getTime() : 0;
+    }
+    
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
   // Fetch initial payment transactions for audit dashboard
   const fetchTransactions = async () => {
     setLoadingTransactions(true);
@@ -706,17 +733,23 @@ const AdminDashboard = () => {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
-                    <th className="py-3 px-4">Student ID</th>
-                    <th className="py-3 px-4">Candidate Name</th>
+                    <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('id')}>
+                      Student ID {sortField === 'id' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                    </th>
+                    <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('name')}>
+                      Candidate Name {sortField === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                    </th>
                     <th className="py-3 px-4">Academic Details</th>
                     <th className="py-3 px-4">Pursuing Courses</th>
                     <th className="py-3 px-4">Role</th>
-                    <th className="py-3 px-4">Registration Date</th>
+                    <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('createdAt')}>
+                      Registration Date {sortField === 'createdAt' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                    </th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-850">
-                  {users.map((u) => (
+                  {sortedUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-slate-900/40 text-slate-300 transition">
                       <td className="py-3.5 px-4 font-mono text-[10px] text-cyan-400">#{u.id}</td>
                       <td className="py-3.5 px-4">
@@ -735,19 +768,61 @@ const AdminDashboard = () => {
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="flex flex-wrap gap-1">
-                          {u.progresses && u.progresses.length > 0 ? (
-                            u.progresses.map((p: any) => (
-                              <span
-                                key={p.courseId}
-                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-blue-500/20 bg-blue-500/5 text-blue-400 text-[9px] font-black uppercase tracking-wider"
-                                title={`Progress: ${p.progress}%`}
-                              >
-                                {p.courseId} ({p.progress}%)
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-slate-600 italic text-[10px]">Not Enrolled</span>
-                          )}
+                          {(() => {
+                            const courseMap = new Map<string, { progress?: number; paid?: boolean; pending?: boolean }>();
+                            
+                            // 1. Add progresses info
+                            if (u.progresses) {
+                              u.progresses.forEach((p: any) => {
+                                courseMap.set(p.courseId, { progress: p.progress });
+                              });
+                            }
+                            
+                            // 2. Add payments info
+                            if (u.payments) {
+                              u.payments.forEach((py: any) => {
+                                const existing = courseMap.get(py.courseId) || {};
+                                if (py.status === 'VERIFIED') {
+                                  courseMap.set(py.courseId, { ...existing, paid: true });
+                                } else if (py.status === 'PENDING_VERIFICATION') {
+                                  courseMap.set(py.courseId, { ...existing, pending: true });
+                                }
+                              });
+                            }
+                            
+                            if (courseMap.size === 0) {
+                              return <span className="text-slate-600 italic text-[10px]">Not Enrolled</span>;
+                            }
+                            
+                            return Array.from(courseMap.entries()).map(([courseId, info]) => {
+                              let badgeText = `${courseId}`;
+                              let badgeStyle = "border-blue-500/20 bg-blue-500/5 text-blue-400";
+                              
+                              if (info.progress !== undefined) {
+                                badgeText += ` (${info.progress}%)`;
+                              } else {
+                                badgeText += ` (0%)`;
+                              }
+                              
+                              if (info.paid) {
+                                badgeText += ` [Paid]`;
+                                badgeStyle = "border-emerald-500/25 bg-emerald-500/10 text-emerald-400";
+                              } else if (info.pending) {
+                                badgeText += ` [Pending]`;
+                                badgeStyle = "border-amber-500/25 bg-amber-500/10 text-amber-400";
+                              }
+                              
+                              return (
+                                <span
+                                  key={courseId}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${badgeStyle}`}
+                                  title={`Course: ${courseId}`}
+                                >
+                                  {badgeText}
+                                </span>
+                              );
+                            });
+                          })()}
                         </div>
                       </td>
                       <td className="py-3.5 px-4">

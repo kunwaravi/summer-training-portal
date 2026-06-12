@@ -95,10 +95,16 @@ export const getAllUsers = async () => {
           courseId: true,
           progress: true
         }
+      },
+      payments: {
+        select: {
+          courseId: true,
+          status: true
+        }
       }
     },
     orderBy: {
-      name: 'asc'
+      id: 'asc'
     }
   });
 };
