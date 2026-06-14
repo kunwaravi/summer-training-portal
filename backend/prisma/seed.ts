@@ -183,6 +183,9 @@ function generateFinalExamQuestions(courseId: string) {
       correctAnswer: correctAnswer
     });
   }
+  return questions;
+}
+
 function getDynamicTopicsForModule(courseId: string, week: number, moduleTitle: string) {
   const topics = [
     {
