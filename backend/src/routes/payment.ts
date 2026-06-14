@@ -35,6 +35,25 @@ router.post('/admin/verify/:paymentId', authenticateToken, isAdmin, async (req: 
   }
 });
 
+// DELETE /api/payments/admin/:paymentId - Admin deletes a payment record
+router.delete('/admin/:paymentId', authenticateToken, isAdmin, async (req: any, res: any, next: any) => {
+  try {
+    const { paymentId } = req.params;
+    const result = await paymentService.deletePayment(paymentId);
+
+    if ('error' in result) {
+      return res.status(result.status || 500).json({ message: result.error });
+    }
+
+    res.json({
+      success: true,
+      message: 'Payment record deleted successfully.'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/payments/status/:courseId - Get current payment status for active user
 router.get('/status/:courseId', authenticateToken, async (req: any, res: any, next: any) => {
   try {

@@ -45,6 +45,36 @@ const FloatingSupportWidget: React.FC = () => {
               </span>
               <Send size={18} className="shrink-0" />
             </motion.a>
+
+            {/* LinkedIn Page Button */}
+            <motion.a
+              href="https://www.linkedin.com/company/edunexus-pro/"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-3 px-4 py-3 bg-[#0A66C2] hover:bg-[#08529d] text-white font-bold text-xs uppercase tracking-widest rounded-full shadow-[0_4px_15px_rgba(10,102,194,0.4)] transition-colors duration-200 group"
+            >
+              <span className="max-w-0 overflow-hidden group-hover:max-w-[150px] transition-all duration-300 ease-out whitespace-nowrap">
+                LinkedIn Page
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0"
+              >
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                <rect width="4" height="12" x="2" y="9" />
+                <circle cx="4" cy="4" r="2" />
+              </svg>
+            </motion.a>
           </motion.div>
         )}
       </AnimatePresence>

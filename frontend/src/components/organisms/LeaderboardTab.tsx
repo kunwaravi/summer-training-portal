@@ -166,7 +166,6 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
                               {item.name}
                               {isCurrentUser && <span className="ml-2 px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[8px] font-black rounded uppercase tracking-wider">You</span>}
                             </span>
-                            <span className="text-[10px] text-slate-550 lowercase">{item.email}</span>
                           </div>
                         </div>
                       </td>

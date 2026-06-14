@@ -62,26 +62,6 @@ const Navbar = () => {
                 </Link>
               )}
 
-              <a 
-                href="https://t.me/+tCapxtLwxNNlZjY1" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors text-xs font-bold uppercase tracking-widest"
-              >
-                <Send size={14} />
-                Telegram Group
-              </a>
-
-              <a 
-                href="https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar?s=cl&p=a&mlu=1" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center gap-2 text-emerald-400 hover:text-emerald-350 transition-colors text-xs font-bold uppercase tracking-widest"
-              >
-                <MessageCircle size={14} />
-                WhatsApp Group
-              </a>
-
               {hasCompletedAny && (
                 <span className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full text-[10px] text-emerald-400 font-black uppercase tracking-widest shadow-lg shadow-emerald-500/5">
                   ★ Certified
@@ -170,12 +150,6 @@ const Navbar = () => {
                     <ShieldCheck size={18} /> Admin Portal
                   </Link>
                 )}
-                <a href="https://t.me/+tCapxtLwxNNlZjY1" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl text-sm font-bold uppercase tracking-widest text-slate-350">
-                  <Send size={18} /> Telegram Group
-                </a>
-                <a href="https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar?s=cl&p=a&mlu=1" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl text-sm font-bold uppercase tracking-widest text-emerald-400">
-                  <MessageCircle size={18} /> WhatsApp Group
-                </a>
                 <button 
                   onClick={() => { toggleTheme(); setIsMenuOpen(false); }}
                   className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl text-sm font-bold uppercase tracking-widest text-slate-300"

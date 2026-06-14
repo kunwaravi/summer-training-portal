@@ -113,3 +113,18 @@ export const adminVerifyPayment = async (paymentId: string) => {
 
   return { success: true, payment: updatedPayment };
 };
+
+// Admin manually deletes a payment record (spam/duplicates/invalid)
+export const deletePayment = async (paymentId: string) => {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId }
+  });
+
+  if (!payment) return { error: 'Payment not found', status: 404 };
+
+  await prisma.payment.delete({
+    where: { id: paymentId }
+  });
+
+  return { success: true };
+};

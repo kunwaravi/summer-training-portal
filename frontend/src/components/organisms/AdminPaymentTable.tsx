@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, CheckCircle, Clock, XCircle, ShieldCheck } from 'lucide-react';
+import { Users, CheckCircle, Clock, XCircle, ShieldCheck, Trash2 } from 'lucide-react';
 import api from '../../api';
 
 interface Transaction {
@@ -52,6 +52,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 
 const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loading, onVerified }) => {
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleVerify = async (paymentId: string, studentName: string) => {
     if (!window.confirm(`Verify payment for "${studentName}"? This will unlock their certificate.`)) return;
@@ -66,6 +67,22 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
       alert(err.response?.data?.message || 'Failed to verify payment. Please try again.');
     } finally {
       setVerifyingId(null);
+    }
+  };
+
+  const handleDelete = async (paymentId: string, studentName: string) => {
+    if (!window.confirm(`Are you sure you want to PERMANENTLY DELETE the payment record for "${studentName}"? This cannot be undone.`)) return;
+
+    setDeletingId(paymentId);
+    try {
+      await api.delete(`/payments/admin/${paymentId}`);
+      alert(`🗑️ Payment record for ${studentName} deleted.`);
+      onVerified();
+    } catch (err: any) {
+      console.error('Failed to delete payment:', err);
+      alert(err.response?.data?.message || 'Failed to delete payment. Please try again.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -113,6 +130,7 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                 const cfg = statusConfig[t.status] || statusConfig['PENDING'];
                 const isAwaitingVerify = t.status === 'PENDING_VERIFICATION';
                 const isVerifying = verifyingId === t.id;
+                const isDeleting = deletingId === t.id;
 
                 return (
                   <tr key={idx} className={`hover:bg-slate-900/40 text-slate-300 transition ${isAwaitingVerify ? 'bg-amber-500/3' : ''}`}>
@@ -130,16 +148,26 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                     </td>
                     <td className="py-3.5 px-4 font-mono text-slate-450 text-[10px]">{t.reference || '—'}</td>
                     <td className="py-3.5 px-4 text-slate-500 font-mono">{new Date(t.createdAt).toLocaleDateString()}</td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
                       {isAwaitingVerify ? (
-                        <button
-                          onClick={() => handleVerify(t.id, t.user?.name)}
-                          disabled={isVerifying}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 hover:border-emerald-500/60 text-emerald-400 rounded-lg text-[10px] font-black uppercase transition active:scale-95 disabled:opacity-50"
-                        >
-                          <ShieldCheck size={12} />
-                          {isVerifying ? 'Verifying...' : 'Verify Now'}
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleVerify(t.id, t.user?.name)}
+                            disabled={isVerifying || isDeleting}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 hover:border-emerald-500/60 text-emerald-400 rounded-lg text-[10px] font-black uppercase transition active:scale-95 disabled:opacity-50"
+                          >
+                            <ShieldCheck size={12} />
+                            {isVerifying ? 'Verifying...' : 'Verify Now'}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(t.id, t.user?.name)}
+                            disabled={isVerifying || isDeleting}
+                            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition active:scale-95 disabled:opacity-50"
+                            title="Delete Request"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </>
                       ) : t.status === 'VERIFIED' || t.status === 'SUCCESS' ? (
                         t.user?.id ? (
                           <a
@@ -154,7 +182,14 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                           <span className="text-slate-600 font-semibold">N/A</span>
                         )
                       ) : (
-                        <span className="text-slate-600 text-[10px]">—</span>
+                        <button
+                          onClick={() => handleDelete(t.id, t.user?.name)}
+                          disabled={isVerifying || isDeleting}
+                          className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition active:scale-95 disabled:opacity-50"
+                          title="Delete Request"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       )}
                     </td>
                   </tr>
