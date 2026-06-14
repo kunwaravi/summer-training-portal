@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCourses } from '../hooks/useCourses';
-import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target } from 'lucide-react';
+import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database } from 'lucide-react';
 import CourseCard from '../components/molecules/CourseCard';
 import Spinner from '../components/atoms/Spinner';
 import SkillRadar from '../components/molecules/SkillRadar';
@@ -29,6 +29,21 @@ const courseMetadata: Record<string, any> = {
     icon: Cpu, 
     color: 'from-orange-500 to-orange-750', 
     barColor: 'bg-orange-500', 
+  },
+  'WebDesign': { 
+    icon: Globe, 
+    color: 'from-pink-500 to-pink-700', 
+    barColor: 'bg-pink-500', 
+  },
+  'Python': { 
+    icon: Terminal, 
+    color: 'from-amber-500 to-amber-700', 
+    barColor: 'bg-amber-500', 
+  },
+  'SQL': { 
+    icon: Database, 
+    color: 'from-emerald-500 to-emerald-700', 
+    barColor: 'bg-emerald-500', 
   },
 };
 
@@ -71,6 +86,9 @@ const Dashboard = () => {
     { label: 'OOP / C++', value: getSkillValue('C++') || 10, color: '#a855f7' },
     { label: 'IoT Networking', value: getSkillValue('IoT') || 5, color: '#10b981' },
     { label: 'Embedded HW', value: getSkillValue('Embedded') || 5, color: '#f59e0b' },
+    { label: 'Web Design', value: getSkillValue('WebDesign') || 5, color: '#ec4899' },
+    { label: 'Python Scripting', value: getSkillValue('Python') || 5, color: '#eab308' },
+    { label: 'SQL DB', value: getSkillValue('SQL') || 5, color: '#10b981' },
     { label: 'System Design', value: Math.min(totalQuizzesPassed * 5, 100) || 10, color: '#06b6d4' },
   ];
 

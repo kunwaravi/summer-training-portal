@@ -50,6 +50,39 @@ const coursesList = [
       "UART Communication", "SPI Communication", "I2C Communication", "ADC and DAC", "RTOS Basics",
       "Embedded Project Design", "Development", "Testing", "Documentation", "Final Submission"
     ]
+  },
+  {
+    id: "WebDesign",
+    title: "Web Design & Frontend Development",
+    description: "Learn HTML, CSS, JavaScript, and modern responsive design patterns in Hinglish.",
+    modules: [
+      "Introduction to HTML5", "HTML Semantic Tags", "CSS Basics & Selectors", "CSS Box Model", "Flexbox & Layouts",
+      "CSS Grid & Animations", "Responsive Web Design & Media Queries", "Tailwind CSS Intro", "JavaScript Basics & Variables", "Control Flows in JS",
+      "Functions & Arrays in JS", "DOM Manipulation", "Event Handlers in JS", "Asynchronous JS & APIs", "Web Page Mini-Project Planning",
+      "Building a Portfolio Project", "Styling & Responsive Layout Polish", "Interactivity Development", "Web Hosting & Git Deploy", "Final Project Review"
+    ]
+  },
+  {
+    id: "Python",
+    title: "Python Programming & Scripting",
+    description: "Master Python syntax, data analysis, automation scripts, and file structures in Hinglish.",
+    modules: [
+      "Introduction to Python", "Installing Python & IDEs", "Variables and Basic Types", "Operators & Expressions", "Conditional statements (if-else)",
+      "Loops (for & while)", "Functions and Scope", "Python List & Tuples", "Dictionaries & Sets", "File Reading & Writing",
+      "Exception Handling", "Introduction to OOP in Python", "Python Modules & Packages", "Data Analysis with Pandas", "Data Visualization with Matplotlib",
+      "Automating Files and Scripts", "Web Scraping Basics", "Project Planning", "Building a CLI Python Tool", "Final Review & Packaging"
+    ]
+  },
+  {
+    id: "SQL",
+    title: "Database Management & SQL",
+    description: "Learn relational databases, SQL queries, joins, indexes, and schema design in Hinglish.",
+    modules: [
+      "Introduction to Databases", "Relational Database Concepts", "SQL Basics (SELECT, WHERE)", "Data Filtering & Sorting", "SQL Functions (Aggregate)",
+      "Group By & Having Clauses", "SQL Joins (Inner, Left, Right)", "Subqueries & Nested Queries", "Database Design & Normalization", "Table Creation & Altering",
+      "Inserting & Updating Data", "Indexes & Performance", "Views & Store Procedures", "Transactions & ACID Properties", "Database Security Basics",
+      "Connecting SQL to Python/Node", "Mini-Project: Library System Database", "Schema Design Polish", "Query Optimizations", "Final Project Submission"
+    ]
   }
 ];
 
@@ -76,6 +109,21 @@ function generateModuleQuizzes(courseId: string, week: number, title: string) {
       "RTOS task scheduling", "Priority inversion", "Mutex deadlocks", "ISR stack overflow",
       "DMA transfer bursts", "Hardware debouncing", "PLL clock stabilization", "Memory mapped I/O",
       "Bootloader entry flags", "Zero-copy buffers", "Context switching overhead", "Critical sections"
+    ],
+    WebDesign: [
+      "HTML forms", "CSS Flexbox sizing", "DOM event handlers", "Media queries viewport",
+      "CSS Grid columns", "Tailwind utilities", "Asynchronous fetch requests", "JSON payloads",
+      "Responsive navigation", "Semantic HTML elements", "Animations and transforms", "Local storage"
+    ],
+    Python: [
+      "list comprehensions", "exception handling blocks", "Pandas DataFrame indexing", "Matplotlib plots",
+      "file IO stream handling", "dictionary operations", "class inheritance", "function scope rules",
+      "standard libraries", "pip packages install", "regular expressions", "CSV parsing"
+    ],
+    SQL: [
+      "SELECT queries joins", "FOREIGN KEY relations", "Index scanning speeds", "Aggregate group queries",
+      "subquery nested scans", "Transactions commit rollback", "ACID constraints", "Table normalization forms",
+      "Store procedure calls", "Views query compilation", "DB user privileges", "Query optimization plans"
     ]
   };
 
@@ -141,75 +189,90 @@ function generateFinalExamQuestions(courseId: string) {
 async function main() {
   console.log('Seeding relational curriculum database for LMS Upgrade...');
 
-  // Clean old contents in reverse order of dependencies
-  await prisma.topic.deleteMany();
-  await prisma.quizQuestion.deleteMany();
-  await prisma.practiceQuestion.deleteMany();
-  await prisma.practiceAttempt.deleteMany();
-  await prisma.moduleProgress.deleteMany();
-  await prisma.assignmentSubmission.deleteMany();
-  await prisma.projectSubmission.deleteMany();
-  await prisma.finalExamQuestion.deleteMany();
-  await prisma.courseProgress.deleteMany();
-  await prisma.quizResult.deleteMany();
-  await prisma.payment.deleteMany();
-  await prisma.certificateRecord.deleteMany();
-  await prisma.discussion.deleteMany();
-  await prisma.forumComment.deleteMany();
-  await prisma.module.deleteMany();
-  await prisma.course.deleteMany();
+  // Do NOT delete user data to preserve student progress and prevent data loss.
+  // Instead, upsert courses and modules, and re-create leaf nodes.
 
   // Seed Courses, Modules, Topics, and Quizzes
   for (const courseData of coursesList) {
-    const course = await prisma.course.create({
-      data: {
-        id: courseData.id,
-        title: courseData.title,
-        description: courseData.description,
-        price: 999,
-        isPublished: true
-      }
-    });
+    let course = await prisma.course.findUnique({ where: { id: courseData.id } });
+    if (!course) {
+      course = await prisma.course.create({
+        data: {
+          id: courseData.id,
+          title: courseData.title,
+          description: courseData.description,
+          price: 999,
+          isPublished: true
+        }
+      });
+      console.log(`Created Course: ${course.id}`);
+    } else {
+      course = await prisma.course.update({
+        where: { id: courseData.id },
+        data: {
+          title: courseData.title,
+          description: courseData.description,
+        }
+      });
+      console.log(`Updated Course: ${course.id}`);
+    }
 
-    console.log(`Created Course: ${course.id}`);
-
-    // Seed 20 Modules per course
+    // Seed Modules per course
     for (let mIdx = 0; mIdx < courseData.modules.length; mIdx++) {
       const moduleTitle = courseData.modules[mIdx];
       const moduleOrder = mIdx + 1;
 
-      const modRecord = await prisma.module.create({
-        data: {
-          courseId: course.id,
-          week: moduleOrder,
-          title: moduleTitle,
-          description: `Deep dive into advanced concepts, syntax structures, and system benchmarks for ${moduleTitle}.`
+      let modRecord = await prisma.module.findUnique({
+        where: {
+          courseId_week: {
+            courseId: course.id,
+            week: moduleOrder
+          }
         }
       });
+
+      if (!modRecord) {
+        modRecord = await prisma.module.create({
+          data: {
+            courseId: course.id,
+            week: moduleOrder,
+            title: moduleTitle,
+            description: `Deep dive into advanced concepts, syntax structures, and system benchmarks for ${moduleTitle}.`
+          }
+        });
+      } else {
+        modRecord = await prisma.module.update({
+          where: { id: modRecord.id },
+          data: {
+            title: moduleTitle,
+            description: `Deep dive into advanced concepts, syntax structures, and system benchmarks for ${moduleTitle}.`
+          }
+        });
+      }
 
       // Seed exactly 6 topics matching module content requirements
       const topicsData = [
         {
           title: "Learning Objectives",
-          text: `By the end of this module on **${moduleTitle}**, you will be able to:\n1. Describe the underlying execution models of ${moduleTitle}.\n2. Develop robust interfaces conforming to ISO design rules.\n3. Apply bit-precise debug parameters to isolate logical errors.\n4. Design and execute custom test benchmarks on target boards.`,
+          text: `By the end of this module on **${moduleTitle}**, you will be able to:\n1. Describe the underlying execution models of ${moduleTitle}.\n2. Develop robust interfaces conforming to ISO design rules.\n3. Apply bit-precise debug parameters to isolate logical errors.\n4. Design and execute custom test benchmarks on target boards.\n\n**Learning Goals (लक्ष्य):**\nIs module ke end tak aap ${moduleTitle} ke rules aur core execution patterns ko identify aur implement karna seekh jayenge.`,
           code: `// Objectives Verification Code\n#include <stdio.h>\nint main() {\n    printf("Objectives loaded for ${moduleTitle}\\n");\n    return 0;\n}`,
           note: "Always verify target hardware specifications before applying new registers parameters."
         },
         {
           title: "Detailed Notes",
-          text: `### Theoretical Foundations of ${moduleTitle}\nThis module explores key syntax constructions, memory layouts, and compilation pipelines. Pointers map directly to hardware addresses, and compiler optimizers shift processing variables into CPU registers. In safety-critical embedded systems, dynamic layouts are avoided to enforce deterministic runtime speeds.`,
+          text: `### Theoretical Foundations of ${moduleTitle}\nThis module explores key syntax constructions, memory layouts, and compilation pipelines. Pointers map directly to hardware addresses, and compiler optimizers shift processing variables into CPU registers. In safety-critical embedded systems, dynamic layouts are avoided to enforce deterministic runtime speeds.\n\n**Hinglish Explanation (आसान शब्दों में):**\nIs module me hum **${moduleTitle}** ke core parameters ko study karenge. Pointers direct physical addresses ko refer karte hain aur processing speeds ko fast rakhne ke liye compile-time optimizations use hoti hain. Safe programming ke liye dynamic buffer allocations ko restrict kiya jata hai taaki systems safe aur responsive rahe.`,
           code: `// System Sandbox Simulation\n#define SYS_REG 0x40021000\nvoid init_system() {\n    volatile unsigned int* clk = (unsigned int*)SYS_REG;\n    *clk |= 0x01; // Enable system clock register\n}`,
           note: "Ensure proper volatile mappings to force compiler reload from physical RAM."
         },
         {
           title: "Examples",
-          text: `Here is a complete, working example illustrating the typical implementation patterns for **${moduleTitle}**. Pay close attention to error checks and data boundaries.`,
+          text: `Here is a complete, working example illustrating the typical implementation patterns for **${moduleTitle}**. Pay close attention to error checks and data boundaries.\n\n**Hinglish Guide (उदाहरण):**\nChalo ek detail code example dekhte hain. Is practical setup me hum verify karenge ki **${moduleTitle}** kaise safely run hota hai. Bounds checks aur peripheral validation code ko dynamic execution me debug karna important hai.`,
           code: `// Verified Implementation Example\n#include <stdio.h>\n\nvoid run_example() {\n    printf("Running verified example: ${moduleTitle}\\n");\n    // Add customized application logic here\n}`,
           note: "Compile with -Wall -Wextra flags to verify code safety constraints."
         },
         {
           title: "Practical Exercises",
-          text: `Complete the following lab exercises to build confidence in **${moduleTitle}**:\n1. Configure a mock register to toggle GPIO pin outputs.\n2. Write a function that safely handles pointer boundaries without overflow.\n3. Implement a circular ring buffer that passes serialized byte frames.`,
+          text: `Complete the following lab exercises to build confidence in **${moduleTitle}**:\n1. Configure a mock register to toggle GPIO pin outputs.\n2. Write a function that safely handles pointer boundaries without overflow.\n3. Implement a circular ring buffer that passes serialized byte frames.\n\n**Hinglish Lab Guidelines (टास्क):**\n1. Module rules ke hisab se peripheral toggles ko configure kare.\n2. Variables aur data types limits ke liye bounds checking compile aur test kare.\n3. Safe circular queue buffer logic implement kare.`,
           code: `// Lab Exercise skeleton\nvoid exercise_skeleton() {\n    // TODO: Write your custom solution here\n}`,
           note: "Test your solution against edge cases, including empty bounds and maximum integers."
         },
@@ -293,6 +356,7 @@ async function main() {
 
   // Seed Practice Questions for Practice Arena
   console.log('Seeding Practice Questions...');
+  await prisma.practiceQuestion.deleteMany();
   const practiceQuestions = [
     {
       category: "Programming",

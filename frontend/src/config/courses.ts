@@ -1,4 +1,4 @@
-import { Code, Box, Wifi, Cpu } from 'lucide-react';
+import { Code, Box, Wifi, Cpu, Globe, Terminal, Database } from 'lucide-react';
 
 export interface SyllabusItem {
   order: number;
@@ -118,6 +118,75 @@ export const coursesConfig: CourseConfigItem[] = [
       { order: 3, title: 'Interrupt Service Routines (ISRs)', details: 'NVIC, nested interrupt priorities, context switching, and avoiding race conditions.' },
       { order: 4, title: 'Timers, Counters & PWM', details: 'Hardware timers, SysTick, generating waveforms, and capturing input signals.' },
       { order: 5, title: 'Real-Time Operating Systems (FreeRTOS)', details: 'Preemptive scheduling, tasks, queues, semaphores, mutexes, and avoiding deadlocks.' }
+    ]
+  },
+  {
+    id: 'WebDesign',
+    title: 'Web Design & Frontend Development',
+    titleShort: 'Web Design',
+    category: 'Programming',
+    difficulty: 'Beginner',
+    tags: ['HTML/CSS', 'Responsive'],
+    colorLight: 'from-pink-500/10 to-pink-600/5',
+    colorDark: 'from-pink-500 to-pink-700',
+    iconColor: 'text-pink-500 bg-pink-500/10',
+    textColor: 'text-pink-400',
+    barColor: 'bg-pink-500',
+    desc: 'Learn HTML, CSS, JavaScript, and modern responsive design patterns in Hinglish.',
+    descShort: 'Learn HTML, CSS, JavaScript, and modern responsive design patterns in Hinglish.',
+    icon: Globe,
+    syllabus: [
+      { order: 1, title: 'HTML5 & Semantic Structure', details: 'Learn the building blocks of web pages, headings, lists, tables, and HTML5 semantic tags.' },
+      { order: 2, title: 'CSS3, Layouts & Flexbox', details: 'Style web pages with colors, margins, fonts, and build layouts using CSS Flexbox.' },
+      { order: 3, title: 'Responsive Design & Tailwind CSS', details: 'Create mobile-friendly web designs using Media Queries and utility-first Tailwind CSS.' },
+      { order: 4, title: 'JavaScript Programming Essentials', details: 'Introduction to JS variables, data types, control flow, functions, and arrays.' },
+      { order: 5, title: 'DOM Manipulation & Web Hosting', details: 'Select and modify page elements dynamically using JS, handle events, and deploy to live hosting.' }
+    ]
+  },
+  {
+    id: 'Python',
+    title: 'Python Programming & Scripting',
+    titleShort: 'Python',
+    category: 'Programming',
+    difficulty: 'Beginner to Intermediate',
+    tags: ['Data Analysis', 'Automation'],
+    colorLight: 'from-amber-500/10 to-amber-600/5',
+    colorDark: 'from-amber-500 to-amber-700',
+    iconColor: 'text-amber-500 bg-amber-500/10',
+    textColor: 'text-amber-400',
+    barColor: 'bg-amber-500',
+    desc: 'Master Python syntax, data analysis, automation scripts, and file structures in Hinglish.',
+    descShort: 'Master Python syntax, data analysis, automation scripts, and file structures in Hinglish.',
+    icon: Terminal,
+    syllabus: [
+      { order: 1, title: 'Python Basics & Control Flows', details: 'Variables, primitive data types, input/output, conditional statements (if-else), and loops.' },
+      { order: 2, title: 'Data Structures & Functions', details: 'Lists, Tuples, Dictionaries, Sets, and writing modular reusable functions.' },
+      { order: 3, title: 'File Operations & Exception Handling', details: 'Reading/writing files, handling exceptions safely, and debugging scripting errors.' },
+      { order: 4, title: 'Object-Oriented Programming (OOP)', details: 'Classes, objects, constructor methods, single/multiple inheritance, and method overriding.' },
+      { order: 5, title: 'Data Analysis & Automation Basics', details: 'Introduction to Pandas DataFrames, plotting with Matplotlib, and web scraping with BeautifulSoup.' }
+    ]
+  },
+  {
+    id: 'SQL',
+    title: 'Database Management & SQL',
+    titleShort: 'SQL Database',
+    category: 'Programming',
+    difficulty: 'Beginner to Intermediate',
+    tags: ['Relational DB', 'Querying'],
+    colorLight: 'from-emerald-500/10 to-emerald-600/5',
+    colorDark: 'from-emerald-500 to-emerald-700',
+    iconColor: 'text-emerald-500 bg-emerald-500/10',
+    textColor: 'text-emerald-400',
+    barColor: 'bg-emerald-500',
+    desc: 'Learn relational databases, SQL queries, joins, indexes, and schema design in Hinglish.',
+    descShort: 'Learn relational databases, SQL queries, joins, indexes, and schema design in Hinglish.',
+    icon: Database,
+    syllabus: [
+      { order: 1, title: 'Relational DB & SQL Basics', details: 'Database fundamentals, SELECT, WHERE, data sorting, and aggregate functions.' },
+      { order: 2, title: 'Group By & Relational Joins', details: 'Grouping data, Inner Joins, Left/Right Joins, and executing subqueries.' },
+      { order: 3, title: 'Data Definition & Manipulation (DDL/DML)', details: 'Creating/altering tables, primary/foreign key constraints, and inserting/updating/deleting rows.' },
+      { order: 4, title: 'Indexes, Transactions & Views', details: 'Optimizing queries with indexes, ACID properties, commit/rollback, and database views.' },
+      { order: 5, title: 'SQL in Applications & Project', details: 'Connecting databases to backend services, schema design, and query optimizations.' }
     ]
   }
 ];

@@ -64,10 +64,52 @@ const courseDetails = [
     color: 'from-orange-500/20 via-orange-600/10 to-transparent border-orange-500/30',
     desc: 'Implement low-level peripheral drivers, nested vectored interrupts, RTOS task scheduling, semaphores, and power configurations.',
     syllabus: [
-      { week: 1, title: 'Peripheral Driver Baselines', details: 'GPIO register manipulation, clock gating, and abstract HALs' },
+      { week: 1, title: 'Peripheral Driver Baselines', details: 'GPIO register manipulation, clock gating, and writing abstract HALs' },
       { week: 2, title: 'Interrupt Handlers & PWM', details: 'Timer hardware interrupts, nested interrupt priorities, and PWM control' },
       { week: 3, title: 'RTOS Task Management', details: 'Preemptive scheduler, task priorities, queues, and mutexes' },
       { week: 4, title: 'System Diagnostics & Safety', details: 'Watchdog timers, brown-out detectors, and ultra-low power modes' }
+    ]
+  },
+  {
+    id: 'WebDesign',
+    title: 'Web Design & Frontend Development',
+    difficulty: 'Beginner',
+    tags: ['HTML/CSS', 'Responsive Layouts'],
+    color: 'from-pink-500/20 via-pink-600/10 to-transparent border-pink-500/30',
+    desc: 'Learn HTML, CSS, JavaScript, and modern responsive design patterns in Hinglish.',
+    syllabus: [
+      { week: 1, title: 'HTML5 & Semantic Structure', details: 'Web page basics, layout structure, and HTML5 semantic markup' },
+      { week: 2, title: 'CSS3 Styling & Responsive Design', details: 'Colors, Flexbox layouts, media queries, and Tailwind CSS baselines' },
+      { week: 3, title: 'JavaScript & DOM Manipulation', details: 'Variables, loops, DOM events, and adding interactive page elements' },
+      { week: 4, title: 'Web Hosting & Git Deploy', details: 'Building a portfolio website, version control, and deploying live to hosting' }
+    ]
+  },
+  {
+    id: 'Python',
+    title: 'Python Programming & Scripting',
+    difficulty: 'Beginner to Intermediate',
+    tags: ['Data Analysis', 'Automation Scripting'],
+    color: 'from-amber-500/20 via-amber-600/10 to-transparent border-amber-500/30',
+    desc: 'Master Python syntax, data analysis, automation scripts, and file structures in Hinglish.',
+    syllabus: [
+      { week: 1, title: 'Python Syntax & Logic', details: 'Variables, loops, conditionals, and standard console inputs/outputs' },
+      { week: 2, title: 'Data Structures & Functions', details: 'Lists, tuples, dictionaries, and modular reusable functions' },
+      { week: 3, title: 'File IO & OOP in Python', details: 'Reading/writing files, handling exceptions, and object-oriented class syntax' },
+      { week: 4, title: 'Data Libraries & Analytics', details: 'Pandas dataframes, Matplotlib plotting, and scripting web scrapers' }
+    ]
+  },
+  {
+    id: 'SQL',
+    title: 'Database Management & SQL',
+    difficulty: 'Beginner to Intermediate',
+    tags: ['Relational DB', 'Query Optimizations'],
+    color: 'from-emerald-500/20 via-emerald-600/10 to-transparent border-emerald-500/30',
+    desc: 'Learn relational databases, SQL queries, joins, indexes, and schema design in Hinglish.',
+    syllabus: [
+      { week: 1, title: 'Database Baselines & DDL', details: 'Relational DB concepts, table creations, primary keys, and data definitions' },
+      { week: 2, title: 'SQL Queries & Joins', details: 'Filtering, SELECT statements, inner/outer joins, and subquery nestings' },
+      { week: 3, title: 'ACID Transactions & Views', details: 'Data alterations (DML), index speeds, views, and commit/rollback logic' },
+      { week: 4, title: 'SQL Application Interfacing', details: 'Connecting DB to backend services, schema designs, and indexing queries' }
     ]
   }
 ];
