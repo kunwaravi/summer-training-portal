@@ -30,6 +30,7 @@ export const registerSchema = z.object({
     collegeName: z.string().min(2),
     branchName: z.string().min(2),
     phone: z.string().min(10).max(15).optional(),
+    referredBy: z.string().optional(),
   }),
 });
 

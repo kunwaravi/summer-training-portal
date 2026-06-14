@@ -30,6 +30,8 @@ model User {
   createdAt         DateTime               @default(now())
   streak            Int                    @default(0)
   lastActiveAt      DateTime?              @default(now())
+  referralCode      String?                @unique
+  referredBy        String?
   assignments       AssignmentSubmission[]
   certificates      CertificateRecord[]
   progresses        CourseProgress[]

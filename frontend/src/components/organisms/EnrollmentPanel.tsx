@@ -35,7 +35,15 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
   const [paymentSubmitted, setPaymentSubmitted] = useState(false);
 
   const BASE_PRICE = 499;
-  const currentPrice = Math.round(BASE_PRICE * (1 - discount));
+
+  const referralCount = user?.referralCount || 0;
+  let referralDiscount = 0;
+  if (referralCount >= 20) referralDiscount = 1.0;
+  else if (referralCount >= 10) referralDiscount = 0.5;
+  else if (referralCount >= 5) referralDiscount = 0.3;
+
+  const finalDiscount = Math.max(discount, referralDiscount);
+  const currentPrice = Math.round(BASE_PRICE * (1 - finalDiscount));
 
   const handleApplyCoupon = () => {
     setCouponError('');
@@ -165,7 +173,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                 onClick={() => { setShowCheckoutModal(true); setPaymentSubmitted(false); }}
                 className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-950 font-black rounded-xl shadow-lg shadow-yellow-500/10 hover:shadow-yellow-500/25 transition duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-xs uppercase tracking-widest"
               >
-                Unlock Official Credentials (₹{BASE_PRICE})
+                Unlock Official Credentials (₹{currentPrice})
               </button>
               <div className="flex items-center gap-1.5 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
                 <ShieldAlert size={14} /> UPI Payment
@@ -250,7 +258,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                     <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                       <span className="text-slate-400 font-bold uppercase">Accreditation Fee</span>
                       <div className="flex flex-col items-end">
-                        {discount > 0 && (
+                        {(discount > 0 || referralDiscount > 0) && (
                           <span className="text-slate-500 line-through text-[10px]">₹499.00</span>
                         )}
                         <span className="text-cyan-400 font-black text-sm">₹{currentPrice.toFixed(2)}</span>
@@ -278,7 +286,8 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                         </button>
                       </div>
                       {couponError && <p className="text-[9px] text-red-500 font-bold ml-1">{couponError}</p>}
-                      {isCouponApplied && <p className="text-[9px] text-green-500 font-bold ml-1">Coupon Applied: {Math.round(discount * 100)}% OFF!</p>}
+                       {isCouponApplied && <p className="text-[9px] text-green-500 font-bold ml-1">Coupon Applied: {Math.round(discount * 100)}% OFF!</p>}
+                       {referralDiscount > 0 && <p className="text-[9px] text-emerald-500 font-bold ml-1">Referral Reward: {Math.round(referralDiscount * 100)}% OFF via {referralCount} referrals!</p>}
                     </div>
 
                     {currentPrice > 0 ? (

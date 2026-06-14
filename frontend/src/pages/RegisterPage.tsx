@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
@@ -10,19 +10,28 @@ import Input from '../components/atoms/Input';
 import Card from '../components/atoms/Card';
 
 const RegisterPage = () => {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     fatherName: '',
     collegeName: '',
     branchName: '',
-    password: ''
+    password: '',
+    referredBy: ''
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuth();
   const { addToast } = useUI();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setFormData(prev => ({ ...prev, referredBy: refCode }));
+    }
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -154,6 +163,14 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 placeholder="••••••••"
                 icon={<Lock size={16} />}
+              />
+              <Input
+                label="Referral Code (Optional)"
+                name="referredBy"
+                value={formData.referredBy}
+                onChange={handleChange}
+                placeholder="REF-XXXX-XXXX"
+                icon={<UserPlus size={16} />}
               />
             </div>
 

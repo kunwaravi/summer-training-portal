@@ -33,7 +33,7 @@ const courseMetadata: Record<string, any> = {
 };
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard' | 'referrals'>('overview');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: coursesData, loading } = useCourses();
@@ -160,6 +160,17 @@ const Dashboard = () => {
         >
           Leaderboard
           {activeTab === 'leaderboard' && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('referrals')}
+          className={`pb-4 font-black uppercase tracking-widest text-[10px] sm:text-xs transition-colors relative ${
+            activeTab === 'referrals' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-350'
+          }`}
+        >
+          Referrals & Rewards
+          {activeTab === 'referrals' && (
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></span>
           )}
         </button>
@@ -327,8 +338,127 @@ const Dashboard = () => {
         </div>
       </div>
       </>
-      ) : (
+      ) : activeTab === 'leaderboard' ? (
         <LeaderboardTab currentUserId={user?.id} />
+      ) : (
+        <div className="space-y-8 animate-fade-in text-slate-350">
+          {/* Referral Intro Header */}
+          <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="max-w-2xl space-y-3">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-wider text-emerald-400">
+                Referral Program
+              </span>
+              <h3 className="text-2xl font-black text-white uppercase italic">Invite Friends, Learn For Free</h3>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Share the gift of learning! Invite your fellow students to join Edunexus Automation Labs. For every successful signup using your referral ID, you unlock automatically scaling discounts on certification fees.
+              </p>
+            </div>
+          </div>
+
+          {/* Referral Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Your Referral Code</span>
+              <div className="flex items-center justify-between gap-3 bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-850">
+                <span className="font-mono text-xs font-bold text-white">{user?.referralCode || 'Generating...'}</span>
+                <button
+                  onClick={() => {
+                    if (user?.referralCode) {
+                      navigator.clipboard.writeText(user.referralCode);
+                      alert('Referral Code copied to clipboard!');
+                    }
+                  }}
+                  className="text-[10px] text-blue-400 hover:text-blue-300 font-extrabold uppercase transition"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Your Invite Link</span>
+              <div className="flex items-center justify-between gap-3 bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-850">
+                <span className="font-mono text-xs font-bold text-white truncate max-w-[150px]">
+                  {window.location.origin}/register?ref={user?.referralCode}
+                </span>
+                <button
+                  onClick={() => {
+                    if (user?.referralCode) {
+                      navigator.clipboard.writeText(`${window.location.origin}/register?ref=${user.referralCode}`);
+                      alert('Invite Link copied to clipboard!');
+                    }
+                  }}
+                  className="text-[10px] text-blue-400 hover:text-blue-300 font-extrabold uppercase transition"
+                >
+                  Copy Link
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Successful Invites</span>
+                <h3 className="text-3xl font-black text-emerald-400 mt-1">{user?.referralCount || 0}</h3>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Current Discount</span>
+                <h3 className="text-xl font-bold text-white mt-1">
+                  {(() => {
+                    const count = user?.referralCount || 0;
+                    if (count >= 20) return "100% OFF (FREE)";
+                    if (count >= 10) return "50% OFF";
+                    if (count >= 5) return "30% OFF";
+                    return "0% OFF";
+                  })()}
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Discount Tiers Progression */}
+          <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-2xl space-y-6">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Rewards & Tiers Progression</h4>
+            <div className="space-y-6">
+              {[
+                { target: 5, discount: "30% Discount", desc: "Unlock 30% discount on any course enrollment certificate", color: "from-blue-500 to-indigo-600" },
+                { target: 10, discount: "50% Discount", desc: "Unlock half-price (50% discount) on course enrollment certificate", color: "from-indigo-500 to-purple-600" },
+                { target: 20, discount: "100% Discount (FREE)", desc: "Unlock complete 100% discount - get course certificate completely FREE!", color: "from-emerald-500 to-teal-600" }
+              ].map((tier, idx) => {
+                const referrals = user?.referralCount || 0;
+                const isUnlocked = referrals >= tier.target;
+                const pct = Math.min((referrals / tier.target) * 100, 100);
+
+                return (
+                  <div key={idx} className="p-4 bg-slate-950/40 border border-slate-850 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${isUnlocked ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-500'}`}>
+                          {isUnlocked ? "✓ Unlocked" : `Locked: Needs ${tier.target - referrals} more`}
+                        </span>
+                        <h5 className="text-xs font-bold text-white">{tier.discount}</h5>
+                      </div>
+                      <p className="text-[10px] text-slate-500">{tier.desc}</p>
+                    </div>
+
+                    <div className="w-full md:w-1/3 space-y-1">
+                      <div className="flex justify-between items-center text-[8px] font-black uppercase text-slate-500">
+                        <span>Target: {tier.target} Signups</span>
+                        <span className="font-mono">{referrals} / {tier.target}</span>
+                      </div>
+                      <div className="h-1.5 bg-slate-900 rounded-full overflow-hidden p-[1px] border border-slate-850">
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${tier.color} transition-all duration-1000`}
+                          style={{ width: `${pct}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

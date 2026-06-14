@@ -33,12 +33,41 @@ export const getPaymentStatus = async (userId: number, courseId: string) => {
 };
 
 export const createOrder = async (userId: number, courseId: string, amount: number) => {
+  // Fetch course details to get the actual price
+  const course = await prisma.course.findUnique({
+    where: { id: courseId }
+  });
+  const basePrice = course ? course.price : 999;
+
+  // Fetch user's referral code and calculate referral count
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  let discountPct = 0;
+  let referralCount = 0;
+  if (user && user.referralCode) {
+    referralCount = await prisma.user.count({
+      where: { referredBy: user.referralCode }
+    });
+    
+    if (referralCount >= 20) discountPct = 100;
+    else if (referralCount >= 10) discountPct = 50;
+    else if (referralCount >= 5) discountPct = 30;
+  }
+
+  // Calculate final discount-adjusted price
+  const finalAmount = Math.round(basePrice * (1 - discountPct / 100));
+
+  // If finalAmount is 0 (100% discount via 20+ referrals), approve it automatically
+  const status = finalAmount === 0 ? 'VERIFIED' : 'PENDING';
+
   const payment = await prisma.payment.create({
     data: {
       userId,
       courseId,
-      amount,
-      status: 'PENDING'
+      amount: finalAmount,
+      status
     }
   });
 
@@ -52,7 +81,10 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
     orderId: payment.id,
     amount: payment.amount,
     courseId: payment.courseId,
-    mockSignature
+    mockSignature,
+    discountApplied: discountPct,
+    referralCount,
+    isFree: finalAmount === 0
   };
 };
 
