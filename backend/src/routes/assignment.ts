@@ -48,7 +48,7 @@ router.post(
       // Week 1 -> Module 5, Week 2 -> Module 10, Week 3 -> Module 15, Week 4 -> Module 20
       const reqModuleOrder = weekNum * 5;
       const moduleRecord = await prisma.module.findFirst({
-        where: { courseId, order: reqModuleOrder }
+        where: { courseId, week: reqModuleOrder }
       });
 
       if (!moduleRecord && req.user.role !== 'ADMIN') {

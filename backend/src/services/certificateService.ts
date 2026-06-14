@@ -54,8 +54,13 @@ export class CertificateService {
     const progress = user.progresses.find(p => p.courseId === courseId);
 
     if (!isAdmin) {
-      if (!progress || progress.weekCompleted < 20) {
-        throw new AppError(`Training track '${courseId}' not completed yet. Complete all 20 chapters to unlock.`, 403);
+      const totalModules = await prisma.module.count({
+        where: { courseId }
+      });
+      const requiredWeeks = totalModules > 0 ? totalModules : 20;
+
+      if (!progress || (progress.weekCompleted < requiredWeeks && !progress.completed)) {
+        throw new AppError(`Training track '${courseId}' not completed yet. Complete all ${requiredWeeks} chapters to unlock.`, 403);
       }
 
       const successPayment = await prisma.payment.findFirst({
@@ -137,15 +142,39 @@ export class CertificateService {
       throw new AppError('No registered candidate matches this credential.', 404);
     }
 
+    const parts = credentialId.split('-');
+    if (parts.length < 4) {
+      throw new AppError('Invalid Credential ID format.', 400);
+    }
+    const cleanCourseKey = parts[1].toUpperCase();
     let courseId = "C";
-    if (credentialId.toUpperCase().includes("CPP_EMBEDDED")) courseId = "C++";
-    else if (credentialId.toUpperCase().includes("IOT")) courseId = "IoT";
-    else if (credentialId.toUpperCase().includes("EMBEDDED")) courseId = "Embedded";
-    else if (credentialId.toUpperCase().includes("C_SYSTEMS")) courseId = "C";
+    if (cleanCourseKey === "CPP_EMBEDDED") courseId = "C++";
+    else if (cleanCourseKey === "IOT_SYSTEMS") courseId = "IoT";
+    else if (cleanCourseKey === "EMBEDDED_SYSTEMS") courseId = "Embedded";
+    else if (cleanCourseKey === "C_SYSTEMS") courseId = "C";
+    else {
+      throw new AppError('Unknown course key in credential.', 400);
+    }
 
     const progress = user.progresses.find(p => p.courseId === courseId);
-    if (!progress || progress.weekCompleted < 20) {
-      throw new AppError('Credential is still active/uncompleted in database.', 403);
+    
+    const totalModules = await prisma.module.count({
+      where: { courseId }
+    });
+    const requiredWeeks = totalModules > 0 ? totalModules : 20;
+
+    const isCompleted = progress && (progress.completed || progress.weekCompleted >= requiredWeeks);
+
+    const successPayment = await prisma.payment.findFirst({
+      where: {
+        userId: calculatedUserId,
+        courseId,
+        status: 'VERIFIED'
+      }
+    });
+
+    if (!isCompleted && !successPayment) {
+      throw new AppError('Credential is still active/uncompleted or unpaid in database.', 403);
     }
 
     const expectedId = this.generateCredentialId(user.id, user.name, courseId);
