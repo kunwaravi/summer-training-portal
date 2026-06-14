@@ -183,7 +183,64 @@ function generateFinalExamQuestions(courseId: string) {
       correctAnswer: correctAnswer
     });
   }
-  return questions;
+function getDynamicTopicsForModule(courseId: string, week: number, moduleTitle: string) {
+  const topics = [
+    {
+      title: "Learning Objectives",
+      text: `By the end of this module on **${moduleTitle}**, you will be able to:\n1. Describe the underlying execution models of ${moduleTitle}.\n2. Develop robust interfaces conforming to ISO design rules.\n3. Apply bit-precise debug parameters to isolate logical errors.\n4. Design and execute custom test benchmarks on target boards.\n\n**Learning Goals (लक्ष्य):**\nIs module ke end tak aap ${moduleTitle} ke rules aur core execution patterns ko identify aur implement karna seekh jayenge.`,
+      code: `// Objectives Verification Code\n#include <stdio.h>\nint main() {\n    printf("Objectives loaded for ${moduleTitle}\\n");\n    return 0;\n}`,
+      note: "Always verify target hardware specifications before applying new registers parameters."
+    },
+    {
+      title: "Detailed Notes",
+      text: `### Theoretical Foundations of ${moduleTitle}\nThis module explores key syntax constructions, memory layouts, and compilation pipelines. Pointers map directly to hardware addresses, and compiler optimizers shift processing variables into CPU registers. In safety-critical embedded systems, dynamic layouts are avoided to enforce deterministic runtime speeds.\n\n**Hinglish Explanation (आसान शब्दों में):**\nIs module me hum **${moduleTitle}** ke core parameters ko study karenge. Pointers direct physical addresses ko refer karte hain aur processing speeds ko fast rakhne ke liye compile-time optimizations use hoti hain. Safe programming ke liye dynamic buffer allocations ko restrict kiya jata hai taaki systems safe aur responsive rahe.`,
+      code: `// System Sandbox Simulation\n#define SYS_REG 0x40021000\nvoid init_system() {\n    volatile unsigned int* clk = (unsigned int*)SYS_REG;\n    *clk |= 0x01; // Enable system clock register\n}`,
+      note: "Ensure proper volatile mappings to force compiler reload from physical RAM."
+    },
+    {
+      title: "Examples",
+      text: `Here is a complete, working example illustrating the typical implementation patterns for **${moduleTitle}**. Pay close attention to error checks and data boundaries.\n\n**Hinglish Guide (उदाहरण):**\nChalo ek detail code example dekhte hain. Is practical setup me hum verify karenge ki **${moduleTitle}** kaise safely run hota hai. Bounds checks aur peripheral validation code ko dynamic execution me debug karna important hai.`,
+      code: `// Verified Implementation Example\n#include <stdio.h>\n\nvoid run_example() {\n    printf("Running verified example: ${moduleTitle}\\n");\n    // Add customized application logic here\n}`,
+      note: "Compile with -Wall -Wextra flags to verify code safety constraints."
+    },
+    {
+      title: "Practical Exercises",
+      text: `Complete the following lab exercises to build confidence in **${moduleTitle}**:\n1. Configure a mock register to toggle GPIO pin outputs.\n2. Write a function that safely handles pointer boundaries without overflow.\n3. Implement a circular ring buffer that passes serialized byte frames.\n\n**Hinglish Lab Guidelines (टास्क):**\n1. Module rules ke hisab se peripheral toggles ko configure kare.\n2. Variables aur data types limits ke liye bounds checking compile aur test kare.\n3. Safe circular queue buffer logic implement kare.`,
+      code: `// Lab Exercise skeleton\nvoid exercise_skeleton() {\n    // TODO: Write your custom solution here\n}`,
+      note: "Test your solution against edge cases, including empty bounds and maximum integers."
+    },
+    {
+      title: "Code Examples",
+      text: `Below is the verified code template showing standard configurations for **${moduleTitle}** operations in resource-constrained environments.`,
+      code: `// Premium Code Template\n#include <stdint.h>\n\nvoid configure_peripheral() {\n    // Register masking operations\n    volatile uint8_t* control = (uint8_t*)0x1000;\n    *control = 0b10101010;\n}`,
+      note: "Direct register masking is significantly faster than standard library abstractions."
+    },
+    {
+      title: "Downloadable Resources",
+      text: `Access cheat sheets, schematic layouts, and laboratory handbooks for **${moduleTitle}** below:\n- [Module Handbook Document (PDF)](#)\n- [Hardware Pinout Reference Map (PDF)](#)\n- [Full Laboratory Source Code Package (ZIP)](#)`,
+      code: null,
+      note: "Download resources locally and use them during your practical experiments."
+    }
+  ];
+
+  if (courseId === "IoT") {
+    topics[1].text = `### IoT Interfacing & Smart Protocols for **${moduleTitle}**\nConnecting hardware nodes to cloud brokers requires stable network configurations, low-power interrupts, and robust JSON serializations. We utilize MQTT publish-subscribe messaging over TCP/IP ports to transmit sensor data reliably.\n\n**Hinglish Hardware Explanation (सरल भाषा में):**\nInternet of Things (IoT) me sensors ka data physical device (jaise ESP32) se remote server tak transmission ke liye protocols (jaise MQTT ya HTTP) use hote hain. Physical boards local variables ko electrical signals me convert karte hain, aur Wi-Fi module ke throw hum broker par telemetry push karte hain.\n\n**Real-World Industry Case:**\nSmart Home Automation: Light levels control sensors publish parameters dynamically to dashboard feeds. If ambient light changes, status registers update instantly.`;
+    topics[3].text = `### Lab Task: ESP32 Telemetry & LED Toggles\nImplement an automated light monitor using an LDR sensor connected to ESP32 Analog Input Pin 34, publishing state shifts via Wi-Fi.\n\n**Wokwi Simulator (बिना हार्डवेयर सीखें):**\nNo physical ESP32 board? Run the simulation online on Wokwi simulator:\n- [Interactive Wokwi ESP32 LED/LDR Board Setup](https://wokwi.com/projects/arduino-esp32-blink)\n\n**Hinglish Lab Instructions:**\n1. ADC Pin 34 use karke variable voltage read karein.\n2. Agar value threshold (jaise 2000) se drop ho, to GPIO Pin 2 (Built-in LED) ko HIGH karein.\n3. Wokwi link par ja kar code simulate karein aur telemetry observe karein.`;
+    topics[3].code = `// ESP32 Interfacing with LDR & LED Simulation\n#define LDR_PIN 34\n#define LED_PIN 2\n\nvoid setup() {\n    pinMode(LED_PIN, OUTPUT);\n    Serial.begin(115200);\n}\n\nvoid loop() {\n    int ldrValue = analogRead(LDR_PIN);\n    Serial.print("LDR Intensity: ");\n    Serial.println(ldrValue);\n    if (ldrValue < 2000) {\n        digitalWrite(LED_PIN, HIGH); // Turn LED on\n    } else {\n        digitalWrite(LED_PIN, LOW); // Turn LED off\n    }\n    delay(1000);\n}`;
+    topics[3].note = "Always call Serial.begin() before printing to verify execution frequencies on external UART consoles.";
+  } else if (courseId === "Embedded") {
+    topics[1].text = `### Microcontrollers & RTOS Core for **${moduleTitle}**\nBare-metal microcontroller registers require careful mapping of CPU ticks. In pre-emptive multitasking, scheduling tasks use semaphores and mutexes to share resource control safely.\n\n**Hinglish Systems Explanation (सरल भाषा में):**\nEmbedded Systems me registers direct microcontroller pins ke functional parameters (input/output/clock) ko change karte hain. Jab system multiple calculations parallelly chalata hai tab memory corruption aur priority inversion se bachne ke liye FreeRTOS queues aur critical sections optimize kiye jate hain.\n\n**Real-World Industry Case:**\nIndustrial Telemetry & Alerting: High-precision thermal sensors monitor industrial boilers. If heat spikes, interrupt routines stop boilers instantly, bypassing task priorities.`;
+    topics[3].text = `### Lab Task: Interrupt Service Routine & GPIO Masking\nWrite a bare-metal C script that registers a hardware interrupt on GPIO Pin 12 (push-button) to toggle Pin 13 (alarm buzzer) instantly.\n\n**Tinkercad Simulator Link (बिना हार्डवेयर सीखें):**\nNo physical microcontrollers? Test online on Tinkercad:\n- [Tinkercad Circuits Online Simulator](https://www.tinkercad.com/circuits)\n\n**Hinglish Lab Instructions:**\n1. GPIO Pin 12 input settings ko input pull-up configurations registers me check karein.\n2. Fall edge trigger configurations (interrupt register) toggle karein.\n3. Tinkercad setup open karke external interrupts wire karein.`;
+    topics[3].code = `// Bare-metal AVR Interrupt Configuration\n#include <avr/io.h>\n#include <avr/interrupt.h>\n\nvoid init_hardware() {\n    DDRB |= (1 << PB5); // Configure Pin 13 (PB5) as Output\n    PORTD |= (1 << PD2); // Enable Pull-up resistor on Pin 2 (PD2)\n    EICRA |= (1 << ISC01); // Trigger INT0 on Falling Edge\n    EIMSK |= (1 << INT0); // Enable external interrupt INT0\n    sei(); // Enable global interrupts\n}\n\nISR(INT0_vect) {\n    PORTB ^= (1 << PB5); // Toggle Alarm Buzzer\n}`;
+    topics[3].note = "Using volatile variables inside ISR blocks prevents compilers from optimizing out variable state changes.";
+  } else if (courseId === "C") {
+    topics[1].text = `### Low-Level Memory & Compilation for **${moduleTitle}**\nMastering C programming requires understanding pointers, heap allocations, and binary bitwise registers manipulation.\n\n**Hinglish Explanation (आसान शब्दों में):**\nC programming me **Pointers** physical memory address storage arrays ki tarah hote hain. Compilers variable levels ko processor CPU registers me change kar dete hain speed improve karne ke liye. memory leak se bachne ke liye standard malloc references ko verify aur delete kiya jata hai.`;
+    topics[3].text = `### Lab Task: Memory Mapping & Direct Pointer Manipulation\nCreate an array of integers and access it using pointer arithmetic. Implement direct memory masking to modify a virtual hardware register byte.\n\n**Wokwi C Sandbox (ऑनलाइन अभ्यास):**\nPractice writing C online without installing compilers:\n- [Wokwi Online C Playground](https://wokwi.com/projects/new/c)\n\n**Hinglish Lab Instructions:**\n1. Integer array elements ko simple pointers offset index variables increment karke access karein.\n2. Volatile pointers reference se register simulation coordinates edit karein.`;
+    topics[3].code = `// Pointer Arithmetic & Virtual Register Masking\n#include <stdio.h>\n#include <stdint.h>\n\nint main() {\n    uint32_t virtual_reg = 0x00000000;\n    volatile uint32_t* reg_ptr = &virtual_reg;\n    \n    // Enable bit 3 and bit 7\n    *reg_ptr |= (1 << 3) | (1 << 7);\n    \n    printf("Virtual Register State: 0x%08X\\n", *reg_ptr);\n    return 0;\n}`;
+    topics[3].note = "Compile-time safety requires specifying pointer variables with correct data types to restrict memory boundary leaks.";
+  }
+
+  return topics;
 }
 
 async function main() {
@@ -250,45 +307,12 @@ async function main() {
         });
       }
 
+      // Safe clean up of existing leaf nodes for this module to prevent duplicate seeding
+      await prisma.topic.deleteMany({ where: { moduleId: modRecord.id } });
+      await prisma.quizQuestion.deleteMany({ where: { moduleId: modRecord.id } });
+
       // Seed exactly 6 topics matching module content requirements
-      const topicsData = [
-        {
-          title: "Learning Objectives",
-          text: `By the end of this module on **${moduleTitle}**, you will be able to:\n1. Describe the underlying execution models of ${moduleTitle}.\n2. Develop robust interfaces conforming to ISO design rules.\n3. Apply bit-precise debug parameters to isolate logical errors.\n4. Design and execute custom test benchmarks on target boards.\n\n**Learning Goals (लक्ष्य):**\nIs module ke end tak aap ${moduleTitle} ke rules aur core execution patterns ko identify aur implement karna seekh jayenge.`,
-          code: `// Objectives Verification Code\n#include <stdio.h>\nint main() {\n    printf("Objectives loaded for ${moduleTitle}\\n");\n    return 0;\n}`,
-          note: "Always verify target hardware specifications before applying new registers parameters."
-        },
-        {
-          title: "Detailed Notes",
-          text: `### Theoretical Foundations of ${moduleTitle}\nThis module explores key syntax constructions, memory layouts, and compilation pipelines. Pointers map directly to hardware addresses, and compiler optimizers shift processing variables into CPU registers. In safety-critical embedded systems, dynamic layouts are avoided to enforce deterministic runtime speeds.\n\n**Hinglish Explanation (आसान शब्दों में):**\nIs module me hum **${moduleTitle}** ke core parameters ko study karenge. Pointers direct physical addresses ko refer karte hain aur processing speeds ko fast rakhne ke liye compile-time optimizations use hoti hain. Safe programming ke liye dynamic buffer allocations ko restrict kiya jata hai taaki systems safe aur responsive rahe.`,
-          code: `// System Sandbox Simulation\n#define SYS_REG 0x40021000\nvoid init_system() {\n    volatile unsigned int* clk = (unsigned int*)SYS_REG;\n    *clk |= 0x01; // Enable system clock register\n}`,
-          note: "Ensure proper volatile mappings to force compiler reload from physical RAM."
-        },
-        {
-          title: "Examples",
-          text: `Here is a complete, working example illustrating the typical implementation patterns for **${moduleTitle}**. Pay close attention to error checks and data boundaries.\n\n**Hinglish Guide (उदाहरण):**\nChalo ek detail code example dekhte hain. Is practical setup me hum verify karenge ki **${moduleTitle}** kaise safely run hota hai. Bounds checks aur peripheral validation code ko dynamic execution me debug karna important hai.`,
-          code: `// Verified Implementation Example\n#include <stdio.h>\n\nvoid run_example() {\n    printf("Running verified example: ${moduleTitle}\\n");\n    // Add customized application logic here\n}`,
-          note: "Compile with -Wall -Wextra flags to verify code safety constraints."
-        },
-        {
-          title: "Practical Exercises",
-          text: `Complete the following lab exercises to build confidence in **${moduleTitle}**:\n1. Configure a mock register to toggle GPIO pin outputs.\n2. Write a function that safely handles pointer boundaries without overflow.\n3. Implement a circular ring buffer that passes serialized byte frames.\n\n**Hinglish Lab Guidelines (टास्क):**\n1. Module rules ke hisab se peripheral toggles ko configure kare.\n2. Variables aur data types limits ke liye bounds checking compile aur test kare.\n3. Safe circular queue buffer logic implement kare.`,
-          code: `// Lab Exercise skeleton\nvoid exercise_skeleton() {\n    // TODO: Write your custom solution here\n}`,
-          note: "Test your solution against edge cases, including empty bounds and maximum integers."
-        },
-        {
-          title: "Code Examples",
-          text: `Below is the verified code template showing standard configurations for **${moduleTitle}** operations in resource-constrained environments.`,
-          code: `// Premium Code Template\n#include <stdint.h>\n\nvoid configure_peripheral() {\n    // Register masking operations\n    volatile uint8_t* control = (uint8_t*)0x1000;\n    *control = 0b10101010;\n}`,
-          note: "Direct register masking is significantly faster than standard library abstractions."
-        },
-        {
-          title: "Downloadable Resources",
-          text: `Access cheat sheets, schematic layouts, and laboratory handbooks for **${moduleTitle}** below:\n- [Module Handbook Document (PDF)](#)\n- [Hardware Pinout Reference Map (PDF)](#)\n- [Full Laboratory Source Code Package (ZIP)](#)`,
-          code: null,
-          note: "Download resources locally and use them during your practical experiments."
-        }
-      ];
+      const topicsData = getDynamicTopicsForModule(course.id, moduleOrder, moduleTitle);
 
       for (let t = 0; t < topicsData.length; t++) {
         const top = topicsData[t];
@@ -317,6 +341,9 @@ async function main() {
         });
       }
     }
+
+    // Safe clean up of existing final exam questions for this course
+    await prisma.finalExamQuestion.deleteMany({ where: { courseId: course.id } });
 
     // Seed 50 Final Exam Questions for this course
     const examQuestions = generateFinalExamQuestions(course.id);

@@ -146,6 +146,32 @@ router.post(
   }
 );
 
+// GET /api/practice/leaderboard/public - Get privacy-safe top student rankings for landing page
+router.get('/leaderboard/public', async (req: any, res: Response, next: NextFunction): Promise<any> => {
+  try {
+    const leaderboard = await prisma.user.findMany({
+      where: {
+        points: { gt: 0 }
+      },
+      select: {
+        name: true,
+        points: true,
+        badges: true,
+        avatarUrl: true,
+        collegeName: true,
+      },
+      orderBy: {
+        points: 'desc',
+      },
+      take: 5,
+    });
+    res.json({ leaderboard });
+  } catch (error: any) {
+    logger.error('Fetch public leaderboard error:', error);
+    next(error);
+  }
+});
+
 // GET /api/practice/leaderboard - Get global student ranking
 router.get('/leaderboard', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {

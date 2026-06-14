@@ -5,3 +5,23 @@
 - [x] Update `AdminDashboard.tsx` to handle user deletion and render the User Management tab UI
 - [x] Build and verify frontend & backend locally
 - [x] Deploy to Hostinger VPS and verify live
+- [x] Seeding & Curriculum Upgrades (seed.ts)
+  - [x] Implement leaf-node deletion inside seed script loop to avoid duplicate entries
+  - [x] Enrich IoT & Embedded syllabus topics (hardware tasks, Wokwi simulators, real industry cases, Hinglish notes)
+  - [x] Run seed script locally to verify correctness
+- [x] Backend Public Leaderboard Endpoint (practice.ts)
+  - [x] Implement `GET /api/practice/leaderboard/public` with restricted privacy columns
+- [x] Frontend Home Page Overhaul (Home.tsx)
+  - [x] Implement floating tech background icons with slow animation
+  - [x] Implement Bento Box Course Catalog layout grid (6-column base)
+  - [x] Implement public Student Hall of Fame section fetching the top students
+  - [x] Implement Interactive Syllabus Preview roadmaps & milestone modals
+  - [x] Implement scroll-based top progress indicator
+- [x] Pedagogical Course Viewer Upgrades (CourseDetail.tsx)
+  - [x] Add Step-by-Step Code-Along tab/drawer component for study material code blocks
+  - [x] Add 'Why It Fails' weekly anti-patterns callouts
+  - [x] Add contextual 'Ask a Doubt' WhatsApp/Telegram pre-filled support buttons
+  - [x] Implement Weekly Micro-Deliverable upload form connected to backend status/submit APIs
+  - [x] Link active circuit topics to interactive online simulators
+- [x] Verification & Build Checks
+  - [x] Verify both backend and frontend build tasks complete cleanly

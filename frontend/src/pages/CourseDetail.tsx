@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCourseDetail } from '../hooks/useCourseDetail';
+import { useUI } from '../context/UIContext';
+import api from '../api';
 import { 
   Lock, Play, Clipboard, 
-  CheckCircle2, Zap, Eye, Code2, Briefcase, FileText
+  CheckCircle2, Zap, Eye, Code2, Briefcase, FileText,
+  MessageSquare, Cpu, ExternalLink, RefreshCw
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -17,10 +20,128 @@ import EnrollmentPanel from '../components/organisms/EnrollmentPanel';
 import Spinner from '../components/atoms/Spinner';
 import CodePlayground from '../components/molecules/CodePlayground';
 
+// Custom static database of Anti-Patterns
+const antiPatternsData: Record<string, Record<number, { title: string; badCode: string; explanation: string; fix: string }>> = {
+  C: {
+    1: {
+      title: 'Uninitialized Local Variables',
+      badCode: 'int counter;\nprintf("%d", counter); // prints garbage value',
+      explanation: 'Local variables are stored on the stack and contain whatever garbage bits were left in that memory location. Accessing them leads to non-deterministic behavior.',
+      fix: 'int counter = 0;\nprintf("%d", counter); // Safe!'
+    },
+    2: {
+      title: 'Missing Switch-Case Breaks',
+      badCode: 'switch (state) {\n  case 1: start_pump();\n  case 2: open_valve(); // executes case 2 as well!\n}',
+      explanation: 'If a case statement lacks a `break`, execution falls through to the next case automatically. This is a common source of logic corruption in state machines.',
+      fix: 'switch (state) {\n  case 1:\n    start_pump();\n    break;\n  case 2:\n    open_valve();\n    break;\n}'
+    },
+    3: {
+      title: 'Dangling Heap Pointers',
+      badCode: 'int* ptr = malloc(sizeof(int));\nfree(ptr);\n*ptr = 20; // Dereferencing after free!',
+      explanation: 'Freeing memory marks the location as available but does not change the pointer value. Subsequent writes will corrupt the heap metadata.',
+      fix: 'int* ptr = malloc(sizeof(int));\nfree(ptr);\nptr = NULL; // Safe from reuse!'
+    },
+    4: {
+      title: 'Invalid Bitwise Shift Offset',
+      badCode: 'uint16_t reg = 1;\nreg = reg << 18; // Shift count >= width of type!',
+      explanation: 'Shifting a value by an offset greater than or equal to its bit-width causes undefined behavior in standard C and may zero out registers.',
+      fix: 'uint32_t reg = 1;\nreg = reg << 18; // Safe with 32-bit width!'
+    }
+  },
+  IoT: {
+    1: {
+      title: 'Delay-Blocking Main Loop',
+      badCode: 'void loop() {\n  read_sensor();\n  delay(5000); // Blocks Wi-Fi network keepalive!\n}',
+      explanation: 'Using `delay()` stops all CPU cycles on ESP32, which blocks background Wi-Fi beacon checks, causing frequent connection drops and packet loss.',
+      fix: 'unsigned long lastRun = 0;\nvoid loop() {\n  if (millis() - lastRun >= 5000) {\n    read_sensor();\n    lastRun = millis();\n  }\n}'
+    },
+    2: {
+      title: 'Floating Analog Pins (LDR/ADC)',
+      badCode: 'int val = analogRead(LDR_PIN); // No pull-down, floating wire',
+      explanation: 'If the analog pin does not have a stable reference resistor, static charge in the environment will cause volatile voltage readings (noise).',
+      fix: 'Connect a 10K Ohm resistor between ADC pin and GND (pull-down setup).'
+    },
+    3: {
+      title: 'Large MQTT Payloads (Memory Exhaustion)',
+      badCode: 'String payload = get_giant_json();\nclient.publish("metrics", payload);',
+      explanation: 'ESP8266 and ESP32 have restricted RAM. Creating very large string buffers dynamically leads to heap fragmentation and silent system crashes.',
+      fix: 'Use StaticJsonDocument from ArduinoJson library to serialize data directly into small arrays.'
+    },
+    4: {
+      title: 'Unsecured Wi-Fi Credentials Storage',
+      badCode: '#define WIFI_SSID "MyHomeWiFi"\n#define WIFI_PASS "12345678"',
+      explanation: 'Hardcoding plaintext Wi-Fi parameters directly inside the firmware files exposes critical network credentials to anyone with access to the source code/binary.',
+      fix: 'Load configurations dynamically using SPIFFS storage or a separate config.h excluded from git commits.'
+    }
+  },
+  Embedded: {
+    1: {
+      title: 'Writing to GPIO Registers without Gating Clocks',
+      badCode: 'GPIOA->ODR |= (1 << 5); // CRASH! clock not enabled',
+      explanation: 'Modern ARM Cortex microcontrollers disable peripheral clocks by default to conserve energy. Modifying registers before gating clocks causes hard faults.',
+      fix: 'RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // Enable clock first!'
+    },
+    2: {
+      title: 'Blocking Delays Inside Interrupt Service Routines (ISRs)',
+      badCode: 'ISR(TIMER1_COMPA_vect) {\n  printf("Timer tick\\n");\n  delay(10);\n}',
+      explanation: 'ISRs must run as quickly as possible. Performing heavy operations (like I/O, UART printing, or delays) blocks other interrupts and leads to watchdog timer resets.',
+      fix: 'ISR(TIMER1_COMPA_vect) {\n  flag_ticked = 1; // Set flag and return immediately\n}'
+    },
+    3: {
+      title: 'Priority Inversion on Shared Mutexes',
+      badCode: 'xSemaphoreTake(shMutex, portMAX_DELAY);\n// Critical section with low priority task',
+      explanation: 'If a low priority task holds a mutex required by a high priority task, and a medium priority task preempts the low task, the high task is blocked indefinitely.',
+      fix: 'Use mutexes with Priority Inheritance enabled to temporarily raise the low task priority.'
+    },
+    4: {
+      title: 'Stack Overflow on Heavy RTOS Task Variables',
+      badCode: 'void vTask(void* p) {\n  char large_buffer[512]; // Exceeds default task stack!\n}',
+      explanation: 'RTOS tasks are allocated a fixed stack size at creation. Allocating large arrays on the task stack leads to immediate stack corruption and resets.',
+      fix: 'Use dynamically allocated heap buffers or declare arrays as static if thread-safety permits.'
+    }
+  }
+};
+
+// Parser for step-by-step code annotations
+const parseCodeSteps = (code: string) => {
+  const lines = code.split('\n');
+  const steps: Array<{ title: string; lines: string[]; explanation: string }> = [];
+  let currentStep: { title: string; lines: string[]; explanation: string } | null = null;
+  
+  lines.forEach((line) => {
+    const match = line.match(/^\s*\/\/\s*(Step\s+\d+:\s*(.*)|(Task.*))/i);
+    if (match) {
+      if (currentStep) {
+        steps.push(currentStep);
+      }
+      currentStep = {
+        title: match[1] || `Step ${steps.length + 1}`,
+        lines: [line],
+        explanation: match[2] || 'Configure memory register addresses or variables.'
+      };
+    } else {
+      if (!currentStep) {
+        currentStep = {
+          title: 'Setup & Definitions',
+          lines: [line],
+          explanation: 'Initialize boilerplate libraries, definitions, or helper headers.'
+        };
+      } else {
+        currentStep.lines.push(line);
+      }
+    }
+  });
+  if (currentStep) {
+    steps.push(currentStep);
+  }
+  return steps;
+};
+
 const CourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToast } = useUI();
   const [mobileView, setMobileView] = useState<'chapters' | 'content'>('chapters');
   
   const {
@@ -44,6 +165,60 @@ const CourseDetail = () => {
   const [lightboxImage, setLightboxImage] = useState<React.ReactNode | null>(null);
   const [activeTab, setActiveTab] = useState<'material' | 'project'>('material');
   const [activePlayground, setActivePlayground] = useState<number | null>(null);
+  const [activeCodeStep, setActiveCodeStep] = useState<string | null>(null);
+
+  // Deliverables State
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [submittingWeek, setSubmittingWeek] = useState<number | null>(null);
+  const [submittingFileName, setSubmittingFileName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchSubmissions = useCallback(async () => {
+    if (!id) return;
+    setLoadingSubmissions(true);
+    try {
+      const res = await api.get(`/assignments/status/${id}`);
+      setSubmissions(res.data.submissions || []);
+    } catch (err) {
+      console.error('Failed to load submissions:', err);
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchSubmissions();
+    }
+  }, [id, fetchSubmissions]);
+
+  const handleUploadAssignment = async (weekNum: number) => {
+    if (!submittingFileName.trim()) {
+      addToast('Please enter a valid file name.', 'error');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const res = await api.post('/assignments/submit', {
+        courseId: id,
+        weekNumber: weekNum,
+        fileName: submittingFileName,
+        fileUrl: `/uploads/mock_${submittingFileName}`
+      });
+      if (res.data.success) {
+        addToast(`Week ${weekNum} assignment submitted successfully!`, 'success');
+        setSubmittingWeek(null);
+        setSubmittingFileName('');
+        fetchSubmissions();
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Failed to submit assignment.';
+      addToast(msg, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleCopyCode = (code: string, topicIndex: number) => {
     navigator.clipboard.writeText(code);
@@ -51,7 +226,16 @@ const CourseDetail = () => {
     setTimeout(() => setCopiedText(null), 2000);
   };
 
+  const handleAskDoubt = (topicTitle: string) => {
+    const text = encodeURIComponent(`Hi Nexus! I have a doubt in Course: ${courseTitle}, Week ${selectedWeek?.week || activeWeekIndex + 1}, Topic: ${topicTitle}.`);
+    const channel = Math.random() > 0.5 
+      ? 'https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar' 
+      : 'https://t.me/+tCapxtLwxNNlZjY1';
+    window.open(`${channel}?text=${text}`, '_blank');
+  };
+
   const selectedWeek = weeks[activeWeekIndex];
+  const currentAntiPattern = antiPatternsData[id as string]?.[selectedWeek?.week];
 
   // Concept Infographic Blueprint Renderer (Issue #13)
   const renderWeeklyDiagram = (courseKey: string, weekNum: number) => {
@@ -59,7 +243,6 @@ const CourseDetail = () => {
     const accentColor = "#3b82f6"; // blue-500
     const textTheme = "fill-slate-300 font-sans text-[11px] font-bold text-center";
     
-    // C Programming Track SVG Blueprints
     if (courseKey === "C") {
       if (weekNum === 1) {
         return (
@@ -193,6 +376,7 @@ const CourseDetail = () => {
             onWeekChange={() => {
               setHasReadMaterial(false);
               setActivePlayground(null);
+              setActiveCodeStep(null);
               setMobileView('content');
             }}
           />
@@ -255,63 +439,128 @@ const CourseDetail = () => {
                     className="space-y-6"
                   >
                     {/* Header block */}
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <div className="inline-block text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
-                          Chapter {selectedWeek.week} Study Material
+                    <div className="flex justify-between items-start gap-4 flex-wrap">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <div className="inline-block text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
+                            Chapter {selectedWeek?.week} Study Material
+                          </div>
+                          <div className="text-[9px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
+                            ⏱ {readingTime} Min Read
+                          </div>
                         </div>
-                        <div className="text-[9px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
-                          ⏱ {readingTime} Min Read
-                        </div>
+                        <h2 className="text-2xl font-extrabold tracking-tight text-white">{selectedWeek?.title}</h2>
+                        <p className="text-slate-400 text-sm mt-1">{selectedWeek?.description}</p>
                       </div>
-                      <h2 className="text-2xl font-extrabold tracking-tight text-white">{selectedWeek.title}</h2>
-                      <p className="text-slate-400 text-sm mt-1">{selectedWeek.description}</p>
                     </div>
 
                     {/* Curriculum Topics List */}
                     <div className="space-y-8 pt-4 border-t border-slate-800/80">
                       {activeModuleDetail?.topics?.map((topic: any, idx: number) => (
-                        <div key={idx} className="space-y-3.5 group">
-                          <div className="flex items-center gap-2.5">
-                            <span className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center text-xs font-bold shrink-0">
-                              {idx + 1}
-                            </span>
-                            <h3 className="text-lg font-bold text-slate-200 tracking-tight group-hover:text-white transition">
-                              {topic.title}
-                            </h3>
+                        <div key={idx} className="space-y-3.5 group text-left">
+                          <div className="flex justify-between items-center gap-4 flex-wrap">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center text-xs font-bold shrink-0">
+                                {idx + 1}
+                              </span>
+                              <h3 className="text-lg font-bold text-slate-200 tracking-tight group-hover:text-white transition">
+                                {topic.title}
+                              </h3>
+                            </div>
+                            <button 
+                              onClick={() => handleAskDoubt(topic.title)}
+                              className="px-2.5 py-1 text-[9px] font-black uppercase text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10 rounded-lg transition-all flex items-center gap-1 shrink-0"
+                            >
+                              <MessageSquare size={11} /> Ask Doubt
+                            </button>
                           </div>
-                          <div className="pl-8 prose prose-invert prose-sm max-w-none text-slate-300">
+
+                          <div className="pl-8 prose prose-invert prose-sm max-w-none text-slate-350">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                               {topic.text}
                             </ReactMarkdown>
                           </div>
                           
                           {topic.code && (
-                            <div className="ml-0 sm:ml-8 space-y-3">
-                              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner">
-                                <div className="absolute right-3 top-3 flex gap-2 opacity-0 group-hover/code:opacity-100 focus-within:opacity-100 transition-opacity">
-                                  <button
-                                    onClick={() => setActivePlayground(idx)}
-                                    className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"
-                                  >
-                                    <Code2 size={12} /> Try it out
-                                  </button>
-                                  <button
-                                    onClick={() => handleCopyCode(topic.code, idx)}
-                                    className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"
-                                  >
-                                    <Clipboard size={12} />
-                                    {copiedText === `${idx}` ? 'Copied!' : 'Copy'}
-                                  </button>
-                                </div>
-                                <div className="overflow-x-auto w-full">
-                                  <pre className="p-4 text-xs font-mono text-cyan-400 leading-relaxed min-w-[300px]">
-                                    <code>{topic.code}</code>
-                                  </pre>
-                                </div>
+                            <div className="ml-0 sm:ml-8 space-y-4">
+                              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner p-4">
+                                {(() => {
+                                  const steps = parseCodeSteps(topic.code);
+                                  return (
+                                    <div className="space-y-4">
+                                      {/* Code Steps Tabs */}
+                                      <div className="flex flex-wrap gap-2 border-b border-slate-850 pb-2">
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest self-center mr-2">Code-Along Steps:</span>
+                                        {steps.map((step, sIdx) => {
+                                          const isSelected = activeCodeStep === `${idx}-${sIdx}` || (!activeCodeStep && sIdx === 0);
+                                          return (
+                                            <button
+                                              key={sIdx}
+                                              onClick={() => {
+                                                setActiveCodeStep(`${idx}-${sIdx}`);
+                                              }}
+                                              className={`px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border transition-all ${
+                                                isSelected
+                                                  ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
+                                                  : 'bg-slate-900 border-slate-800 text-slate-450 hover:text-slate-200'
+                                              }`}
+                                            >
+                                              Step {sIdx + 1}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+
+                                      {/* Code Display Area */}
+                                      {(() => {
+                                        const activeStepIdx = activeCodeStep && activeCodeStep.startsWith(`${idx}-`)
+                                          ? parseInt(activeCodeStep.split('-')[1])
+                                          : 0;
+                                        const step = steps[activeStepIdx] || steps[0];
+                                        if (!step) return null;
+                                        
+                                        return (
+                                          <div className="space-y-3">
+                                            <div className="relative">
+                                              <div className="absolute right-0 top-0 flex gap-2">
+                                                <button
+                                                  onClick={() => setActivePlayground(idx)}
+                                                  className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"
+                                                >
+                                                  <Code2 size={12} /> Sandbox Tryout
+                                                </button>
+                                                <button
+                                                  onClick={() => handleCopyCode(topic.code, idx)}
+                                                  className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-455 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"
+                                                >
+                                                  <Clipboard size={12} />
+                                                  {copiedText === `${idx}` ? 'Copied!' : 'Copy'}
+                                                </button>
+                                              </div>
+
+                                              <div className="overflow-x-auto w-full pt-8 sm:pt-4">
+                                                <pre className="text-xs font-mono text-cyan-400 leading-relaxed min-w-[300px]">
+                                                  <code>
+                                                    {step.lines.join('\n')}
+                                                  </code>
+                                                </pre>
+                                              </div>
+                                            </div>
+
+                                            {/* Step specific Explanation / Why annotation */}
+                                            <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl text-slate-300 text-[11px] leading-relaxed">
+                                              <strong className="text-blue-300 uppercase tracking-widest text-[9px] block mb-1">🔍 Why this step?</strong>
+                                              {step.explanation}
+                                            </div>
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+                                  );
+                                })()}
                               </div>
 
-                              {/* Inline Playground Toggle */}
+                              {/* Interactive Playground Sandbox */}
                               <AnimatePresence>
                                 {activePlayground === idx && (
                                   <motion.div
@@ -342,46 +591,115 @@ const CourseDetail = () => {
                       ))}
                     </div>
 
+                    {/* Online Circuit Simulators Callout Box if applicable */}
+                    {(id === 'IoT' || id === 'Embedded' || id === 'C') && (
+                      <div className="p-5 rounded-2xl border border-blue-500/25 bg-blue-500/5 space-y-3 ml-0 sm:ml-8 mt-4 text-left">
+                        <div className="flex items-center gap-2 text-blue-400">
+                          <Cpu size={18} className="animate-pulse" />
+                          <h4 className="text-xs font-black uppercase tracking-widest">Interactive Circuit Simulators</h4>
+                        </div>
+                        <p className="text-slate-400 text-xs leading-relaxed">
+                          No hardware? You can compile, run, and test your systems applications directly on browser-based online circuit simulator boxes:
+                        </p>
+                        <div className="flex flex-wrap gap-3 pt-1">
+                          {id === 'IoT' && (
+                            <a 
+                              href="https://wokwi.com/projects/arduino-esp32-blink" 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
+                            >
+                              <ExternalLink size={12} /> Launch Wokwi ESP32 board Setup
+                            </a>
+                          )}
+                          {id === 'Embedded' && (
+                            <a 
+                              href="https://www.tinkercad.com/circuits" 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
+                            >
+                              <ExternalLink size={12} /> Launch Tinkercad Circuits Online
+                            </a>
+                          )}
+                          {id === 'C' && (
+                            <a 
+                              href="https://wokwi.com/projects/new/c" 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
+                            >
+                              <ExternalLink size={12} /> Launch Wokwi C sandbox
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Why It Fails - Anti-Patterns comparative block */}
+                    {currentAntiPattern && (
+                      <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/5 space-y-3.5 ml-0 sm:ml-8 mt-6 text-left">
+                        <div className="flex items-center gap-2 text-red-400">
+                          <span className="text-lg leading-none select-none">⚠️</span>
+                          <h4 className="text-xs font-black uppercase tracking-widest">Why It Fails: Common Anti-Patterns</h4>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-slate-200 text-xs font-extrabold">{currentAntiPattern.title}</p>
+                          <p className="text-slate-400 text-[11px] leading-relaxed">{currentAntiPattern.explanation}</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                            <div className="p-3 bg-red-950/10 border border-red-900/30 rounded-xl font-mono text-[10px] text-red-300">
+                              <p className="text-red-400 font-extrabold uppercase text-[8px] tracking-wider mb-1">❌ Bad Anti-Pattern Code</p>
+                              <pre className="overflow-x-auto whitespace-pre">{currentAntiPattern.badCode}</pre>
+                            </div>
+                            <div className="p-3 bg-emerald-950/10 border border-emerald-900/30 rounded-xl font-mono text-[10px] text-emerald-300">
+                              <p className="text-emerald-400 font-extrabold uppercase text-[8px] tracking-wider mb-1">✔️ Correct Fix Pattern</p>
+                              <pre className="overflow-x-auto whitespace-pre">{currentAntiPattern.fix}</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Concept Visualized Blueprint */}
-                    <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 ml-0 sm:ml-8">
+                    <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 ml-0 sm:ml-8 text-left">
                       <div className="flex items-center gap-2 text-cyan-400">
                         <Zap size={18} className="animate-pulse" />
                         <h4 className="text-xs font-black uppercase tracking-widest">Concept Visualized Blueprint</h4>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <div className="space-y-2 text-slate-350 text-xs leading-relaxed">
+                        <div className="space-y-2 text-slate-300 text-xs leading-relaxed">
                           <p className="font-bold text-slate-200">Interactive Blueprint Visualization</p>
                           <p>Study this visual schematic representation of the concepts introduced this week.</p>
                           <button 
-                            onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek.week))}
+                            onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek?.week))}
                             className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-white font-extrabold uppercase rounded text-[9px] border border-slate-700/60 transition"
                           >
                             <Eye size={12} /> Click Diagram to Expand
                           </button>
                         </div>
                         <div 
-                          onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek.week))}
+                          onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek?.week))}
                           className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/80 hover:bg-slate-950/20 transition duration-300 cursor-pointer flex justify-center items-center group shadow-md"
                         >
                           <div className="transform group-hover:scale-[1.02] transition duration-300 w-full max-w-[280px]">
-                            {renderWeeklyDiagram(id as string, selectedWeek.week)}
+                            {renderWeeklyDiagram(id as string, selectedWeek?.week)}
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Module Verification */}
-                    <div className="mt-10 p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4">
-                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-300">Module Verification</h4>
+                    <div className="mt-10 p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 text-left">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-355">Module Verification</h4>
                       {activeWeekIndex < currentWeek ? (
-                        <div className="flex items-center gap-3 text-emerald-400">
+                        <div className="flex flex-wrap items-center gap-3 text-emerald-400">
                           <CheckCircle2 size={24} />
                           <div>
-                            <p className="text-sm font-bold">Chapter {selectedWeek.week} Completed!</p>
+                            <p className="text-sm font-bold">Chapter {selectedWeek?.week} Completed!</p>
                             <p className="text-xs text-slate-400">You passed the quiz. Re-take it to improve your score.</p>
                           </div>
                           <button 
-                            onClick={() => navigate(`/quiz/${id}/${selectedWeek.week}`)}
+                            onClick={() => navigate(`/quiz/${id}/${selectedWeek?.week}`)}
                             className="ml-auto text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-lg text-slate-300 font-semibold transition"
                           >
                             Retry Quiz
@@ -397,17 +715,17 @@ const CourseDetail = () => {
                               className="mt-0.5 w-4 h-4 text-cyan-600 rounded bg-slate-800 border-slate-700"
                             />
                             <span className="group-hover:text-slate-200 transition">
-                              I have read and understood all the study concepts for Chapter {selectedWeek.week}. I am ready to attempt the quiz.
+                              I have read and understood all the study concepts for Chapter {selectedWeek?.week}. I am ready to attempt the quiz.
                             </span>
                           </label>
                           <button 
                             disabled={!hasReadMaterial}
-                            onClick={() => navigate(`/quiz/${id}/${selectedWeek.week}`)}
+                            onClick={() => navigate(`/quiz/${id}/${selectedWeek?.week}`)}
                             className={`w-full py-3 rounded-xl font-extrabold text-sm transition flex items-center justify-center gap-2 text-white shadow-lg ${
                               hasReadMaterial ? 'bg-gradient-to-r from-cyan-600 to-blue-600' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                             }`}
                           >
-                            <Play size={16} /> Unlock & Start Chapter {selectedWeek.week} Quiz
+                            <Play size={16} /> Unlock & Start Chapter {selectedWeek?.week} Quiz
                           </button>
                         </div>
                       ) : (
@@ -422,61 +740,137 @@ const CourseDetail = () => {
               )}
             </>
           ) : (
-            /* Project & Assignment Tab Content */
+            /* Project & Assignment Tab Content with interactive Deliverables timeline */
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="py-4 space-y-8"
             >
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 border-l-4 border-l-purple-500">
-                <h3 className="text-xl font-bold text-white mb-2">Industrial Project Submission</h3>
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 border-l-4 border-l-purple-500 text-left relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent pointer-events-none"></div>
+                <h3 className="text-xl font-extrabold text-white mb-2">Industrial Project Submission</h3>
                 <p className="text-slate-400 text-sm leading-relaxed">
                   As part of your training, you are required to submit a practical implementation of the concepts learned. 
                   This is mandatory for generating your final certificate.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-4">
                   <div className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-300">
-                    Status: <span className="text-amber-400">Pending Eligibility</span>
+                    Status: <span className="text-amber-400 font-extrabold">{currentWeek >= 20 ? 'Eligible for Certificate' : 'Pending Eligibility'}</span>
                   </div>
                   <div className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-300">
-                    Required: 20/20 Modules
+                    Syllabus Completed: <span className="text-purple-400 font-black">{currentWeek}/20 Chapters</span>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 space-y-4">
-                  <div className="flex items-center gap-2 text-blue-400">
-                    <FileText size={18} />
-                    <h4 className="text-sm font-black uppercase tracking-widest">Current Assignment</h4>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-white">Week {Math.floor(currentWeek / 5) + 1} Practical Task</p>
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
-                      Implement a modular register-mapping header for a mock peripheral. Submit the .c file for review.
-                    </p>
-                  </div>
-                  <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-lg transition">
-                    Upload Solution
-                  </button>
+              {loadingSubmissions ? (
+                <div className="flex justify-center items-center py-12">
+                  <Spinner size="md" />
                 </div>
+              ) : (
+                <div className="space-y-6 text-left">
+                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Weekly Micro-Deliverables Checklist</h4>
+                  
+                  {[1, 2, 3, 4].map((weekNum) => {
+                    const submission = submissions.find(s => s.weekNumber === weekNum);
+                    const requiredModule = weekNum * 5;
+                    const isUnlocked = currentWeek >= requiredModule;
+                    
+                    return (
+                      <div key={weekNum} className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 space-y-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:border-slate-700/80">
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-purple-400 uppercase tracking-wide">
+                              Week {weekNum} Deliverable
+                            </span>
+                            {submission ? (
+                              <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${
+                                submission.status === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
+                                submission.status === 'REJECTED' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
+                                'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                              }`}>
+                                {submission.status}
+                              </span>
+                            ) : isUnlocked ? (
+                              <span className="text-[8px] font-black uppercase bg-blue-500/10 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded">
+                                Eligible
+                              </span>
+                            ) : (
+                              <span className="text-[8px] font-black uppercase bg-slate-800 border border-slate-700 text-slate-500 px-2 py-0.5 rounded">
+                                Locked
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs font-bold text-white">Week {weekNum} Practical Task Submission</p>
+                          <p className="text-[10px] text-slate-400 leading-relaxed max-w-xl">
+                            {weekNum === 1 ? 'Implement a modular register-mapping header and direct registers masking. Upload main.c.' :
+                             weekNum === 2 ? 'Register custom GPIO interrupt handlers and write volatile toggles. Upload interrupts.c.' :
+                             weekNum === 3 ? 'Deploy serial communication buses logic and I2C address checks. Upload serial.c.' :
+                             'Build full RTOS context switching threads and preemptive semaphores. Upload rtos_main.c.'}
+                          </p>
+                          
+                          {submission?.feedback && (
+                            <div className="p-2.5 bg-slate-950/60 border border-slate-850 rounded-xl text-[10px] text-slate-400 mt-2">
+                              <strong className="text-slate-300 block mb-0.5">Admin Feedback:</strong>
+                              {submission.feedback}
+                            </div>
+                          )}
+                        </div>
 
-                <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 space-y-4">
-                  <div className="flex items-center gap-2 text-purple-400">
-                    <Briefcase size={18} />
-                    <h4 className="text-sm font-black uppercase tracking-widest">Final Project</h4>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-white">Full System Architect</p>
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
-                      Unlocked after completing Chapter 20. Design a complete RTOS-based telemetry system.
-                    </p>
-                  </div>
-                  <button disabled className="w-full py-2 bg-slate-950 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg cursor-not-allowed">
-                    Locked until Chapter 20
-                  </button>
+                        <div className="shrink-0 flex items-center">
+                          {submission ? (
+                            <div className="text-[10px] text-slate-500 font-mono flex flex-col items-end gap-1">
+                              <span>Submitted: {new Date(submission.submittedAt).toLocaleDateString()}</span>
+                              <span className="text-[9px] text-purple-400 font-bold max-w-[120px] truncate">{submission.fileName}</span>
+                            </div>
+                          ) : isUnlocked ? (
+                            submittingWeek === weekNum ? (
+                              <div className="flex flex-col gap-2 w-full md:w-56 text-left">
+                                <input 
+                                  type="text"
+                                  placeholder="Enter file name (e.g. main.c)"
+                                  value={submittingFileName}
+                                  onChange={(e) => setSubmittingFileName(e.target.value)}
+                                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                                />
+                                <div className="flex gap-2">
+                                  <button
+                                    disabled={isSubmitting}
+                                    onClick={() => handleUploadAssignment(weekNum)}
+                                    className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-45 text-white font-extrabold uppercase rounded text-[9px] tracking-wider transition-colors"
+                                  >
+                                    {isSubmitting ? 'Submitting...' : 'Confirm'}
+                                  </button>
+                                  <button
+                                    onClick={() => setSubmittingWeek(null)}
+                                    className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 font-extrabold uppercase rounded text-[9px] tracking-wider transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button 
+                                onClick={() => {
+                                  setSubmittingWeek(weekNum);
+                                  setSubmittingFileName('');
+                                }}
+                                className="w-full md:w-36 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 hover:border-purple-500/50 text-purple-400 hover:text-purple-300 font-extrabold text-[9px] uppercase tracking-widest rounded-lg transition duration-200"
+                              >
+                                Upload Solution
+                              </button>
+                            )
+                          ) : (
+                            <div className="text-[10px] text-slate-500 flex items-center gap-1 font-semibold uppercase">
+                              <Lock size={12} /> Locked (Need Module {requiredModule})
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              )}
             </motion.div>
           )}
 
@@ -485,15 +879,21 @@ const CourseDetail = () => {
             <div className="flex justify-between items-center pt-6 border-t border-slate-800/80 mt-10">
               <button
                 disabled={activeWeekIndex === 0}
-                onClick={() => setActiveWeekIndex(activeWeekIndex - 1)}
-                className="px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={() => {
+                  setActiveWeekIndex(activeWeekIndex - 1);
+                  setActiveCodeStep(null);
+                }}
+                className="px-4 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed transition"
               >
                 ← Prev Module
               </button>
               <button
                 disabled={activeWeekIndex >= Math.min(currentWeek, weeks.length - 1)}
-                onClick={() => setActiveWeekIndex(activeWeekIndex + 1)}
-                className="px-4 py-2.5 rounded-xl border text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={() => {
+                  setActiveWeekIndex(activeWeekIndex + 1);
+                  setActiveCodeStep(null);
+                }}
+                className="px-4 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed transition"
               >
                 Next Module →
               </button>
