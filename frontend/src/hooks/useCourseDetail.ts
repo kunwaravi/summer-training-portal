@@ -25,7 +25,10 @@ export const useCourseDetail = (courseId: string | undefined) => {
       const courseWeeks = course?.modules || [];
       setWeeks(courseWeeks);
       
-      const activeIndex = Math.min(currentWeek, Math.max(0, courseWeeks.length - 1));
+      const savedIndex = localStorage.getItem(`last_viewed_week_${courseId}`);
+      const activeIndex = savedIndex !== null
+        ? Math.min(parseInt(savedIndex, 10), Math.max(0, courseWeeks.length - 1))
+        : Math.min(currentWeek, Math.max(0, courseWeeks.length - 1));
       setActiveWeekIndex(activeIndex);
     } catch (err) {
       console.error('Failed to fetch course syllabus:', err);
@@ -78,10 +81,17 @@ export const useCourseDetail = (courseId: string | undefined) => {
     fetchPaymentStatus();
   };
 
+  const setPersistedActiveWeekIndex = (index: number) => {
+    setActiveWeekIndex(index);
+    if (courseId) {
+      localStorage.setItem(`last_viewed_week_${courseId}`, index.toString());
+    }
+  };
+
   return {
     weeks,
     activeWeekIndex,
-    setActiveWeekIndex,
+    setActiveWeekIndex: setPersistedActiveWeekIndex,
     loadingSyllabus,
     loadingDetails,
     activeModuleDetail,

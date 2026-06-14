@@ -9,6 +9,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion, AnimatePresence } from 'framer-motion';
+import { coursesConfig } from '../config/courses';
 
 import CourseHero from '../components/organisms/CourseHero';
 import SyllabusManager from '../components/organisms/SyllabusManager';
@@ -20,6 +21,7 @@ const CourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [mobileView, setMobileView] = useState<'chapters' | 'content'>('chapters');
   
   const {
     weeks,
@@ -33,6 +35,9 @@ const CourseDetail = () => {
     currentWeek,
     setIsPaid
   } = useCourseDetail(id);
+
+  const courseConf = coursesConfig.find(c => c.id === id);
+  const courseTitle = courseConf ? courseConf.title : 'Specialized Course';
 
   const [hasReadMaterial, setHasReadMaterial] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
@@ -167,25 +172,34 @@ const CourseDetail = () => {
   return (
     <div className="py-6 max-w-6xl mx-auto px-4 space-y-6">
       
-      <CourseHero courseId={id} />
+      <CourseHero 
+        courseId={id} 
+        courseTitle={courseTitle}
+        weekTitle={selectedWeek ? `Chapter ${selectedWeek.week}: ${selectedWeek.title}` : undefined}
+        mobileView={mobileView}
+        onBackClick={() => setMobileView('chapters')}
+      />
 
       {/* Main Split-Screen Layout */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         
-        <SyllabusManager 
-          weeks={weeks}
-          activeWeekIndex={activeWeekIndex}
-          setActiveWeekIndex={setActiveWeekIndex}
-          currentWeek={currentWeek}
-          completedPercentage={completedPercentage}
-          onWeekChange={() => {
-            setHasReadMaterial(false);
-            setActivePlayground(null);
-          }}
-        />
+        <div className={`w-full lg:w-1/3 shrink-0 ${mobileView === 'content' ? 'hidden lg:block' : 'block'}`}>
+          <SyllabusManager 
+            weeks={weeks}
+            activeWeekIndex={activeWeekIndex}
+            setActiveWeekIndex={setActiveWeekIndex}
+            currentWeek={currentWeek}
+            completedPercentage={completedPercentage}
+            onWeekChange={() => {
+              setHasReadMaterial(false);
+              setActivePlayground(null);
+              setMobileView('content');
+            }}
+          />
+        </div>
 
         {/* Right Column: Dynamic E-Learning Viewer Console */}
-        <div className="flex-1 w-full bg-slate-900/30 border border-slate-800 rounded-2xl p-6 lg:p-8 space-y-6 overflow-hidden">
+        <div className={`flex-1 w-full bg-slate-900/30 border border-slate-800 rounded-2xl p-6 lg:p-8 space-y-6 overflow-hidden ${mobileView === 'chapters' ? 'hidden lg:block' : 'block'}`}>
           
           {/* Tab Navigation */}
           <div className="flex gap-4 border-b border-slate-800 pb-1">
