@@ -160,6 +160,9 @@ const CourseDetail = () => {
   const courseConf = coursesConfig.find(c => c.id === id);
   const courseTitle = courseConf ? courseConf.title : 'Specialized Course';
 
+  const [viewState, setViewState] = useState<'course-home' | 'module-home' | 'topic-reader'>('course-home');
+  const [activeTopicIndex, setActiveTopicIndex] = useState<number | null>(null);
+
   const [hasReadMaterial, setHasReadMaterial] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<React.ReactNode | null>(null);
@@ -359,6 +362,9 @@ const CourseDetail = () => {
         courseId={id} 
         courseTitle={courseTitle}
         weekTitle={selectedWeek ? `Chapter ${selectedWeek.week}: ${selectedWeek.title}` : undefined}
+        topicTitle={activeTopicIndex !== null && activeModuleDetail?.topics?.[activeTopicIndex] ? activeModuleDetail.topics[activeTopicIndex].title : undefined}
+        viewState={viewState}
+        setViewState={setViewState}
         mobileView={mobileView}
         onBackClick={() => setMobileView('chapters')}
       />
@@ -373,10 +379,13 @@ const CourseDetail = () => {
             setActiveWeekIndex={setActiveWeekIndex}
             currentWeek={currentWeek}
             completedPercentage={completedPercentage}
+            viewState={viewState}
+            setViewState={setViewState}
             onWeekChange={() => {
               setHasReadMaterial(false);
               setActivePlayground(null);
               setActiveCodeStep(null);
+              setActiveTopicIndex(null);
               setMobileView('content');
             }}
           />
@@ -385,519 +394,619 @@ const CourseDetail = () => {
         {/* Right Column: Dynamic E-Learning Viewer Console */}
         <div className={`flex-1 w-full bg-slate-900/30 border border-slate-800 rounded-2xl p-6 lg:p-8 space-y-6 overflow-hidden ${mobileView === 'chapters' ? 'hidden lg:block' : 'block'}`}>
           
-          {/* Tab Navigation */}
-          <div className="flex gap-4 border-b border-slate-800 pb-1">
-            <button 
-              onClick={() => setActiveTab('material')}
-              className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
-                activeTab === 'material' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <FileText size={14} /> Study Material
-              </div>
-              {activeTab === 'material' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
-            </button>
-            <button 
-              onClick={() => setActiveTab('project')}
-              className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
-                activeTab === 'project' ? 'text-purple-400' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Briefcase size={14} /> Project & Assignment
-              </div>
-              {activeTab === 'project' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
-            </button>
-          </div>
-
-          {activeTab === 'material' ? (
-            <>
-              {loadingDetails ? (
-                <div className="space-y-6 animate-pulse py-4">
-                  <div className="h-6 w-32 bg-slate-800 rounded"></div>
-                  <div className="h-8 w-2/3 bg-slate-800 rounded"></div>
-                  <div className="h-4 w-full bg-slate-800 rounded"></div>
-                  <div className="space-y-6 pt-10 border-t border-slate-850">
-                    {[1, 2].map((i) => (
-                      <div key={i} className="space-y-3 pl-8 relative">
-                        <div className="absolute left-0 top-0 h-6 w-6 rounded-full bg-slate-800"></div>
-                        <div className="h-6 w-40 bg-slate-800 rounded"></div>
-                        <div className="h-4 w-full bg-slate-800 rounded"></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeWeekIndex}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.25 }}
-                    className="space-y-6"
-                  >
-                    {/* Header block */}
-                    <div className="flex justify-between items-start gap-4 flex-wrap">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <div className="inline-block text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
-                            Chapter {selectedWeek?.week} Study Material
-                          </div>
-                          <div className="text-[9px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
-                            ⏱ {readingTime} Min Read
-                          </div>
-                        </div>
-                        <h2 className="text-2xl font-extrabold tracking-tight text-white">{selectedWeek?.title}</h2>
-                        <p className="text-slate-400 text-sm mt-1">{selectedWeek?.description}</p>
-                      </div>
-                    </div>
-
-                    {/* Curriculum Topics List */}
-                    <div className="space-y-8 pt-4 border-t border-slate-800/80">
-                      {activeModuleDetail?.topics?.map((topic: any, idx: number) => (
-                        <div key={idx} className="space-y-3.5 group text-left">
-                          <div className="flex justify-between items-center gap-4 flex-wrap">
-                            <div className="flex items-center gap-2.5">
-                              <span className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center text-xs font-bold shrink-0">
-                                {idx + 1}
-                              </span>
-                              <h3 className="text-lg font-bold text-slate-200 tracking-tight group-hover:text-white transition">
-                                {topic.title}
-                              </h3>
-                            </div>
-                            <button 
-                              onClick={() => handleAskDoubt(topic.title)}
-                              className="px-2.5 py-1 text-[9px] font-black uppercase text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10 rounded-lg transition-all flex items-center gap-1 shrink-0"
-                            >
-                              <MessageSquare size={11} /> Ask Doubt
-                            </button>
-                          </div>
-
-                          <div className="pl-8 prose prose-invert prose-sm max-w-none text-slate-350">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {topic.text}
-                            </ReactMarkdown>
-                          </div>
-                          
-                          {topic.code && (
-                            <div className="ml-0 sm:ml-8 space-y-4">
-                              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner p-4">
-                                {(() => {
-                                  const steps = parseCodeSteps(topic.code);
-                                  return (
-                                    <div className="space-y-4">
-                                      {/* Code Steps Tabs */}
-                                      <div className="flex flex-wrap gap-2 border-b border-slate-850 pb-2">
-                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest self-center mr-2">Code-Along Steps:</span>
-                                        {steps.map((step, sIdx) => {
-                                          const isSelected = activeCodeStep === `${idx}-${sIdx}` || (!activeCodeStep && sIdx === 0);
-                                          return (
-                                            <button
-                                              key={sIdx}
-                                              onClick={() => {
-                                                setActiveCodeStep(`${idx}-${sIdx}`);
-                                              }}
-                                              className={`px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border transition-all ${
-                                                isSelected
-                                                  ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
-                                                  : 'bg-slate-900 border-slate-800 text-slate-450 hover:text-slate-200'
-                                              }`}
-                                            >
-                                              Step {sIdx + 1}
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-
-                                      {/* Code Display Area */}
-                                      {(() => {
-                                        const activeStepIdx = activeCodeStep && activeCodeStep.startsWith(`${idx}-`)
-                                          ? parseInt(activeCodeStep.split('-')[1])
-                                          : 0;
-                                        const step = steps[activeStepIdx] || steps[0];
-                                        if (!step) return null;
-                                        
-                                        return (
-                                          <div className="space-y-3">
-                                            <div className="relative">
-                                              <div className="absolute right-0 top-0 flex gap-2">
-                                                <button
-                                                  onClick={() => setActivePlayground(idx)}
-                                                  className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"
-                                                >
-                                                  <Code2 size={12} /> Sandbox Tryout
-                                                </button>
-                                                <button
-                                                  onClick={() => handleCopyCode(topic.code, idx)}
-                                                  className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-455 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"
-                                                >
-                                                  <Clipboard size={12} />
-                                                  {copiedText === `${idx}` ? 'Copied!' : 'Copy'}
-                                                </button>
-                                              </div>
-
-                                              <div className="overflow-x-auto w-full pt-8 sm:pt-4">
-                                                <pre className="text-xs font-mono text-cyan-400 leading-relaxed min-w-[300px]">
-                                                  <code>
-                                                    {step.lines.join('\n')}
-                                                  </code>
-                                                </pre>
-                                              </div>
-                                            </div>
-
-                                            {/* Step specific Explanation / Why annotation */}
-                                            <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl text-slate-300 text-[11px] leading-relaxed">
-                                              <strong className="text-blue-300 uppercase tracking-widest text-[9px] block mb-1">🔍 Why this step?</strong>
-                                              {step.explanation}
-                                            </div>
-                                          </div>
-                                        );
-                                      })()}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-
-                              {/* Interactive Playground Sandbox */}
-                              <AnimatePresence>
-                                {activePlayground === idx && (
-                                  <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                  >
-                                    <CodePlayground 
-                                      initialCode={topic.code} 
-                                      language={id === 'C' || id === 'C++' ? 'C/C++' : 'MicroPython'} 
-                                    />
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          )}
-
-                          {topic.note && (
-                            <div className="ml-0 sm:ml-8 p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-teal-300 text-xs leading-relaxed flex items-start gap-3">
-                              <span className="text-lg leading-none select-none">💡</span>
-                              <div>
-                                <strong className="text-teal-200 block mb-0.5">Core Takeaway</strong>
-                                {topic.note}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Online Circuit Simulators Callout Box if applicable */}
-                    {(id === 'IoT' || id === 'Embedded' || id === 'C') && (
-                      <div className="p-5 rounded-2xl border border-blue-500/25 bg-blue-500/5 space-y-3 ml-0 sm:ml-8 mt-4 text-left">
-                        <div className="flex items-center gap-2 text-blue-400">
-                          <Cpu size={18} className="animate-pulse" />
-                          <h4 className="text-xs font-black uppercase tracking-widest">Interactive Circuit Simulators</h4>
-                        </div>
-                        <p className="text-slate-400 text-xs leading-relaxed">
-                          No hardware? You can compile, run, and test your systems applications directly on browser-based online circuit simulator boxes:
-                        </p>
-                        <div className="flex flex-wrap gap-3 pt-1">
-                          {id === 'IoT' && (
-                            <a 
-                              href="https://wokwi.com/projects/arduino-esp32-blink" 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
-                            >
-                              <ExternalLink size={12} /> Launch Wokwi ESP32 board Setup
-                            </a>
-                          )}
-                          {id === 'Embedded' && (
-                            <a 
-                              href="https://www.tinkercad.com/circuits" 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
-                            >
-                              <ExternalLink size={12} /> Launch Tinkercad Circuits Online
-                            </a>
-                          )}
-                          {id === 'C' && (
-                            <a 
-                              href="https://wokwi.com/projects/new/c" 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
-                            >
-                              <ExternalLink size={12} /> Launch Wokwi C sandbox
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Why It Fails - Anti-Patterns comparative block */}
-                    {currentAntiPattern && (
-                      <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/5 space-y-3.5 ml-0 sm:ml-8 mt-6 text-left">
-                        <div className="flex items-center gap-2 text-red-400">
-                          <span className="text-lg leading-none select-none">⚠️</span>
-                          <h4 className="text-xs font-black uppercase tracking-widest">Why It Fails: Common Anti-Patterns</h4>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-slate-200 text-xs font-extrabold">{currentAntiPattern.title}</p>
-                          <p className="text-slate-400 text-[11px] leading-relaxed">{currentAntiPattern.explanation}</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                            <div className="p-3 bg-red-950/10 border border-red-900/30 rounded-xl font-mono text-[10px] text-red-300">
-                              <p className="text-red-400 font-extrabold uppercase text-[8px] tracking-wider mb-1">❌ Bad Anti-Pattern Code</p>
-                              <pre className="overflow-x-auto whitespace-pre">{currentAntiPattern.badCode}</pre>
-                            </div>
-                            <div className="p-3 bg-emerald-950/10 border border-emerald-900/30 rounded-xl font-mono text-[10px] text-emerald-300">
-                              <p className="text-emerald-400 font-extrabold uppercase text-[8px] tracking-wider mb-1">✔️ Correct Fix Pattern</p>
-                              <pre className="overflow-x-auto whitespace-pre">{currentAntiPattern.fix}</pre>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Concept Visualized Blueprint */}
-                    <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 ml-0 sm:ml-8 text-left">
-                      <div className="flex items-center gap-2 text-cyan-400">
-                        <Zap size={18} className="animate-pulse" />
-                        <h4 className="text-xs font-black uppercase tracking-widest">Concept Visualized Blueprint</h4>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <div className="space-y-2 text-slate-300 text-xs leading-relaxed">
-                          <p className="font-bold text-slate-200">Interactive Blueprint Visualization</p>
-                          <p>Study this visual schematic representation of the concepts introduced this week.</p>
-                          <button 
-                            onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek?.week))}
-                            className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-white font-extrabold uppercase rounded text-[9px] border border-slate-700/60 transition"
-                          >
-                            <Eye size={12} /> Click Diagram to Expand
-                          </button>
-                        </div>
-                        <div 
-                          onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek?.week))}
-                          className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/80 hover:bg-slate-950/20 transition duration-300 cursor-pointer flex justify-center items-center group shadow-md"
-                        >
-                          <div className="transform group-hover:scale-[1.02] transition duration-300 w-full max-w-[280px]">
-                            {renderWeeklyDiagram(id as string, selectedWeek?.week)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Module Verification */}
-                    <div className="mt-10 p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 text-left">
-                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-355">Module Verification</h4>
-                      {activeWeekIndex < currentWeek ? (
-                        <div className="flex flex-wrap items-center gap-3 text-emerald-400">
-                          <CheckCircle2 size={24} />
-                          <div>
-                            <p className="text-sm font-bold">Chapter {selectedWeek?.week} Completed!</p>
-                            <p className="text-xs text-slate-400">You passed the quiz. Re-take it to improve your score.</p>
-                          </div>
-                          <button 
-                            onClick={() => navigate(`/quiz/${id}/${selectedWeek?.week}`)}
-                            className="ml-auto text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-lg text-slate-300 font-semibold transition"
-                          >
-                            Retry Quiz
-                          </button>
-                        </div>
-                      ) : activeWeekIndex === currentWeek ? (
-                        <div className="space-y-4">
-                          <label className="flex items-start gap-3 cursor-pointer group text-xs text-slate-400 select-none">
-                            <input 
-                              type="checkbox"
-                              checked={hasReadMaterial}
-                              onChange={(e) => setHasReadMaterial(e.target.checked)}
-                              className="mt-0.5 w-4 h-4 text-cyan-600 rounded bg-slate-800 border-slate-700"
-                            />
-                            <span className="group-hover:text-slate-200 transition">
-                              I have read and understood all the study concepts for Chapter {selectedWeek?.week}. I am ready to attempt the quiz.
-                            </span>
-                          </label>
-                          <button 
-                            disabled={!hasReadMaterial}
-                            onClick={() => navigate(`/quiz/${id}/${selectedWeek?.week}`)}
-                            className={`w-full py-3 rounded-xl font-extrabold text-sm transition flex items-center justify-center gap-2 text-white shadow-lg ${
-                              hasReadMaterial ? 'bg-gradient-to-r from-cyan-600 to-blue-600' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                            }`}
-                          >
-                            <Play size={16} /> Unlock & Start Chapter {selectedWeek?.week} Quiz
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3 text-slate-500 text-xs">
-                          <Lock size={18} />
-                          <span>Complete Chapter {currentWeek + 1} quiz to unlock these materials.</span>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-              )}
-            </>
-          ) : (
-            /* Project & Assignment Tab Content with interactive Deliverables timeline */
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="py-4 space-y-8"
-            >
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 border-l-4 border-l-purple-500 text-left relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent pointer-events-none"></div>
-                <h3 className="text-xl font-extrabold text-white mb-2">Industrial Project Submission</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
-                  As part of your training, you are required to submit a practical implementation of the concepts learned. 
-                  This is mandatory for generating your final certificate.
+          {viewState === 'course-home' ? (
+            <div className="space-y-6 text-left animate-fade-in">
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded">
+                  Course Overview
+                </span>
+                <h2 className="text-2xl font-black text-white">{courseTitle}</h2>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  {/* @ts-ignore */}
+                  {courseConf?.desc || 'Welcome to this specialized curriculum track. Learn low-level hardware constraints, memory mappings, and system programming paradigms.'}
                 </p>
-                <div className="mt-6 flex flex-wrap gap-4">
-                  <div className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-300">
-                    Status: <span className="text-amber-400 font-extrabold">{currentWeek >= 20 ? 'Eligible for Certificate' : 'Pending Eligibility'}</span>
-                  </div>
-                  <div className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-300">
-                    Syllabus Completed: <span className="text-purple-400 font-black">{currentWeek}/20 Chapters</span>
-                  </div>
+              </div>
+
+              {/* Course Meta Info Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-xl">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Duration</span>
+                  <p className="text-xs font-bold text-slate-200 mt-0.5">4-Week Immersion</p>
+                </div>
+                <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-xl">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Chapters</span>
+                  <p className="text-xs font-bold text-slate-200 mt-0.5">{weeks.length} Interactive Modules</p>
+                </div>
+                <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-xl col-span-2 sm:col-span-1">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Prerequisites</span>
+                  <p className="text-xs font-bold text-slate-200 mt-0.5">Basic Logic Foundations</p>
                 </div>
               </div>
 
-              {loadingSubmissions ? (
-                <div className="flex justify-center items-center py-12">
-                  <Spinner size="md" />
-                </div>
-              ) : (
-                <div className="space-y-6 text-left">
-                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Weekly Micro-Deliverables Checklist</h4>
-                  
-                  {[1, 2, 3, 4].map((weekNum) => {
-                    const submission = submissions.find(s => s.weekNumber === weekNum);
-                    const requiredModule = weekNum * 5;
-                    const isUnlocked = currentWeek >= requiredModule;
-                    
+              {/* Learning Syllabus Milestones */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold text-slate-200 uppercase tracking-widest">Syllabus Chapters Timeline</h3>
+                <div className="space-y-2.5">
+                  {weeks.map((week, index) => {
+                    const isUnlocked = index <= currentWeek;
+                    const isCompleted = index < currentWeek;
                     return (
-                      <div key={weekNum} className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 space-y-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:border-slate-700/80">
-                        <div className="space-y-1.5 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-purple-400 uppercase tracking-wide">
-                              Week {weekNum} Deliverable
-                            </span>
-                            {submission ? (
-                              <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${
-                                submission.status === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                                submission.status === 'REJECTED' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-                                'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                              }`}>
-                                {submission.status}
-                              </span>
-                            ) : isUnlocked ? (
-                              <span className="text-[8px] font-black uppercase bg-blue-500/10 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded">
-                                Eligible
-                              </span>
-                            ) : (
-                              <span className="text-[8px] font-black uppercase bg-slate-800 border border-slate-700 text-slate-500 px-2 py-0.5 rounded">
-                                Locked
-                              </span>
-                            )}
+                      <div 
+                        key={index}
+                        onClick={() => {
+                          if (isUnlocked) {
+                            setActiveWeekIndex(index);
+                            setViewState('module-home');
+                          }
+                        }}
+                        className={`p-4 rounded-xl border flex items-center justify-between transition group ${
+                          isUnlocked 
+                            ? 'bg-slate-950/40 border-slate-850 hover:border-cyan-500/40 cursor-pointer' 
+                            : 'bg-slate-950/10 border-slate-900/50 opacity-40 cursor-not-allowed'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black uppercase ${
+                            isCompleted 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                              : isUnlocked 
+                                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                : 'bg-slate-800 text-slate-500'
+                          }`}>
+                            W{week.week}
+                          </span>
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-200 group-hover:text-white transition">{week.title}</h4>
+                            <p className="text-[9px] text-slate-550">Chapter {week.week} Curriculum module.</p>
                           </div>
-                          <p className="text-xs font-bold text-white">Week {weekNum} Practical Task Submission</p>
-                          <p className="text-[10px] text-slate-400 leading-relaxed max-w-xl">
-                            {weekNum === 1 ? 'Implement a modular register-mapping header and direct registers masking. Upload main.c.' :
-                             weekNum === 2 ? 'Register custom GPIO interrupt handlers and write volatile toggles. Upload interrupts.c.' :
-                             weekNum === 3 ? 'Deploy serial communication buses logic and I2C address checks. Upload serial.c.' :
-                             'Build full RTOS context switching threads and preemptive semaphores. Upload rtos_main.c.'}
-                          </p>
-                          
-                          {submission?.feedback && (
-                            <div className="p-2.5 bg-slate-950/60 border border-slate-850 rounded-xl text-[10px] text-slate-400 mt-2">
-                              <strong className="text-slate-300 block mb-0.5">Admin Feedback:</strong>
-                              {submission.feedback}
-                            </div>
-                          )}
                         </div>
-
-                        <div className="shrink-0 flex items-center">
-                          {submission ? (
-                            <div className="text-[10px] text-slate-500 font-mono flex flex-col items-end gap-1">
-                              <span>Submitted: {new Date(submission.submittedAt).toLocaleDateString()}</span>
-                              <span className="text-[9px] text-purple-400 font-bold max-w-[120px] truncate">{submission.fileName}</span>
-                            </div>
-                          ) : isUnlocked ? (
-                            submittingWeek === weekNum ? (
-                              <div className="flex flex-col gap-2 w-full md:w-56 text-left">
-                                <input 
-                                  type="text"
-                                  placeholder="Enter file name (e.g. main.c)"
-                                  value={submittingFileName}
-                                  onChange={(e) => setSubmittingFileName(e.target.value)}
-                                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
-                                />
-                                <div className="flex gap-2">
-                                  <button
-                                    disabled={isSubmitting}
-                                    onClick={() => handleUploadAssignment(weekNum)}
-                                    className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-45 text-white font-extrabold uppercase rounded text-[9px] tracking-wider transition-colors"
-                                  >
-                                    {isSubmitting ? 'Submitting...' : 'Confirm'}
-                                  </button>
-                                  <button
-                                    onClick={() => setSubmittingWeek(null)}
-                                    className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 font-extrabold uppercase rounded text-[9px] tracking-wider transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button 
-                                onClick={() => {
-                                  setSubmittingWeek(weekNum);
-                                  setSubmittingFileName('');
-                                }}
-                                className="w-full md:w-36 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 hover:border-purple-500/50 text-purple-400 hover:text-purple-300 font-extrabold text-[9px] uppercase tracking-widest rounded-lg transition duration-200"
-                              >
-                                Upload Solution
-                              </button>
-                            )
-                          ) : (
-                            <div className="text-[10px] text-slate-500 flex items-center gap-1 font-semibold uppercase">
-                              <Lock size={12} /> Locked (Need Module {requiredModule})
-                            </div>
-                          )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                            {isCompleted ? 'Completed' : isUnlocked ? 'Start Chapter' : 'Locked'}
+                          </span>
+                          <ChevronRight size={12} className="text-slate-600 group-hover:text-white transition" />
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              )}
-            </motion.div>
-          )}
+              </div>
 
-          {/* Bottom Navigation */}
-          {activeTab === 'material' && (
-            <div className="flex justify-between items-center pt-6 border-t border-slate-800/80 mt-10">
+              {/* Start/Continue CTA Button */}
               <button
-                disabled={activeWeekIndex === 0}
                 onClick={() => {
-                  setActiveWeekIndex(activeWeekIndex - 1);
-                  setActiveCodeStep(null);
+                  const continueIdx = Math.min(currentWeek, weeks.length - 1);
+                  setActiveWeekIndex(continueIdx);
+                  setViewState('module-home');
                 }}
-                className="px-4 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed transition"
+                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-extrabold text-sm uppercase tracking-widest rounded-xl transition shadow active:scale-95 cursor-pointer"
               >
-                ← Prev Module
-              </button>
-              <button
-                disabled={activeWeekIndex >= Math.min(currentWeek, weeks.length - 1)}
-                onClick={() => {
-                  setActiveWeekIndex(activeWeekIndex + 1);
-                  setActiveCodeStep(null);
-                }}
-                className="px-4 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed transition"
-              >
-                Next Module →
+                {currentWeek > 0 ? 'Continue Curriculum' : 'Start Curriculum'}
               </button>
             </div>
+          ) : (
+            <>
+              {/* Tab Navigation */}
+              <div className="flex gap-4 border-b border-slate-800 pb-1">
+                <button 
+                  onClick={() => setActiveTab('material')}
+                  className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
+                    activeTab === 'material' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText size={14} /> Study Material
+                  </div>
+                  {activeTab === 'material' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+                </button>
+                <button 
+                  onClick={() => setActiveTab('project')}
+                  className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
+                    activeTab === 'project' ? 'text-purple-400' : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Briefcase size={14} /> Project & Assignment
+                  </div>
+                  {activeTab === 'project' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
+                </button>
+              </div>
+
+              {activeTab === 'material' ? (
+                <>
+                  {loadingDetails ? (
+                    <div className="space-y-6 animate-pulse py-4">
+                      <div className="h-6 w-32 bg-slate-800 rounded"></div>
+                      <div className="h-8 w-2/3 bg-slate-800 rounded"></div>
+                      <div className="h-4 w-full bg-slate-800 rounded"></div>
+                      <div className="space-y-6 pt-10 border-t border-slate-850">
+                        {[1, 2].map((i) => (
+                          <div key={i} className="space-y-3 pl-8 relative">
+                            <div className="absolute left-0 top-0 h-6 w-6 rounded-full bg-slate-800"></div>
+                            <div className="h-6 w-40 bg-slate-800 rounded"></div>
+                            <div className="h-4 w-full bg-slate-800 rounded"></div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <AnimatePresence mode="wait">
+                      {viewState === 'module-home' ? (
+                        <motion.div
+                          key="module-home-view"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.25 }}
+                          className="space-y-6"
+                        >
+                          {/* Header block */}
+                          <div className="flex justify-between items-start gap-4 flex-wrap text-left">
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                <span className="inline-block text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
+                                  Chapter {selectedWeek?.week} Module Outline
+                                </span>
+                                <span className="text-[9px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2.5 py-0.5 rounded uppercase tracking-wider">
+                                  ⏱ {readingTime} Min Read
+                                </span>
+                              </div>
+                              <h2 className="text-2xl font-extrabold tracking-tight text-white">{selectedWeek?.title}</h2>
+                              <p className="text-slate-400 text-sm mt-1">{selectedWeek?.description}</p>
+                            </div>
+                          </div>
+
+                          {/* List of Topic Cards */}
+                          <div className="space-y-3.5 text-left">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Curriculum Study Topics</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {activeModuleDetail?.topics?.map((topic: any, idx: number) => (
+                                <div 
+                                  key={idx}
+                                  onClick={() => {
+                                    setActiveTopicIndex(idx);
+                                    setViewState('topic-reader');
+                                  }}
+                                  className="p-5 bg-slate-950/40 hover:bg-slate-950/20 border border-slate-850 hover:border-cyan-500/50 rounded-2xl transition duration-300 cursor-pointer group flex flex-col justify-between h-36 shadow-inner text-left"
+                                >
+                                  <div className="space-y-1.5">
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
+                                      Topic {idx + 1}
+                                    </span>
+                                    <h4 className="text-sm font-bold text-white group-hover:text-cyan-400 transition truncate">{topic.title}</h4>
+                                    <p className="text-[10px] text-slate-500 line-clamp-2">
+                                      {topic.text ? topic.text.replace(/[#*`_]/g, '').slice(0, 100) : 'Learn about this core concepts in detail.'}
+                                    </p>
+                                  </div>
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-450 group-hover:text-white transition flex items-center gap-1">
+                                    Start Reading <ChevronRight size={10} />
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Online Circuit Simulators Callout Box */}
+                          {(id === 'IoT' || id === 'Embedded' || id === 'C') && (
+                            <div className="p-5 rounded-2xl border border-blue-500/25 bg-blue-500/5 space-y-3 mt-4 text-left">
+                              <div className="flex items-center gap-2 text-blue-400">
+                                <Cpu size={18} className="animate-pulse" />
+                                <h4 className="text-xs font-black uppercase tracking-widest">Interactive Circuit Simulators</h4>
+                              </div>
+                              <p className="text-slate-400 text-xs leading-relaxed">
+                                No hardware? You can compile, run, and test your systems applications directly on browser-based online circuit simulator boxes:
+                              </p>
+                              <div className="flex flex-wrap gap-3 pt-1">
+                                {id === 'IoT' && (
+                                  <a 
+                                    href="https://wokwi.com/projects/arduino-esp32-blink" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
+                                  >
+                                    <ExternalLink size={12} /> Launch Wokwi ESP32 board Setup
+                                  </a>
+                                )}
+                                {id === 'Embedded' && (
+                                  <a 
+                                    href="https://www.tinkercad.com/circuits" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
+                                  >
+                                    <ExternalLink size={12} /> Launch Tinkercad Circuits Online
+                                  </a>
+                                )}
+                                {id === 'C' && (
+                                  <a 
+                                    href="https://wokwi.com/projects/new/c" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
+                                  >
+                                    <ExternalLink size={12} /> Launch Wokwi C sandbox
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Why It Fails - Anti-Patterns comparative block */}
+                          {currentAntiPattern && (
+                            <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/5 space-y-3.5 mt-6 text-left">
+                              <div className="flex items-center gap-2 text-red-400">
+                                <span className="text-lg leading-none select-none">⚠️</span>
+                                <h4 className="text-xs font-black uppercase tracking-widest">Why It Fails: Common Anti-Patterns</h4>
+                              </div>
+                              <div className="space-y-2">
+                                <p className="text-slate-200 text-xs font-extrabold">{currentAntiPattern.title}</p>
+                                <p className="text-slate-400 text-[11px] leading-relaxed">{currentAntiPattern.explanation}</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                  <div className="p-3 bg-red-950/10 border border-red-900/30 rounded-xl font-mono text-[10px] text-red-300">
+                                    <p className="text-red-400 font-extrabold uppercase text-[8px] tracking-wider mb-1">❌ Bad Anti-Pattern Code</p>
+                                    <pre className="overflow-x-auto whitespace-pre">{currentAntiPattern.badCode}</pre>
+                                  </div>
+                                  <div className="p-3 bg-emerald-950/10 border border-emerald-900/30 rounded-xl font-mono text-[10px] text-emerald-300">
+                                    <p className="text-emerald-400 font-extrabold uppercase text-[8px] tracking-wider mb-1">✔️ Correct Fix Pattern</p>
+                                    <pre className="overflow-x-auto whitespace-pre">{currentAntiPattern.fix}</pre>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Concept Visualized Blueprint */}
+                          <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 text-left">
+                            <div className="flex items-center gap-2 text-cyan-400">
+                              <Zap size={18} className="animate-pulse" />
+                              <h4 className="text-xs font-black uppercase tracking-widest">Concept Visualized Blueprint</h4>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                              <div className="space-y-2 text-slate-300 text-xs leading-relaxed">
+                                <p className="font-bold text-slate-200">Interactive Blueprint Visualization</p>
+                                <p>Study this visual schematic representation of the concepts introduced this week.</p>
+                                <button 
+                                  onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek?.week))}
+                                  className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-white font-extrabold uppercase rounded text-[9px] border border-slate-700/60 transition cursor-pointer"
+                                >
+                                  <Eye size={12} /> Click Diagram to Expand
+                                </button>
+                              </div>
+                              <div 
+                                onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek?.week))}
+                                className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/80 hover:bg-slate-950/20 transition duration-300 cursor-pointer flex justify-center items-center group shadow-md"
+                              >
+                                <div className="transform group-hover:scale-[1.02] transition duration-300 w-full max-w-[280px]">
+                                  {renderWeeklyDiagram(id as string, selectedWeek?.week)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Module Verification */}
+                          <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 space-y-4 text-left">
+                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-355">Module Verification</h4>
+                            {activeWeekIndex < currentWeek ? (
+                              <div className="flex flex-wrap items-center gap-3 text-emerald-400">
+                                <CheckCircle2 size={24} />
+                                <div>
+                                  <p className="text-sm font-bold">Chapter {selectedWeek?.week} Completed!</p>
+                                  <p className="text-xs text-slate-400">You passed the quiz. Re-take it to improve your score.</p>
+                                </div>
+                                <button 
+                                  onClick={() => navigate(`/quiz/${id}/${selectedWeek?.week}`)}
+                                  className="ml-auto text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-lg text-slate-300 font-semibold transition cursor-pointer"
+                                >
+                                  Retry Quiz
+                                </button>
+                              </div>
+                            ) : activeWeekIndex === currentWeek ? (
+                              <div className="space-y-4">
+                                <label className="flex items-start gap-3 cursor-pointer group text-xs text-slate-400 select-none">
+                                  <input 
+                                    type="checkbox"
+                                    checked={hasReadMaterial}
+                                    onChange={(e) => setHasReadMaterial(e.target.checked)}
+                                    className="mt-0.5 w-4 h-4 text-cyan-600 rounded bg-slate-800 border-slate-700"
+                                  />
+                                  <span className="group-hover:text-slate-200 transition">
+                                    I have read and understood all the study concepts for Chapter {selectedWeek?.week}. I am ready to attempt the quiz.
+                                  </span>
+                                </label>
+                                <button 
+                                  disabled={!hasReadMaterial}
+                                  onClick={() => navigate(`/quiz/${id}/${selectedWeek?.week}`)}
+                                  className={`w-full py-3 rounded-xl font-extrabold text-sm transition flex items-center justify-center gap-2 text-white shadow-lg cursor-pointer ${
+                                    hasReadMaterial ? 'bg-gradient-to-r from-cyan-600 to-blue-600' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                  }`}
+                                >
+                                  <Play size={16} /> Unlock & Start Chapter {selectedWeek?.week} Quiz
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-3 text-slate-500 text-xs">
+                                <Lock size={18} />
+                                <span>Complete Chapter {currentWeek + 1} quiz to unlock these materials.</span>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      ) : (
+                        /* Topic Reader view */
+                        (() => {
+                          const topicIndex = activeTopicIndex !== null ? activeTopicIndex : 0;
+                          const topic = activeModuleDetail?.topics?.[topicIndex];
+                          const topics = activeModuleDetail?.topics || [];
+                          const hasPrev = topicIndex > 0;
+                          const hasNext = topicIndex < topics.length - 1;
+
+                          if (!topic) return null;
+
+                          return (
+                            <motion.div
+                              key={`topic-reader-${topicIndex}`}
+                              initial={{ opacity: 0, x: 15 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -15 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-6 text-left"
+                            >
+                              <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
+                                  Topic {topicIndex + 1} of {topics.length}
+                                </span>
+                                <button 
+                                  onClick={() => handleAskDoubt(topic.title)}
+                                  className="px-2.5 py-1 text-[9px] font-black uppercase text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                >
+                                  <MessageSquare size={11} /> Ask Doubt
+                                </button>
+                              </div>
+
+                              <h2 className="text-xl font-extrabold tracking-tight text-white">{topic.title}</h2>
+                              
+                              <div className="prose prose-invert prose-sm max-w-none text-slate-350 leading-relaxed">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {topic.text}
+                                </ReactMarkdown>
+                              </div>
+
+                              {topic.code && (
+                                <div className="space-y-4">
+                                  <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 relative group/code shadow-inner p-4">
+                                    {(() => {
+                                      const steps = parseCodeSteps(topic.code);
+                                      return (
+                                        <div className="space-y-4">
+                                          {/* Code Steps Tabs */}
+                                          <div className="flex flex-wrap gap-2 border-b border-slate-850 pb-2">
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest self-center mr-2">Code-Along Steps:</span>
+                                            {steps.map((step, sIdx) => {
+                                              const isSelected = activeCodeStep === `${topicIndex}-${sIdx}` || (!activeCodeStep && sIdx === 0);
+                                              return (
+                                                <button
+                                                  key={sIdx}
+                                                  onClick={() => {
+                                                    setActiveCodeStep(`${topicIndex}-${sIdx}`);
+                                                  }}
+                                                  className={`px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border transition-all cursor-pointer ${
+                                                    isSelected
+                                                      ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
+                                                      : 'bg-slate-900 border-slate-800 text-slate-450 hover:text-slate-200'
+                                                  }`}
+                                                >
+                                                  Step {sIdx + 1}
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+
+                                          {/* Code Display Area */}
+                                          {(() => {
+                                            const activeStepIdx = activeCodeStep && activeCodeStep.startsWith(`${topicIndex}-`)
+                                              ? parseInt(activeCodeStep.split('-')[1])
+                                              : 0;
+                                            const step = steps[activeStepIdx] || steps[0];
+                                            if (!step) return null;
+                                            
+                                            return (
+                                              <div className="space-y-3">
+                                                <div className="relative">
+                                                  <div className="absolute right-0 top-0 flex gap-2">
+                                                    <button
+                                                      onClick={() => setActivePlayground(topicIndex)}
+                                                      className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                                                    >
+                                                      <Code2 size={12} /> Sandbox Tryout
+                                                    </button>
+                                                    <button
+                                                      onClick={() => handleCopyCode(topic.code, topicIndex)}
+                                                      className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-455 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                                                    >
+                                                      <Clipboard size={12} />
+                                                      {copiedText === `${topicIndex}` ? 'Copied!' : 'Copy'}
+                                                    </button>
+                                                  </div>
+
+                                                  <div className="overflow-x-auto w-full pt-8 sm:pt-4">
+                                                    <pre className="text-xs font-mono text-cyan-400 leading-relaxed min-w-[300px]">
+                                                      <code>
+                                                        {step.lines.join('\n')}
+                                                      </code>
+                                                    </pre>
+                                                  </div>
+                                                </div>
+
+                                                {/* Step specific Explanation / Why annotation */}
+                                                <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl text-slate-300 text-[11px] leading-relaxed">
+                                                  <strong className="text-blue-300 uppercase tracking-widest text-[9px] block mb-1">🔍 Why this step?</strong>
+                                                  {step.explanation}
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  {/* Interactive Playground Sandbox */}
+                                  <AnimatePresence>
+                                    {activePlayground === topicIndex && (
+                                      <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                      >
+                                        <CodePlayground 
+                                          initialCode={topic.code} 
+                                          language={id === 'C' || id === 'C++' ? 'C/C++' : 'MicroPython'} 
+                                        />
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              )}
+
+                              {topic.note && (
+                                <div className="p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-teal-300 text-xs leading-relaxed flex items-start gap-3">
+                                  <span className="text-lg leading-none select-none">💡</span>
+                                  <div>
+                                    <strong className="text-teal-200 block mb-0.5">Core Takeaway</strong>
+                                    {topic.note}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Reader Control Row */}
+                              <div className="flex justify-between items-center pt-6 border-t border-slate-800 mt-8">
+                                <button
+                                  onClick={() => {
+                                    if (hasPrev) {
+                                      setActiveTopicIndex(topicIndex - 1);
+                                      setActiveCodeStep(null);
+                                    } else {
+                                      setViewState('module-home');
+                                    }
+                                  }}
+                                  className="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition cursor-pointer"
+                                >
+                                  ← {hasPrev ? 'Prev Topic' : 'Back to Outline'}
+                                </button>
+                                
+                                <button
+                                  onClick={() => {
+                                    if (hasNext) {
+                                      setActiveTopicIndex(topicIndex + 1);
+                                      setActiveCodeStep(null);
+                                    } else {
+                                      setViewState('module-home');
+                                      // Scroll down to the verification / quiz unlock block in module-home
+                                      setTimeout(() => {
+                                        window.scrollTo({
+                                          top: document.body.scrollHeight,
+                                          behavior: 'smooth'
+                                        });
+                                      }, 100);
+                                    }
+                                  }}
+                                  className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-widest transition cursor-pointer shadow-lg shadow-cyan-600/10"
+                                >
+                                  {hasNext ? 'Next Topic →' : 'Done & Go to Quiz'}
+                                </button>
+                              </div>
+                            </motion.div>
+                          );
+                        })()
+                      )}
+                    </AnimatePresence>
+                  )}
+                </>
+              ) : (
+                /* Project & Assignment Tab Content */
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="py-4 space-y-8"
+                >
+                  <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 border-l-4 border-l-purple-500 text-left relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent pointer-events-none"></div>
+                    <h3 className="text-xl font-extrabold text-white mb-2">Industrial Project Submission</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      As part of your training, you are required to submit a practical implementation of the concepts learned. 
+                      This is mandatory for generating your final certificate.
+                    </p>
+                    <div className="mt-6 flex flex-wrap gap-4">
+                      <div className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-300">
+                        Status: <span className="text-amber-400 font-extrabold">{currentWeek >= 20 ? 'Eligible for Certificate' : 'Pending Eligibility'}</span>
+                      </div>
+                      <div className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-300">
+                        Syllabus Completed: <span className="text-purple-400 font-black">{currentWeek}/20 Chapters</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {loadingSubmissions ? (
+                    <div className="flex justify-center items-center py-12">
+                      <Spinner size="md" />
+                    </div>
+                  ) : (
+                    <div className="space-y-6 text-left">
+                      <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Weekly Micro-Deliverables Checklist</h4>
+                      {[1, 2, 3, 4].map((weekNum) => {
+                        const submission = submissions.find(s => s.weekNumber === weekNum);
+                        const requiredModule = weekNum * 5;
+                        const isUnlocked = currentWeek >= requiredModule;
+                        return (
+                          <div key={weekNum} className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 space-y-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:border-slate-700/80">
+                            <div className="space-y-1.5 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-purple-400 uppercase tracking-wide">Week {weekNum} Deliverable</span>
+                                {submission ? (
+                                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${submission.status === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'}`}>{submission.status}</span>
+                                ) : isUnlocked ? (
+                                  <span className="text-[8px] font-black uppercase bg-blue-500/10 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded">Eligible</span>
+                                ) : (
+                                  <span className="text-[8px] font-black uppercase bg-slate-800 border border-slate-700 text-slate-500 px-2 py-0.5 rounded">Locked</span>
+                                )}
+                              </div>
+                              <p className="text-xs font-bold text-white">Week {weekNum} Practical Task Submission</p>
+                              {submission?.feedback && <div className="p-2.5 bg-slate-950/60 border border-slate-850 rounded-xl text-[10px] text-slate-400 mt-2">{submission.feedback}</div>}
+                            </div>
+                            <div className="shrink-0 flex items-center">
+                              {submission ? (
+                                <div className="text-[10px] text-slate-500 font-mono flex flex-col items-end gap-1">
+                                  <span>Submitted: {new Date(submission.submittedAt).toLocaleDateString()}</span>
+                                </div>
+                              ) : isUnlocked ? (
+                                submittingWeek === weekNum ? (
+                                  <div className="flex flex-col gap-2 w-full md:w-56 text-left">
+                                    <input type="text" placeholder="Enter file name (e.g. main.c)" value={submittingFileName} onChange={(e) => setSubmittingFileName(e.target.value)} className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500" />
+                                    <div className="flex gap-2">
+                                      <button disabled={isSubmitting} onClick={() => handleUploadAssignment(weekNum)} className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-extrabold uppercase rounded text-[9px] tracking-wider transition-colors">Confirm</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button onClick={() => { setSubmittingWeek(weekNum); setSubmittingFileName(''); }} className="w-full md:w-36 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 hover:border-purple-500/50 text-purple-400 font-extrabold text-[9px] uppercase tracking-widest rounded-lg">Upload</button>
+                                )
+                              ) : <div className="text-[10px] text-slate-500 font-semibold uppercase"><Lock size={12} /> Locked</div>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* Bottom Navigation */}
+              {activeTab === 'material' && viewState === 'module-home' && (
+                <div className="flex justify-between items-center pt-6 border-t border-slate-800/80 mt-10">
+                  <button disabled={activeWeekIndex === 0} onClick={() => { setActiveWeekIndex(activeWeekIndex - 1); }} className="px-4 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 transition cursor-pointer">← Prev Module</button>
+                  <button disabled={activeWeekIndex >= Math.min(currentWeek, weeks.length - 1)} onClick={() => { setActiveWeekIndex(activeWeekIndex + 1); }} className="px-4 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 text-[11px] font-extrabold uppercase tracking-wider disabled:opacity-30 transition cursor-pointer">Next Module →</button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

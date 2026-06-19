@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Lock, CheckCircle, ChevronRight } from 'lucide-react';
+import { BookOpen, Lock, CheckCircle, ChevronRight, Home } from 'lucide-react';
 
 interface Week {
   week: number;
@@ -13,6 +13,8 @@ interface SyllabusManagerProps {
   currentWeek: number;
   completedPercentage: number;
   onWeekChange?: () => void;
+  viewState?: 'course-home' | 'module-home' | 'topic-reader';
+  setViewState?: (state: 'course-home' | 'module-home' | 'topic-reader') => void;
 }
 
 const SyllabusManager: React.FC<SyllabusManagerProps> = ({
@@ -21,7 +23,9 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
   setActiveWeekIndex,
   currentWeek,
   completedPercentage,
-  onWeekChange
+  onWeekChange,
+  viewState = 'course-home',
+  setViewState
 }) => {
   const radius = 20;
   const circumference = 2 * Math.PI * radius;
@@ -66,10 +70,40 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
       </div>
       
       <div className="space-y-2.5">
+        {/* Course Home Overview Button */}
+        <button
+          onClick={() => {
+            if (setViewState) {
+              setViewState('course-home');
+              onWeekChange?.();
+            }
+          }}
+          className={`w-full text-left p-3.5 rounded-xl border flex items-center justify-between transition-all duration-200 group cursor-pointer ${
+            viewState === 'course-home'
+              ? 'bg-cyan-500/10 border-cyan-500/50 text-white shadow-lg shadow-cyan-500/5' 
+              : 'bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800 hover:border-slate-600'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg transition-colors ${
+              viewState === 'course-home'
+                ? 'bg-cyan-500/20 text-cyan-400' 
+                : 'bg-slate-700/50 text-slate-400'
+            }`}>
+              <Home size={18} />
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Overview</p>
+              <h4 className="text-sm font-bold">Course Syllabus Outline</h4>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-slate-500 group-hover:translate-x-0.5 transition-transform" />
+        </button>
+
         {weeks.map((week, index) => {
           const isUnlocked = index <= currentWeek;
           const isCompleted = index < currentWeek;
-          const isActive = index === activeWeekIndex;
+          const isActive = index === activeWeekIndex && viewState !== 'course-home';
           
           return (
             <button
@@ -77,6 +111,9 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
               disabled={!isUnlocked}
               onClick={() => {
                 setActiveWeekIndex(index);
+                if (setViewState) {
+                  setViewState('module-home');
+                }
                 onWeekChange?.();
               }}
               className={`w-full text-left p-3.5 rounded-xl border flex items-center justify-between transition-all duration-200 group ${
