@@ -424,9 +424,8 @@ const Dashboard = () => {
                 <h3 className="text-xl font-bold text-white mt-1">
                   {(() => {
                     const count = user?.referralCount || 0;
-                    if (count >= 20) return "100% OFF (FREE)";
-                    if (count >= 10) return "50% OFF";
-                    if (count >= 5) return "30% OFF";
+                    if (count >= 10) return "100% OFF (FREE)";
+                    if (count >= 5) return "50% OFF";
                     return "0% OFF";
                   })()}
                 </h3>
@@ -439,9 +438,8 @@ const Dashboard = () => {
             <h4 className="text-sm font-bold text-white uppercase tracking-wider">Rewards & Tiers Progression</h4>
             <div className="space-y-6">
               {[
-                { target: 5, discount: "30% Discount", desc: "Unlock 30% discount on any course enrollment certificate", color: "from-blue-500 to-indigo-600" },
-                { target: 10, discount: "50% Discount", desc: "Unlock half-price (50% discount) on course enrollment certificate", color: "from-indigo-500 to-purple-600" },
-                { target: 20, discount: "100% Discount (FREE)", desc: "Unlock complete 100% discount - get course certificate completely FREE!", color: "from-emerald-500 to-teal-600" }
+                { target: 5, discount: "50% Discount", desc: "Unlock half-price (50% discount) on any course enrollment certificate", color: "from-indigo-500 to-purple-600" },
+                { target: 10, discount: "100% Discount (FREE)", desc: "Unlock complete 100% discount - get course certificate completely FREE!", color: "from-emerald-500 to-teal-600" }
               ].map((tier, idx) => {
                 const referrals = user?.referralCount || 0;
                 const isUnlocked = referrals >= tier.target;

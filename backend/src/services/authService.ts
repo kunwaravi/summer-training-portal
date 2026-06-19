@@ -136,7 +136,7 @@ export const getUserById = async (userId: number) => {
 };
 
 export const getAllUsers = async () => {
-  return await prisma.user.findMany({
+  const users = await prisma.user.findMany({
     select: {
       id: true,
       name: true,
@@ -164,6 +164,20 @@ export const getAllUsers = async () => {
       id: 'asc'
     }
   });
+
+  // Calculate referral counts in memory from referredBy frequencies
+  const referralCounts = new Map<string, number>();
+  users.forEach(u => {
+    if (u.referredBy) {
+      const code = u.referredBy.trim();
+      referralCounts.set(code, (referralCounts.get(code) || 0) + 1);
+    }
+  });
+
+  return users.map(u => ({
+    ...u,
+    referralCount: u.referralCode ? (referralCounts.get(u.referralCode.trim()) || 0) : 0
+  }));
 };
 
 export const deleteUser = async (userId: number) => {

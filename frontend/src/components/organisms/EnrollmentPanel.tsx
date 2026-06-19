@@ -38,9 +38,8 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
 
   const referralCount = user?.referralCount || 0;
   let referralDiscount = 0;
-  if (referralCount >= 20) referralDiscount = 1.0;
-  else if (referralCount >= 10) referralDiscount = 0.5;
-  else if (referralCount >= 5) referralDiscount = 0.3;
+  if (referralCount >= 10) referralDiscount = 1.0;
+  else if (referralCount >= 5) referralDiscount = 0.5;
 
   const finalDiscount = Math.max(discount, referralDiscount);
   const currentPrice = Math.round(BASE_PRICE * (1 - finalDiscount));

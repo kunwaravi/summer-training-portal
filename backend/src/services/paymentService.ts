@@ -51,9 +51,8 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
       where: { referredBy: user.referralCode }
     });
     
-    if (referralCount >= 20) discountPct = 100;
-    else if (referralCount >= 10) discountPct = 50;
-    else if (referralCount >= 5) discountPct = 30;
+    if (referralCount >= 10) discountPct = 100;
+    else if (referralCount >= 5) discountPct = 50;
   }
 
   // Calculate final discount-adjusted price

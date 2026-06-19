@@ -484,10 +484,11 @@ const AdminDashboard = () => {
                     onChange={(e) => setSelectedCourseId(e.target.value)}
                     className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-cyan-500"
                   >
-                    <option value="C">C & Systems Programming</option>
-                    <option value="C++">C++ & OOP</option>
-                    <option value="IoT">IoT Interfacing</option>
-                    <option value="Embedded">Embedded Systems</option>
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title} ({c.id})
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <button
@@ -741,6 +742,7 @@ const AdminDashboard = () => {
                     </th>
                     <th className="py-3 px-4">Academic Details</th>
                     <th className="py-3 px-4">Pursuing Courses</th>
+                    <th className="py-3 px-4">Referrals</th>
                     <th className="py-3 px-4">Role</th>
                     <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('createdAt')}>
                       Registration Date {sortField === 'createdAt' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
@@ -823,6 +825,21 @@ const AdminDashboard = () => {
                               );
                             });
                           })()}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="space-y-0.5">
+                          <div className="font-semibold text-slate-200">
+                            Code: <span className="font-mono text-[10px] text-cyan-400">{u.referralCode || 'N/A'}</span>
+                          </div>
+                          {u.referredBy && (
+                            <div className="text-[9px] text-slate-500">
+                              Referred By: <span className="font-mono">{u.referredBy}</span>
+                            </div>
+                          )}
+                          <div className="text-[10px] text-emerald-400 font-bold">
+                            Count: {u.referralCount || 0}
+                          </div>
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
