@@ -70,7 +70,8 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
     try {
       const orderRes = await api.post('/payments/create-order', {
         courseId: courseId,
-        amount: currentPrice
+        amount: currentPrice,
+        couponCode: isCouponApplied ? couponCode : undefined
       });
 
       const { orderId, mockSignature } = orderRes.data;

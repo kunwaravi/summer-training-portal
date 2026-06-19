@@ -32,7 +32,7 @@ export const getPaymentStatus = async (userId: number, courseId: string) => {
   return payment;
 };
 
-export const createOrder = async (userId: number, courseId: string, amount: number) => {
+export const createOrder = async (userId: number, courseId: string, amount: number, couponCode?: string) => {
   // Fetch course details to get the actual price
   const course = await prisma.course.findUnique({
     where: { id: courseId }
@@ -44,7 +44,7 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
     where: { id: userId }
   });
 
-  let discountPct = 0;
+  let referralDiscount = 0;
   let referralCount = 0;
   if (user && user.referralCode) {
     referralCount = await prisma.user.count({
@@ -56,14 +56,24 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
       }
     });
     
-    if (referralCount >= 10) discountPct = 100;
-    else if (referralCount >= 5) discountPct = 50;
+    if (referralCount >= 10) referralDiscount = 1.0;
+    else if (referralCount >= 5) referralDiscount = 0.5;
   }
 
-  // Calculate final discount-adjusted price
-  const finalAmount = Math.round(basePrice * (1 - discountPct / 100));
+  // Calculate coupon discount
+  let couponDiscount = 0;
+  if (couponCode) {
+    const code = couponCode.toUpperCase().trim();
+    if (code === 'SAVI10') couponDiscount = 1.0;
+    else if (code === 'AVI050') couponDiscount = 0.5;
+    else if (code === 'AVI030') couponDiscount = 0.3;
+  }
 
-  // If finalAmount is 0 (100% discount via 20+ referrals), approve it automatically
+  // Calculate final discount-adjusted price (using maximum of referral or coupon discount)
+  const finalDiscount = Math.max(referralDiscount, couponDiscount);
+  const finalAmount = Math.round(basePrice * (1 - finalDiscount));
+
+  // If finalAmount is 0 (100% discount via 10+ referrals or coupon), approve it automatically
   const status = finalAmount === 0 ? 'VERIFIED' : 'PENDING';
 
   const payment = await prisma.payment.create({
@@ -86,13 +96,13 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
     amount: payment.amount,
     courseId: payment.courseId,
     mockSignature,
-    discountApplied: discountPct,
+    discountApplied: finalDiscount * 100,
     referralCount,
     isFree: finalAmount === 0
   };
 };
 
-// Student submits payment proof — sets status to PENDING_VERIFICATION for admin review
+// Student submits payment proof — sets status to PENDING_VERIFICATION for admin review, or VERIFIED if free
 export const submitPaymentForVerification = async (
   orderId: string,
   mockSignature: string,
@@ -118,11 +128,12 @@ export const submitPaymentForVerification = async (
     return { error: 'Security Check: Cryptographic payment signature spoofing detected!', status: 403 };
   }
 
-  // Mark as pending verification — admin must approve before certificate is unlocked
+  // Mark as verified if free checkout (amount is 0), else pending verification
+  const newStatus = payment.amount === 0 ? 'VERIFIED' : 'PENDING_VERIFICATION';
   const updatedPayment = await prisma.payment.update({
     where: { id: orderId },
     data: {
-      status: 'PENDING_VERIFICATION',
+      status: newStatus,
       reference: gatewayReference || `UPI_REF_${crypto.randomBytes(6).toString('hex').toUpperCase()}`
     }
   });

@@ -363,7 +363,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ mode = 'login' }) => {
             <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">
               {isLogin ? 'New to Edunexus?' : 'Already have an account?'}{' '}
               <button
-                onClick={() => navigate(isLogin ? '/register' : '/login')}
+                onClick={() => {
+                  const ref = searchParams.get('ref');
+                  const query = ref ? `?ref=${ref}` : '';
+                  navigate(isLogin ? `/register${query}` : `/login${query}`);
+                }}
                 className="text-blue-400 hover:text-blue-300 font-black ml-1 transition underline decoration-2 underline-offset-4"
               >
                 {isLogin ? 'Join Free' : 'Login Here'}

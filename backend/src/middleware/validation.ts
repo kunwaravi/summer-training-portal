@@ -95,6 +95,7 @@ export const createOrderSchema = z.object({
   body: z.object({
     courseId: z.string(),
     amount: z.number().or(z.string()),
+    couponCode: z.string().optional(),
   }),
 });
 

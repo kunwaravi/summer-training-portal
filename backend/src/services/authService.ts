@@ -30,7 +30,7 @@ export const registerUser = async (userData: any) => {
     if (referrer) {
       validReferredBy = normalizedReferredBy;
     } else {
-      console.warn(`User registered with invalid referredBy code: ${referredBy}`);
+      throw new AppError('The referral code entered does not exist. Please check the code or register without it.', 400);
     }
   }
 

@@ -75,10 +75,10 @@ const AdminDashboard = () => {
   const [selectedCourseId, setSelectedCourseId] = useState<string>('C');
 
   // Candidate sorting states
-  const [sortField, setSortField] = useState<'id' | 'name' | 'createdAt'>('id');
+  const [sortField, setSortField] = useState<'id' | 'name' | 'createdAt' | 'referralCount'>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  const handleSort = (field: 'id' | 'name' | 'createdAt') => {
+  const handleSort = (field: 'id' | 'name' | 'createdAt' | 'referralCount') => {
     if (sortField === field) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
@@ -94,6 +94,11 @@ const AdminDashboard = () => {
     if (sortField === 'createdAt') {
       aVal = aVal ? new Date(aVal).getTime() : 0;
       bVal = bVal ? new Date(bVal).getTime() : 0;
+    }
+
+    if (sortField === 'referralCount') {
+      aVal = aVal || 0;
+      bVal = bVal || 0;
     }
     
     if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
@@ -742,7 +747,9 @@ const AdminDashboard = () => {
                     </th>
                     <th className="py-3 px-4">Academic Details</th>
                     <th className="py-3 px-4">Pursuing Courses</th>
-                    <th className="py-3 px-4">Referrals</th>
+                    <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('referralCount')}>
+                      Referrals {sortField === 'referralCount' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                    </th>
                     <th className="py-3 px-4">Role</th>
                     <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('createdAt')}>
                       Registration Date {sortField === 'createdAt' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}

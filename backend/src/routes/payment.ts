@@ -75,9 +75,9 @@ router.get('/status/:courseId', authenticateToken, async (req: any, res: any, ne
 router.post('/create-order', authenticateToken, validate(createOrderSchema), async (req: any, res: any, next: any) => {
   try {
     const userId = req.user.id;
-    const { courseId, amount } = req.body;
+    const { courseId, amount, couponCode } = req.body;
 
-    const orderData = await paymentService.createOrder(userId, courseId, parseInt(amount));
+    const orderData = await paymentService.createOrder(userId, courseId, parseInt(amount), couponCode);
     res.json(orderData);
   } catch (error) {
     next(error);
