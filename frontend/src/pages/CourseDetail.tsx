@@ -177,6 +177,15 @@ const CourseDetail = () => {
   const [submittingFileName, setSubmittingFileName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Doubts State
+  const [isDoubtOpen, setIsDoubtOpen] = useState(false);
+  const [doubtTopicTitle, setDoubtTopicTitle] = useState('');
+  const [doubtsList, setDoubtsList] = useState<any[]>([]);
+  const [loadingDoubts, setLoadingDoubts] = useState(false);
+  const [newDoubtText, setNewDoubtText] = useState('');
+  const [expandedDoubtId, setExpandedDoubtId] = useState<number | null>(null);
+  const [newCommentText, setNewCommentText] = useState('');
+
   const fetchSubmissions = useCallback(async () => {
     if (!id) return;
     setLoadingSubmissions(true);
@@ -195,6 +204,66 @@ const CourseDetail = () => {
       fetchSubmissions();
     }
   }, [id, fetchSubmissions]);
+
+  const fetchDoubts = useCallback(async () => {
+    if (!id) return;
+    setLoadingDoubts(true);
+    try {
+      const res = await api.get(`/forum?courseId=${id}`);
+      setDoubtsList(res.data.discussions || []);
+    } catch (err) {
+      console.error('Failed to load doubts:', err);
+    } finally {
+      setLoadingDoubts(false);
+    }
+  }, [id]);
+
+  const handlePostDoubt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDoubtText.trim() || !id) return;
+    try {
+      const res = await api.post('/forum', {
+        title: `Doubt: ${doubtTopicTitle}`,
+        content: newDoubtText,
+        courseId: id
+      });
+      setDoubtsList([res.data, ...doubtsList]);
+      setNewDoubtText('');
+      addToast('Doubt posted to community discussion forum!', 'success');
+    } catch (err) {
+      console.error('Failed to post doubt:', err);
+      addToast('Failed to post doubt.', 'error');
+    }
+  };
+
+  const handlePostComment = async (postId: number) => {
+    if (!newCommentText.trim()) return;
+    try {
+      const res = await api.post(`/forum/${postId}/comment`, {
+        content: newCommentText
+      });
+      setDoubtsList(prev => prev.map(d => {
+        if (d.id === postId) {
+          return {
+            ...d,
+            comments: [...(d.comments || []), res.data]
+          };
+        }
+        return d;
+      }));
+      setNewCommentText('');
+      addToast('Reply posted successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to post reply:', err);
+      addToast('Failed to post reply.', 'error');
+    }
+  };
+
+  useEffect(() => {
+    if (id && isDoubtOpen) {
+      fetchDoubts();
+    }
+  }, [id, isDoubtOpen, fetchDoubts]);
 
   const handleUploadAssignment = async (weekNum: number) => {
     if (!submittingFileName.trim()) {
@@ -230,11 +299,8 @@ const CourseDetail = () => {
   };
 
   const handleAskDoubt = (topicTitle: string) => {
-    const text = encodeURIComponent(`Hi Nexus! I have a doubt in Course: ${courseTitle}, Week ${selectedWeek?.week || activeWeekIndex + 1}, Topic: ${topicTitle}.`);
-    const channel = Math.random() > 0.5 
-      ? 'https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar' 
-      : 'https://t.me/+tCapxtLwxNNlZjY1';
-    window.open(`${channel}?text=${text}`, '_blank');
+    setDoubtTopicTitle(topicTitle);
+    setIsDoubtOpen(true);
   };
 
   const selectedWeek = weeks[activeWeekIndex];
@@ -1020,6 +1086,196 @@ const CourseDetail = () => {
           navigate={navigate}
         />
       )}
+
+      {/* Contextual Doubts Side Drawer */}
+      <AnimatePresence>
+        {isDoubtOpen && (
+          <>
+            {/* Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDoubtOpen(false)}
+              className="fixed inset-0 z-50 bg-black no-print"
+            />
+
+            {/* Slide-over container */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-slate-950 border-l border-slate-850 p-6 flex flex-col justify-between shadow-2xl no-print text-left"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center pb-4 border-b border-slate-900">
+                <div>
+                  <h3 className="text-base font-black text-white uppercase tracking-wider">Ask a Doubt</h3>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase truncate max-w-[280px]">
+                    Topic: {doubtTopicTitle}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsDoubtOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-900 border border-slate-850 text-slate-400 hover:text-white flex items-center justify-center text-sm transition-colors cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Scrollable Doubt & Community Panel */}
+              <div className="flex-1 overflow-y-auto py-4 space-y-6 pr-1">
+                {/* 1. Community Discussion Forum */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-900/60 pb-1 flex items-center gap-1.5">
+                    <MessageSquare size={12} className="text-blue-400" />
+                    Community Doubts for this Track
+                  </h4>
+
+                  {loadingDoubts ? (
+                    <div className="space-y-3 py-4 animate-pulse">
+                      <div className="h-10 bg-slate-905 rounded-lg w-full"></div>
+                      <div className="h-10 bg-slate-905 rounded-lg w-full"></div>
+                    </div>
+                  ) : doubtsList.length === 0 ? (
+                    <div className="p-4 rounded-xl border border-dashed border-slate-900 bg-slate-950/20 text-center">
+                      <p className="text-xs text-slate-500 font-medium">No doubts posted yet. Be the first to ask!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3.5">
+                      {doubtsList.map((doubt: any) => {
+                        const isExpanded = expandedDoubtId === doubt.id;
+                        return (
+                          <div 
+                            key={doubt.id} 
+                            className={`border rounded-xl p-3.5 transition-all bg-slate-950/40 ${isExpanded ? 'border-slate-800' : 'border-slate-900 hover:border-slate-850'}`}
+                          >
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <span className="text-[9px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider block mb-1 w-max">
+                                  {doubt.user?.name ? doubt.user.name.split(' ')[0] : 'Student'}
+                                </span>
+                                <p className="text-xs font-extrabold text-white leading-relaxed">{doubt.content}</p>
+                                <span className="text-[8px] text-slate-600 font-mono block mt-1">
+                                  {new Date(doubt.createdAt).toLocaleString()}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => setExpandedDoubtId(isExpanded ? null : doubt.id)}
+                                className="text-[9px] font-black text-slate-450 hover:text-white uppercase tracking-wider border border-slate-900 px-2 py-0.5 rounded bg-slate-900/40 cursor-pointer"
+                              >
+                                {isExpanded ? 'Collapse' : `Replies (${doubt.comments?.length || 0})`}
+                              </button>
+                            </div>
+
+                            {/* Replies List */}
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  className="overflow-hidden mt-3 pl-4 border-l-2 border-slate-900 space-y-3"
+                                >
+                                  <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
+                                    {(doubt.comments || []).length === 0 ? (
+                                      <p className="text-[10px] text-slate-500 italic">No replies yet.</p>
+                                    ) : (
+                                      doubt.comments.map((comment: any) => (
+                                        <div key={comment.id} className="p-2 bg-slate-950 rounded-lg border border-slate-900/60 text-left">
+                                          <div className="flex justify-between items-center mb-1">
+                                            <span className={`text-[8.5px] font-black uppercase tracking-wider ${comment.user?.role === 'ADMIN' ? 'text-amber-400 bg-amber-500/10' : 'text-slate-400 bg-slate-900'} px-1.5 py-0.5 rounded`}>
+                                              {comment.user?.name || 'User'} {comment.user?.role === 'ADMIN' && '★ Staff'}
+                                            </span>
+                                            <span className="text-[8px] text-slate-650 font-mono">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                                          </div>
+                                          <p className="text-[10.5px] text-slate-350 leading-relaxed font-medium">{comment.content}</p>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+
+                                  {/* Reply Comment Form */}
+                                  <div className="flex gap-2 pt-1">
+                                    <input
+                                      type="text"
+                                      placeholder="Write a reply..."
+                                      value={newCommentText}
+                                      onChange={(e) => setNewCommentText(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handlePostComment(doubt.id);
+                                      }}
+                                      className="flex-1 bg-slate-950 border border-slate-900 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-blue-500"
+                                    />
+                                    <button
+                                      onClick={() => handlePostComment(doubt.id)}
+                                      className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded-lg text-[9px] tracking-wider transition cursor-pointer"
+                                    >
+                                      Reply
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Direct Instant Support Options */}
+                <div className="p-4 bg-slate-900/20 border border-slate-900 rounded-xl space-y-3">
+                  <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-1.5">
+                    <Zap size={12} className="text-amber-400" />
+                    Instant Staff Support
+                  </h4>
+                  <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                    Want private support or need help with a custom code bug? Chat directly with our staff on WhatsApp or Telegram groups.
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <a
+                      href={`https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar?text=${encodeURIComponent(`Doubt in Course: ${courseTitle}, Topic: ${doubtTopicTitle}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-450 hover:text-emerald-300 font-extrabold text-[9px] uppercase tracking-wider transition"
+                    >
+                      WhatsApp Help
+                    </a>
+                    <a
+                      href={`https://t.me/+tCapxtLwxNNlZjY1?text=${encodeURIComponent(`Doubt in Course: ${courseTitle}, Topic: ${doubtTopicTitle}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-450 hover:text-blue-300 font-extrabold text-[9px] uppercase tracking-wider transition"
+                    >
+                      Telegram Help
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom New Doubt Input Form */}
+              <form onSubmit={handlePostDoubt} className="border-t border-slate-900 pt-4 mt-2 space-y-2.5">
+                <textarea
+                  placeholder="Post a new doubt/question for the community..."
+                  value={newDoubtText}
+                  onChange={(e) => setNewDoubtText(e.target.value)}
+                  rows={2}
+                  className="w-full bg-slate-950 border border-slate-900 rounded-xl p-3 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-blue-500 resize-none font-medium"
+                />
+                <button
+                  type="submit"
+                  disabled={!newDoubtText.trim()}
+                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-extrabold uppercase rounded-xl text-[10px] tracking-wider transition cursor-pointer"
+                >
+                  Post Doubt to Forum
+                </button>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Lightbox Modal */}
       <AnimatePresence>
