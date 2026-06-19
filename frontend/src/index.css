@@ -101,3 +101,66 @@ body {
   background-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
+
+/* High-Contrast Light Mode Accent Text Overrides */
+.light .text-blue-400 {
+  color: #1d4ed8 !important; /* Blue 700 */
+}
+.light .text-emerald-400 {
+  color: #047857 !important; /* Emerald 700 */
+}
+.light .text-cyan-400 {
+  color: #0369a1 !important; /* Cyan 700 */
+}
+.light .text-amber-400,
+.light .text-yellow-500 {
+  color: #b45309 !important; /* Amber 700 */
+}
+.light .text-red-400 {
+  color: #b91c1c !important; /* Red 700 */
+}
+
+/* Premium Light Mode Backgrounds for Badges & Accents */
+.light .bg-blue-500\/5,
+.light .bg-blue-500\/10 {
+  background-color: #eff6ff !important; /* Blue 50 */
+}
+.light .bg-emerald-500\/5,
+.light .bg-emerald-500\/10 {
+  background-color: #ecfdf5 !important; /* Emerald 50 */
+}
+.light .bg-cyan-500\/5,
+.light .bg-cyan-500\/10 {
+  background-color: #ecfeff !important; /* Cyan 50 */
+}
+.light .bg-amber-500\/5,
+.light .bg-amber-500\/10 {
+  background-color: #fffbef !important; /* Amber 50 */
+}
+.light .bg-red-500\/5,
+.light .bg-red-500\/10 {
+  background-color: #fef2f2 !important; /* Red 50 */
+}
+
+/* Premium Light Mode Borders for Badges & Cards */
+.light .border-blue-500\/20,
+.light .border-blue-500\/25 {
+  border-color: #bfdbfe !important; /* Blue 200 */
+}
+.light .border-emerald-500\/20,
+.light .border-emerald-500\/25 {
+  border-color: #a7f3d0 !important; /* Emerald 200 */
+}
+.light .border-cyan-500\/20,
+.light .border-cyan-500\/25 {
+  border-color: #bae6fd !important; /* Cyan 200 */
+}
+.light .border-amber-500\/20,
+.light .border-amber-500\/25 {
+  border-color: #fde68a !important; /* Amber 200 */
+}
+.light .border-red-500\/20,
+.light .border-red-500\/25 {
+  border-color: #fca5a5 !important; /* Red 300 */
+}
+
