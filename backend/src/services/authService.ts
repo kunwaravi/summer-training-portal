@@ -23,11 +23,12 @@ export const registerUser = async (userData: any) => {
   // Validate referredBy if provided
   let validReferredBy: string | null = null;
   if (referredBy) {
+    const normalizedReferredBy = referredBy.trim().toUpperCase();
     const referrer = await prisma.user.findUnique({
-      where: { referralCode: referredBy }
+      where: { referralCode: normalizedReferredBy }
     });
     if (referrer) {
-      validReferredBy = referredBy;
+      validReferredBy = normalizedReferredBy;
     } else {
       console.warn(`User registered with invalid referredBy code: ${referredBy}`);
     }
@@ -96,7 +97,12 @@ export const loginUser = async (credentials: any) => {
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1d' });
   
   const referralCount = await prisma.user.count({
-    where: { referredBy: user.referralCode }
+    where: {
+      referredBy: {
+        equals: user.referralCode,
+        mode: 'insensitive'
+      }
+    }
   });
 
   // Omit password from return
@@ -128,7 +134,12 @@ export const getUserById = async (userId: number) => {
   }
 
   const referralCount = await prisma.user.count({
-    where: { referredBy: user.referralCode }
+    where: {
+      referredBy: {
+        equals: user.referralCode,
+        mode: 'insensitive'
+      }
+    }
   });
 
   const { password: _, ...userWithoutPassword } = user;
@@ -165,18 +176,18 @@ export const getAllUsers = async () => {
     }
   });
 
-  // Calculate referral counts in memory from referredBy frequencies
+  // Calculate referral counts in memory from referredBy frequencies (case-insensitive)
   const referralCounts = new Map<string, number>();
   users.forEach(u => {
     if (u.referredBy) {
-      const code = u.referredBy.trim();
+      const code = u.referredBy.trim().toUpperCase();
       referralCounts.set(code, (referralCounts.get(code) || 0) + 1);
     }
   });
 
   return users.map(u => ({
     ...u,
-    referralCount: u.referralCode ? (referralCounts.get(u.referralCode.trim()) || 0) : 0
+    referralCount: u.referralCode ? (referralCounts.get(u.referralCode.trim().toUpperCase()) || 0) : 0
   }));
 };
 

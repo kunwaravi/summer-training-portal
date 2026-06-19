@@ -48,7 +48,12 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
   let referralCount = 0;
   if (user && user.referralCode) {
     referralCount = await prisma.user.count({
-      where: { referredBy: user.referralCode }
+      where: {
+        referredBy: {
+          equals: user.referralCode,
+          mode: 'insensitive'
+        }
+      }
     });
     
     if (referralCount >= 10) discountPct = 100;

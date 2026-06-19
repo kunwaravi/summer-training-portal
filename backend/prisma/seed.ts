@@ -261,7 +261,7 @@ async function main() {
           id: courseData.id,
           title: courseData.title,
           description: courseData.description,
-          price: 999,
+          price: 499,
           isPublished: true
         }
       });
@@ -272,6 +272,7 @@ async function main() {
         data: {
           title: courseData.title,
           description: courseData.description,
+          price: 499
         }
       });
       console.log(`Updated Course: ${course.id}`);
