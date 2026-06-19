@@ -33,13 +33,13 @@ body {
 }
 
 .light .bg-slate-950,
-.light .bg-slate-950/40,
-.light .bg-slate-950/50,
-.light .bg-slate-950/60,
+.light .bg-slate-950\\/40,
+.light .bg-slate-950\\/50,
+.light .bg-slate-950\\/60,
 .light .bg-slate-900,
-.light .bg-slate-900/20,
-.light .bg-slate-900/40,
-.light .bg-slate-900/60 {
+.light .bg-slate-900\\/20,
+.light .bg-slate-900\\/40,
+.light .bg-slate-900\\/60 {
   background-color: #ffffff !important;
   color: #0f172a !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;

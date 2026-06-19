@@ -7,7 +7,8 @@ import {
   LogIn, UserPlus, Mail, Lock, User, GraduationCap, 
   ShieldCheck, CheckCircle2, Send, MessageSquare, BookOpen, 
   Cpu, Code2, Server, Wifi, Terminal, Settings, Database, 
-  Trophy, Medal, Star, ExternalLink, ArrowRight, Zap, Play, Sparkles
+  Trophy, Medal, Star, ExternalLink, ArrowRight, Zap, Play, Sparkles,
+  ChevronDown, ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/atoms/Button';
@@ -129,16 +130,57 @@ const courseDetails = [
   }
 ];
 
+const ResistorIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M4 32h10l4-12 6 24 6-24 6 24 6-24 4 12h18" />
+    <rect x="20" y="24" width="24" height="16" rx="2" fill="currentColor" fillOpacity="0.05" stroke="currentColor" strokeWidth="2" />
+    <line x1="26" y1="24" x2="26" y2="40" />
+    <line x1="32" y1="24" x2="32" y2="40" />
+    <line x1="38" y1="24" x2="38" y2="40" />
+  </svg>
+);
+
+const AndGateIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M16 16h16c8 0 16 6 16 16s-8 16-16 16H16V16z" />
+    <line x1="4" y1="24" x2="16" y2="24" />
+    <line x1="4" y1="40" x2="16" y2="40" />
+    <line x1="48" y1="32" x2="60" y2="32" />
+  </svg>
+);
+
+const CapacitorIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <line x1="32" y1="4" x2="32" y2="26" />
+    <line x1="32" y1="38" x2="32" y2="60" />
+    <line x1="16" y1="26" x2="48" y2="26" strokeWidth="3" />
+    <line x1="16" y1="38" x2="48" y2="38" strokeWidth="3" />
+  </svg>
+);
+
+const getGlowStyles = (id: string) => {
+  switch (id) {
+    case 'C': return 'hover:border-blue-500/50 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]';
+    case 'C++': return 'hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]';
+    case 'IoT': return 'hover:border-teal-500/50 hover:shadow-[0_0_20px_rgba(20,184,166,0.15)]';
+    case 'Embedded': return 'hover:border-orange-500/50 hover:shadow-[0_0_20px_rgba(249,115,22,0.15)]';
+    case 'WebDesign': return 'hover:border-pink-500/50 hover:shadow-[0_0_20px_rgba(236,72,153,0.15)]';
+    case 'Python': return 'hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]';
+    case 'SQL': return 'hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]';
+    default: return 'hover:border-slate-700/80';
+  }
+};
+
 // Floating Tech Background Icons
 const FloatingTechIcons = () => {
   const icons = [
     { Icon: Cpu, color: 'text-blue-500/20', size: 40, x: '8%', y: '12%', delay: 0 },
-    { Icon: Code2, color: 'text-amber-500/20', size: 36, x: '82%', y: '18%', delay: 1 },
+    { Icon: ResistorIcon, color: 'text-amber-500/20', size: 44, x: '82%', y: '18%', delay: 1 },
     { Icon: Server, color: 'text-purple-500/20', size: 44, x: '72%', y: '78%', delay: 2 },
-    { Icon: Wifi, color: 'text-teal-500/20', size: 38, x: '18%', y: '82%', delay: 1.5 },
-    { Icon: Terminal, color: 'text-pink-500/20', size: 32, x: '5%', y: '48%', delay: 0.5 },
+    { Icon: AndGateIcon, color: 'text-teal-500/20', size: 40, x: '18%', y: '82%', delay: 1.5 },
+    { Icon: CapacitorIcon, color: 'text-pink-500/20', size: 36, x: '5%', y: '48%', delay: 0.5 },
     { Icon: Database, color: 'text-emerald-500/20', size: 42, x: '88%', y: '52%', delay: 2.5 },
-    { Icon: Settings, color: 'text-indigo-500/20', size: 36, x: '42%', y: '88%', delay: 3 },
+    { Icon: Code2, color: 'text-indigo-500/20', size: 36, x: '42%', y: '88%', delay: 3 },
   ];
 
   return (
@@ -183,6 +225,8 @@ const Home = () => {
   const [previewCourse, setPreviewCourse] = useState<any | null>(null);
   const [topStudents, setTopStudents] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
+  const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
+  const [activeWeekPreview, setActiveWeekPreview] = useState<number>(1);
 
   const { login } = useAuth();
   const { addToast } = useUI();
@@ -258,6 +302,49 @@ const Home = () => {
         className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-teal-400 to-amber-500 z-50 origin-left"
         style={{ transform: `scaleX(${scrollProgress})` }}
       />
+
+      {/* Animated Mesh Gradient Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-20">
+        <motion.div
+          animate={{
+            x: [0, 40, -40, 0],
+            y: [0, -50, 50, 0],
+            scale: [1, 1.15, 0.9, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/10 blur-[130px]"
+        />
+        <motion.div
+          animate={{
+            x: [0, -50, 50, 0],
+            y: [0, 40, -40, 0],
+            scale: [1, 0.9, 1.2, 1],
+          }}
+          transition={{
+            duration: 30,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute bottom-[20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-amber-500/5 blur-[120px]"
+        />
+        <motion.div
+          animate={{
+            x: [0, 30, -30, 0],
+            y: [0, 30, -30, 0],
+            scale: [1, 1.1, 0.85, 1],
+          }}
+          transition={{
+            duration: 28,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-[40%] left-[20%] w-[45%] h-[45%] rounded-full bg-purple-600/8 blur-[110px]"
+        />
+      </div>
 
       {/* Floating Background Icons */}
       <FloatingTechIcons />
@@ -360,6 +447,24 @@ const Home = () => {
         </motion.div>
       </div>
 
+    {/* Animated Scroll Indicator */}
+    <div className="flex justify-center pb-4">
+      <motion.div
+        animate={{ y: [0, 8, 0] }}
+        transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+        className="text-slate-500 hover:text-amber-400 transition-colors cursor-pointer flex flex-col items-center gap-1.5"
+        onClick={() => {
+          const el = document.getElementById('catalog-section');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+      >
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Explore Catalog</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-amber-500">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 13l-7 7-7-7" />
+        </svg>
+      </motion.div>
+    </div>
+
       {/* 2. Trust Metrics / Social Proof Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-y border-slate-800/80 py-8 relative">
         <div className="text-center space-y-1">
@@ -389,17 +494,35 @@ const Home = () => {
         </div>
 
         {/* Bento Grid layout */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+        <motion.div 
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.08 }
+            }
+          }}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="grid grid-cols-1 md:grid-cols-6 gap-6"
+        >
           {courseDetails.map((course) => {
             const IconComp = course.icon;
+            const glowStyles = getGlowStyles(course.id);
             return (
               <motion.div
                 key={course.id}
-                whileHover={{ y: -5 }}
+                variants={{
+                  hidden: { opacity: 0, y: 25 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                transition={{ type: "spring", stiffness: 120, damping: 14 }}
                 className={`col-span-1 ${course.colSpan} flex`}
               >
                 <Card 
-                  className="w-full p-6 flex flex-col justify-between relative overflow-hidden border border-slate-850 hover:border-slate-700/80 transition-all duration-300"
+                  className={`w-full p-6 flex flex-col justify-between relative overflow-hidden border border-slate-850 transition-all duration-350 ${glowStyles}`}
                   variant="glass"
                 >
                   {/* Subtle decorative glow */}
@@ -431,8 +554,8 @@ const Home = () => {
 
                   <div className="pt-6 mt-6 border-t border-slate-850/60 flex items-center justify-between gap-4">
                     <button 
-                      onClick={() => setPreviewCourse(course)}
-                      className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-wider flex items-center gap-1 transition-colors"
+                      onClick={() => { setPreviewCourse(course); setActiveWeekPreview(1); }}
+                      className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-wider flex items-center gap-1 transition-colors animate-pulse hover:animate-none"
                     >
                       <BookOpen size={12} /> Preview Syllabus
                     </button>
@@ -447,7 +570,7 @@ const Home = () => {
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
 
       {/* 4. Student Hall of Fame Section (Issue #45) */}
@@ -462,59 +585,122 @@ const Home = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {topStudents.slice(0, 3).map((student, idx) => {
-            const rankColors = [
-              'border-yellow-500/50 shadow-yellow-500/5 bg-gradient-to-b from-yellow-500/5 to-slate-950',
-              'border-slate-400/50 shadow-slate-400/5 bg-gradient-to-b from-slate-400/5 to-slate-950',
-              'border-amber-600/50 shadow-amber-600/5 bg-gradient-to-b from-amber-600/5 to-slate-950'
-            ];
-            const medalIcons = [
-              <Trophy className="text-yellow-400 animate-bounce" size={24} />,
-              <Medal className="text-slate-350" size={24} />,
-              <Medal className="text-amber-600" size={24} />
-            ];
+        {/* Podium Layout */}
+        <div className="flex flex-col md:flex-row items-end justify-center gap-6 pt-4 max-w-4xl mx-auto">
+          {topStudents.length > 0 && (() => {
+            const podiumStudents = [];
+            if (topStudents[1]) podiumStudents.push({ ...topStudents[1], rank: 2, scale: 'scale-100', height: 'h-auto md:h-72', border: 'border-slate-350/40 shadow-slate-350/5', color: 'from-slate-400/5 via-slate-950 to-slate-950', badge: '🥈 Silver' });
+            if (topStudents[0]) podiumStudents.push({ ...topStudents[0], rank: 1, scale: 'scale-100 md:scale-105', height: 'h-auto md:h-80 md:-translate-y-2', border: 'border-yellow-500/60 shadow-yellow-500/10', color: 'from-yellow-500/10 via-slate-950 to-slate-950', badge: '👑 Gold' });
+            if (topStudents[2]) podiumStudents.push({ ...topStudents[2], rank: 3, scale: 'scale-100', height: 'h-auto md:h-64', border: 'border-amber-700/40 shadow-amber-700/5', color: 'from-amber-750/5 via-slate-950 to-slate-950', badge: '🥉 Bronze' });
 
-            return (
-              <motion.div
-                key={student.name}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="flex"
-              >
-                <Card className={`w-full p-6 flex flex-col items-center text-center relative overflow-hidden border ${rankColors[idx]}`} variant="glass">
-                  <div className="absolute top-4 right-4">{medalIcons[idx]}</div>
-                  
-                  <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center font-black text-white text-base shadow-inner border border-slate-700/60 mb-4">
-                    {student.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                  </div>
+            return podiumStudents.map((student) => {
+              const orderClass = student.rank === 1 ? 'order-1 md:order-2' : student.rank === 2 ? 'order-2 md:order-1' : 'order-3 md:order-3';
+              return (
+                <motion.div
+                  key={student.name}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ type: "spring", stiffness: 100, damping: 15 }}
+                  className={`w-full md:w-1/3 ${orderClass} ${student.scale} flex`}
+                >
+                  <Card className={`w-full p-6 flex flex-col items-center text-center justify-between relative overflow-hidden border ${student.border} bg-gradient-to-b ${student.color} ${student.height}`} variant="glass">
+                    <div className="absolute top-4 right-4">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-slate-900 border border-slate-800 rounded text-slate-350">
+                        {student.badge}
+                      </span>
+                    </div>
 
-                  <h3 className="text-sm font-extrabold text-white">{student.name}</h3>
-                  <p className="text-[10px] text-slate-500 font-semibold truncate max-w-full uppercase mt-0.5">{student.collegeName || 'Technology Institute'}</p>
+                    <div className="flex flex-col items-center mt-4">
+                      <div className={`w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center font-black text-white text-base shadow-inner border mb-4 relative ${student.rank === 1 ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]' : 'border-slate-700'}`}>
+                        {student.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                        {student.rank === 1 && <span className="absolute -top-2 text-yellow-400 text-lg">👑</span>}
+                      </div>
 
-                  <div className="flex items-center gap-1.5 mt-4 px-3 py-1 bg-slate-950/80 border border-slate-900 rounded-full">
-                    <Zap className="text-amber-400 fill-amber-400" size={13} />
-                    <span className="text-xs font-black text-white font-mono">{student.points} <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">XP</span></span>
-                  </div>
+                      <h3 className="text-sm font-extrabold text-white">{student.name}</h3>
+                      <p className="text-[10px] text-slate-500 font-semibold truncate max-w-full uppercase mt-0.5">{student.collegeName || 'Technology Institute'}</p>
+                    </div>
 
-                  <div className="flex flex-wrap gap-1 justify-center mt-3.5">
-                    {student.badges && student.badges.length > 0 ? (
-                      student.badges.map((b: string) => (
-                        <span key={b} className="px-2 py-0.5 rounded bg-slate-900 border border-slate-850 text-[8.5px] font-black uppercase text-slate-450 tracking-wider">
-                          🏆 {b.replace(/_/g, ' ')}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-[9px] text-slate-650 italic">Consistent Learner</span>
-                    )}
-                  </div>
-                </Card>
-              </motion.div>
-            );
-          })}
+                    <div className="flex flex-col items-center w-full mt-4 gap-3">
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-950/80 border border-slate-900 rounded-full">
+                        <Zap className="text-amber-400 fill-amber-400" size={13} />
+                        <span className="text-xs font-black text-white font-mono">{student.points} <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">XP</span></span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1 justify-center max-h-[48px] overflow-hidden">
+                        {student.badges && student.badges.length > 0 ? (
+                          student.badges.slice(0, 2).map((b: string) => (
+                            <span key={b} className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-850 text-[8px] font-black uppercase text-slate-450 tracking-wider">
+                              🏆 {b.replace(/_/g, ' ').replace('week 1 master', 'W1 Master').replace('bug hunter', 'Bug Hunter').replace('perfect score', 'Perfect')}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[9px] text-slate-650 italic">Consistent Learner</span>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            });
+          })()}
         </div>
+
+        {/* Collapsible View Top 10 Leaderboard Ranks */}
+        {topStudents.length > 3 && (
+          <div className="flex flex-col items-center pt-4">
+            <button
+              onClick={() => setShowAllLeaderboard(!showAllLeaderboard)}
+              className="px-5 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 text-[10px] font-black uppercase tracking-widest text-slate-450 hover:text-white transition flex items-center gap-2 cursor-pointer"
+            >
+              {showAllLeaderboard ? (
+                <>Hide Ranks <ChevronUp size={12} /></>
+              ) : (
+                <>View Top 10 Ranks <ChevronDown size={12} /></>
+              )}
+            </button>
+
+            <AnimatePresence>
+              {showAllLeaderboard && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="w-full max-w-2xl mt-4 overflow-hidden"
+                >
+                  <Card className="p-4 border border-slate-850" variant="glass">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs text-slate-400">
+                        <thead>
+                          <tr className="border-b border-slate-900 text-slate-500 font-black uppercase tracking-wider text-[9px]">
+                            <th className="py-2.5 px-3">Rank</th>
+                            <th className="py-2.5 px-3">Student Name</th>
+                            <th className="py-2.5 px-3">College Name</th>
+                            <th className="py-2.5 px-3 text-right">XP Points</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-900/60">
+                          {topStudents.slice(3, 10).map((student, idx) => (
+                            <tr key={student.name} className="hover:bg-slate-900/30 transition-colors">
+                              <td className="py-3 px-3 font-mono font-bold text-slate-350">#{idx + 4}</td>
+                              <td className="py-3 px-3 font-extrabold text-white">{student.name}</td>
+                              <td className="py-3 px-3 text-slate-500 truncate max-w-[200px] uppercase text-[10px] font-semibold">{student.collegeName || 'Technology Institute'}</td>
+                              <td className="py-3 px-3 text-right font-mono font-bold text-amber-500 flex items-center justify-end gap-1">
+                                <Zap className="text-amber-500 fill-amber-500/20" size={12} />
+                                {student.points} XP
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {/* 5. Value Propositions / Credibility Accreditations */}
@@ -715,32 +901,59 @@ const Home = () => {
                   <p className="text-slate-400 text-xs mt-1 leading-relaxed">{previewCourse.desc}</p>
                 </div>
 
-                <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-2">
-                  <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">4-Week Training Roadmaps</h4>
-                  
-                  <div className="relative border-l-2 border-slate-850 ml-4 pl-6 space-y-8 my-4">
-                    {previewCourse.syllabus.map((weekData: any) => (
-                      <div key={weekData.week} className="relative group/week">
-                        {/* Timeline Node */}
-                        <div className="absolute -left-[31px] top-0.5 w-4.5 h-4.5 rounded-full bg-slate-950 border-2 border-amber-500 flex items-center justify-center text-slate-950 font-black text-[9px]">
-                        </div>
-                        
-                        <div className="space-y-1 text-left">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-amber-400 uppercase tracking-wide">
-                              Week {weekData.week}
-                            </span>
-                            <span className="text-[8.5px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded uppercase">
-                              Project Milestone: {weekData.milestone}
-                            </span>
+              <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2 mb-4">4-Week Training Roadmaps</h4>
+                
+                <div className="space-y-3">
+                  {previewCourse.syllabus.map((weekData: any) => {
+                    const isOpen = activeWeekPreview === weekData.week;
+                    return (
+                      <div 
+                        key={weekData.week} 
+                        className={`relative border rounded-2xl p-4 transition-all duration-350 ${isOpen ? 'border-amber-500/40 bg-amber-500/[0.02]' : 'border-slate-850 bg-slate-950/20 hover:border-slate-800'}`}
+                      >
+                        <button
+                          onClick={() => setActiveWeekPreview(isOpen ? 0 : weekData.week)}
+                          className="w-full flex items-center justify-between text-left focus:outline-none cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-mono font-black text-xs transition-colors duration-300 ${isOpen ? 'bg-amber-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]' : 'bg-slate-900 text-slate-400 border border-slate-800'}`}>
+                              0{weekData.week}
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Week {weekData.week} Module</span>
+                              <h4 className="text-sm font-extrabold text-white tracking-tight">{weekData.title}</h4>
+                            </div>
                           </div>
-                          <h4 className="text-sm font-extrabold text-white">{weekData.title}</h4>
-                          <p className="text-slate-450 text-[11px] leading-relaxed font-medium">{weekData.details}</p>
-                        </div>
+                          <div className={`text-slate-500 hover:text-white transition-transform duration-250 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
+                            <ChevronDown size={16} />
+                          </div>
+                        </button>
+
+                        <AnimatePresence initial={false}>
+                          {isOpen && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-3.5 pl-11 border-t border-slate-900/60 pt-3.5 space-y-3">
+                                <p className="text-slate-450 text-xs leading-relaxed font-medium">{weekData.details}</p>
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                                  <span>Milestone:</span>
+                                  <span className="text-white font-mono">{weekData.milestone}</span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
+              </div>
 
                 <div className="pt-4 border-t border-slate-850 flex justify-end">
                   <Button 

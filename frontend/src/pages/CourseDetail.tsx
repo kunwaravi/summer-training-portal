@@ -7,7 +7,7 @@ import api from '../api';
 import { 
   Lock, Play, Clipboard, 
   CheckCircle2, Zap, Eye, Code2, Briefcase, FileText,
-  MessageSquare, Cpu, ExternalLink, RefreshCw
+  MessageSquare, Cpu, ExternalLink, RefreshCw, ChevronRight
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
