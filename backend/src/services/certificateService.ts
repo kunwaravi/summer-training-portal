@@ -14,6 +14,9 @@ export class CertificateService {
       case "C++": return "C++ & OOP for Embedded Systems";
       case "IoT": return "IoT & Smart Interfacing Solutions";
       case "Embedded": return "Embedded Systems & Real-Time OS";
+      case "WebDesign": return "Web Design & Frontend Development";
+      case "Python": return "Python Programming & Scripting";
+      case "SQL": return "Database Management & SQL";
       default: return "Advanced Computing Solutions";
     }
   }
@@ -152,6 +155,9 @@ export class CertificateService {
     else if (cleanCourseKey === "IOT_SYSTEMS") courseId = "IoT";
     else if (cleanCourseKey === "EMBEDDED_SYSTEMS") courseId = "Embedded";
     else if (cleanCourseKey === "C_SYSTEMS") courseId = "C";
+    else if (cleanCourseKey === "WEBDESIGN_SYSTEMS") courseId = "WebDesign";
+    else if (cleanCourseKey === "PYTHON_SYSTEMS") courseId = "Python";
+    else if (cleanCourseKey === "SQL_SYSTEMS") courseId = "SQL";
     else {
       throw new AppError('Unknown course key in credential.', 400);
     }

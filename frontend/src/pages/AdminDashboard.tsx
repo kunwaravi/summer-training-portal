@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import api from '../api';
 import { 
   Shield, Users, Award, BookOpen, Edit3, Trash2, Plus, 
   ArrowUp, ArrowDown, Eye, DollarSign, 
   Save, FileText, Image, RefreshCw, ChevronDown, ChevronRight,
-  TrendingUp
+  TrendingUp, Share2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminPaymentTable from '../components/organisms/AdminPaymentTable';
+import { coursesConfig } from '../config/courses';
 
 interface Topic {
   id?: number;
@@ -42,7 +43,7 @@ interface Course {
 }
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'analytics'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'analytics' | 'referrals'>('transactions');
   
   // Transaction logs states
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -73,6 +74,10 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
   const [selectedCourseId, setSelectedCourseId] = useState<string>('C');
+
+  // Referral tracker states
+  const [referralSearch, setReferralSearch] = useState('');
+  const [expandedReferrerId, setExpandedReferrerId] = useState<number | null>(null);
 
   // Candidate sorting states
   const [sortField, setSortField] = useState<'id' | 'name' | 'createdAt' | 'referralCount'>('id');
@@ -443,6 +448,16 @@ const AdminDashboard = () => {
           <Users size={16} /> User Management
         </button>
         <button
+          onClick={() => setActiveTab('referrals')}
+          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'referrals'
+              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Share2 size={16} /> Referral Tracker
+        </button>
+        <button
           onClick={() => setActiveTab('analytics')}
           className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
             activeTab === 'analytics'
@@ -489,7 +504,7 @@ const AdminDashboard = () => {
                     onChange={(e) => setSelectedCourseId(e.target.value)}
                     className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-cyan-500"
                   >
-                    {courses.map((c) => (
+                    {coursesConfig.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title} ({c.id})
                       </option>
@@ -974,6 +989,276 @@ const AdminDashboard = () => {
                   <strong>Founder Insight:</strong> C Programming remains the absolute gateway track with 36% of all traffic. 
                   Week 1 and 2 quiz results show high retention, with a 14% drop-off at Week 3 when register-masking and pointers concepts are introduced.
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'referrals' && (
+          <div className="space-y-6 animate-fade-in text-slate-350">
+            {/* Referral Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {/* Card 1: Total Referred */}
+              <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Total Referred Students</span>
+                <div className="flex items-baseline justify-between">
+                  <h3 className="text-2xl font-black text-white">
+                    {users.filter(u => u.referredBy).length}
+                  </h3>
+                  <span className="text-[10px] font-bold text-emerald-400">
+                    Signups via Code
+                  </span>
+                </div>
+              </div>
+              
+              {/* Card 2: Top Referrer */}
+              {(() => {
+                const top = users.reduce((prev, current) => {
+                  return (prev.referralCount || 0) > (current.referralCount || 0) ? prev : current;
+                }, { name: 'N/A', referralCount: 0 });
+                return (
+                  <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Top Referrer</span>
+                    <div className="flex items-baseline justify-between">
+                      <h3 className="text-sm font-black text-white truncate max-w-[150px]" title={top.name}>
+                        {top.name}
+                      </h3>
+                      <span className="text-[14px] font-extrabold text-cyan-400">
+                        {top.referralCount || 0} Refers
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+              
+              {/* Card 3: Referral Paid Conversion */}
+              {(() => {
+                const totalReferred = users.filter(u => u.referredBy).length;
+                const paidReferred = users.filter(u => u.referredBy && u.payments?.some((p: any) => p.status === 'VERIFIED')).length;
+                const conversionRate = totalReferred > 0 ? ((paidReferred / totalReferred) * 100).toFixed(1) : '0';
+                return (
+                  <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Paid Conversion Rate</span>
+                    <div className="flex items-baseline justify-between">
+                      <h3 className="text-2xl font-black text-emerald-400">
+                        {conversionRate}%
+                      </h3>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        {paidReferred} of {totalReferred} paid
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Directory Control Bar */}
+            <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-800/80">
+                <div>
+                  <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Share2 size={18} className="text-cyan-400" /> Referral Program Directory
+                  </h3>
+                  <p className="text-slate-400 text-xs mt-1">Track which candidates have referred others and drill down to view their referred signups.</p>
+                </div>
+                <div className="w-full sm:w-72">
+                  <input
+                    type="text"
+                    placeholder="Search by Name, Email, or Code..."
+                    value={referralSearch}
+                    onChange={(e) => setReferralSearch(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
+                      <th className="py-3 px-4">Referrer Details</th>
+                      <th className="py-3 px-4">Referral Code</th>
+                      <th className="py-3 px-4">Referred By</th>
+                      <th className="py-3 px-4 text-center">Successful Refers</th>
+                      <th className="py-3 px-4 text-center">Paid Conversions</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850">
+                    {(() => {
+                      const filtered = users.filter(u => {
+                        if (!referralSearch) return true;
+                        const s = referralSearch.toLowerCase();
+                        return (
+                          u.name.toLowerCase().includes(s) ||
+                          u.email.toLowerCase().includes(s) ||
+                          (u.referralCode && u.referralCode.toLowerCase().includes(s))
+                        );
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={6} className="py-8 text-center text-slate-500 italic">
+                              No referrers found matching search criteria.
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return filtered.map((referrer) => {
+                        const isExpanded = expandedReferrerId === referrer.id;
+                        
+                        // Find referred students
+                        const referredStudents = users.filter(
+                          student => student.referredBy && student.referredBy.trim().toUpperCase() === referrer.referralCode?.trim().toUpperCase()
+                        );
+                        
+                        const paidCount = referredStudents.filter(
+                          student => student.payments?.some((p: any) => p.status === 'VERIFIED')
+                        ).length;
+
+                        return (
+                          <Fragment key={referrer.id}>
+                            <tr className="hover:bg-slate-900/40 text-slate-300 transition">
+                              <td className="py-3.5 px-4">
+                                <div className="font-bold text-white">{referrer.name}</div>
+                                <div className="text-[10px] text-slate-500 font-mono">{referrer.email}</div>
+                              </td>
+                              <td className="py-3.5 px-4 font-mono text-[11px] text-cyan-400">
+                                {referrer.referralCode || 'N/A'}
+                              </td>
+                              <td className="py-3.5 px-4">
+                                {referrer.referredBy ? (
+                                  <span className="font-mono text-[10px] text-slate-450 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                    {referrer.referredBy}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-650 italic">Direct Signup</span>
+                                )}
+                              </td>
+                              <td className="py-3.5 px-4 text-center font-bold text-white">
+                                {referredStudents.length}
+                              </td>
+                              <td className="py-3.5 px-4 text-center">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  paidCount > 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-500'
+                                }`}>
+                                  {paidCount} paid
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 text-right">
+                                <button
+                                  onClick={() => setExpandedReferrerId(isExpanded ? null : referrer.id)}
+                                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[10px] font-bold uppercase transition"
+                                >
+                                  {isExpanded ? 'Hide Details' : 'View Details'}
+                                </button>
+                              </td>
+                            </tr>
+                            
+                            {/* Expandable sub-table for referred students */}
+                            {isExpanded && (
+                              <tr>
+                                <td colSpan={6} className="bg-slate-950/40 p-4 border-l-2 border-cyan-500">
+                                  <div className="space-y-3 pl-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-cyan-400 flex items-center gap-1.5">
+                                      Students Referred by {referrer.name} ({referredStudents.length})
+                                    </h4>
+                                    
+                                    {referredStudents.length === 0 ? (
+                                      <p className="text-[10px] text-slate-500 italic">This user has not referred any students yet.</p>
+                                    ) : (
+                                      <div className="overflow-x-auto border border-slate-800 rounded-xl bg-slate-950/60">
+                                        <table className="w-full text-left text-[11px] text-slate-350">
+                                          <thead>
+                                            <tr className="border-b border-slate-800 text-slate-500 uppercase font-bold text-[9px] tracking-wider bg-slate-900/30">
+                                              <th className="py-2 px-3">Student Name</th>
+                                              <th className="py-2 px-3">Email Address</th>
+                                              <th className="py-2 px-3">Registration Date</th>
+                                              <th className="py-2 px-3">Enrolled Course Tracks</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody className="divide-y divide-slate-850">
+                                            {referredStudents.map((student) => (
+                                              <tr key={student.id} className="hover:bg-slate-900/30">
+                                                <td className="py-2 px-3 font-semibold text-slate-200">{student.name}</td>
+                                                <td className="py-2 px-3 font-mono">{student.email}</td>
+                                                <td className="py-2 px-3">
+                                                  {student.createdAt ? new Date(student.createdAt).toLocaleDateString('en-US', {
+                                                    year: 'numeric', month: 'short', day: 'numeric'
+                                                  }) : 'N/A'}
+                                                </td>
+                                                <td className="py-2 px-3">
+                                                  <div className="flex flex-wrap gap-1">
+                                                    {(() => {
+                                                      const courseMap = new Map<string, { progress?: number; paid?: boolean; pending?: boolean }>();
+                                                      
+                                                      if (student.progresses) {
+                                                        student.progresses.forEach((p: any) => {
+                                                          courseMap.set(p.courseId, { progress: p.progress });
+                                                        });
+                                                      }
+                                                      
+                                                      if (student.payments) {
+                                                        student.payments.forEach((py: any) => {
+                                                          const existing = courseMap.get(py.courseId) || {};
+                                                          if (py.status === 'VERIFIED') {
+                                                            courseMap.set(py.courseId, { ...existing, paid: true });
+                                                          } else if (py.status === 'PENDING_VERIFICATION') {
+                                                            courseMap.set(py.courseId, { ...existing, pending: true });
+                                                          }
+                                                        });
+                                                      }
+                                                      
+                                                      if (courseMap.size === 0) {
+                                                        return <span className="text-slate-650 italic text-[9px]">Not Enrolled</span>;
+                                                      }
+                                                      
+                                                      return Array.from(courseMap.entries()).map(([courseId, info]) => {
+                                                        let badgeText = `${courseId}`;
+                                                        let badgeStyle = "border-blue-500/20 bg-blue-500/5 text-blue-400";
+                                                        
+                                                        if (info.progress !== undefined) badgeText += ` (${info.progress}%)`;
+                                                        else badgeText += ` (0%)`;
+                                                        
+                                                        if (info.paid) {
+                                                          badgeText += ` [Paid]`;
+                                                          badgeStyle = "border-emerald-500/25 bg-emerald-500/10 text-emerald-400";
+                                                        } else if (info.pending) {
+                                                          badgeText += ` [Pending]`;
+                                                          badgeStyle = "border-amber-500/25 bg-amber-500/10 text-amber-400";
+                                                        }
+                                                        
+                                                        return (
+                                                          <span
+                                                            key={courseId}
+                                                            className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[8px] font-bold uppercase tracking-wider ${badgeStyle}`}
+                                                          >
+                                                            {badgeText}
+                                                          </span>
+                                                        );
+                                                      });
+                                                    })()}
+                                                  </div>
+                                                </td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
