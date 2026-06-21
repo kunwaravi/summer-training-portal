@@ -33,6 +33,17 @@ export const getPaymentStatus = async (userId: number, courseId: string) => {
 };
 
 export const createOrder = async (userId: number, courseId: string, amount: number, couponCode?: string) => {
+  const existingPayment = await prisma.payment.findFirst({
+    where: { userId, courseId, status: { in: ['VERIFIED', 'PENDING_VERIFICATION'] } }
+  });
+
+  if (existingPayment?.status === 'VERIFIED') {
+    return { error: 'Certificate already unlocked for this course.', status: 400 };
+  }
+  if (existingPayment?.status === 'PENDING_VERIFICATION') {
+    return { error: 'Payment proof already submitted and is pending admin verification. Please wait.', status: 400 };
+  }
+
   // Fetch course details to get the actual price
   const course = await prisma.course.findUnique({
     where: { id: courseId }

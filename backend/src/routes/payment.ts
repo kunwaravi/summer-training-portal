@@ -78,6 +78,11 @@ router.post('/create-order', authenticateToken, validate(createOrderSchema), asy
     const { courseId, amount, couponCode } = req.body;
 
     const orderData = await paymentService.createOrder(userId, courseId, parseInt(amount), couponCode);
+
+    if ('error' in orderData) {
+      return res.status(orderData.status || 400).json({ message: orderData.error });
+    }
+
     res.json(orderData);
   } catch (error) {
     next(error);
