@@ -36,6 +36,46 @@ export const getModuleByWeek = async (courseId: string, week: number) => {
   return moduleRecord;
 };
 
+export const getPublicCourseDetails = async (courseId: string) => {
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    include: {
+      modules: {
+        select: {
+          id: true,
+          week: true,
+          title: true,
+          description: true,
+          topics: {
+            select: {
+              id: true,
+              title: true
+            }
+          }
+        },
+        orderBy: {
+          week: 'asc'
+        }
+      }
+    }
+  });
+
+  if (!course) return null;
+
+  return {
+    id: course.id,
+    title: course.title,
+    description: course.description,
+    modules: course.modules.map(m => ({
+      week: m.week,
+      title: m.title,
+      description: m.description,
+      topicCount: m.topics.length,
+      topics: m.topics
+    }))
+  };
+};
+
 export const createCourse = async (data: { id: string; title: string; description?: string; price?: number }) => {
   return await prisma.course.create({
     data: {

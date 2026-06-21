@@ -13,6 +13,7 @@ const Verify = () => {
   const [credentialId, setCredentialId] = useState(initialId);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [courseDetails, setCourseDetails] = useState<any>(null);
   const [error, setError] = useState('');
 
   // Email verification state hooks
@@ -60,10 +61,22 @@ const Verify = () => {
     setLoading(true);
     setError('');
     setResult(null);
+    setCourseDetails(null);
 
     try {
       const res = await api.get(`/certificate/verify/${targetId.trim()}`);
       setResult(res.data);
+
+      // Fetch course curriculum details
+      if (res.data.courseId) {
+        try {
+          const courseRes = await api.get(`/courses/${res.data.courseId}/public`);
+          setCourseDetails(courseRes.data);
+        } catch (courseErr) {
+          console.error('Failed to fetch course details:', courseErr);
+          // Continue without course details - don't block the certificate display
+        }
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Verification failed. No matching registered candidate found.');
     } finally {
@@ -257,6 +270,31 @@ const Verify = () => {
                   <span className="font-bold text-white mt-0.5 block">{result.completionDate}</span>
                 </div>
               </div>
+
+              {/* Course Curriculum Section */}
+              {courseDetails && (
+                <div className="mt-6 pt-6 border-t border-emerald-500/20 space-y-4">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm uppercase tracking-wider">
+                    <CheckCircle2 size={14} />
+                    Course Curriculum Completed
+                  </div>
+                  <div className="space-y-3">
+                    {courseDetails.modules.map((module: any) => (
+                      <div key={module.week} className="p-3 rounded-lg bg-slate-950/50 border border-slate-800 text-xs">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="font-bold text-white">Week {module.week}: {module.title}</p>
+                            <p className="text-slate-400 text-[9px] mt-1">{module.description}</p>
+                          </div>
+                          <span className="text-[9px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded border border-emerald-500/30 whitespace-nowrap">
+                            {module.topicCount} topics
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Legal / Corporate Accreditation Stamp */}
               <div className="p-4 rounded-lg bg-slate-950/30 border border-slate-800 text-[10px] text-slate-450 leading-relaxed space-y-1.5 font-sans">

@@ -207,6 +207,7 @@ export class CertificateService {
       fatherName: user.fatherName,
       collegeName: user.collegeName,
       branchName: user.branchName,
+      courseId,
       courseName: displayCourseName,
       grade,
       completionDate,

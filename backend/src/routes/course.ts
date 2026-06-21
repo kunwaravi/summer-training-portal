@@ -15,6 +15,22 @@ router.get('/', async (req: any, res: any, next: any) => {
   }
 });
 
+// GET /api/courses/:courseId/public - Public course details for certificate verification (no auth required)
+router.get('/:courseId/public', async (req: any, res: any, next: any) => {
+  try {
+    const { courseId } = req.params;
+    const courseDetails = await courseService.getPublicCourseDetails(courseId);
+
+    if (!courseDetails) {
+      return res.status(404).json({ message: `Course ${courseId} not found.` });
+    }
+
+    res.json(courseDetails);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/courses/:courseId/module/:week - Dynamic fetch for ONE module's full topics (Lazy loading detail view)
 router.get('/:courseId/module/:week', async (req: any, res: any, next: any) => {
   try {
