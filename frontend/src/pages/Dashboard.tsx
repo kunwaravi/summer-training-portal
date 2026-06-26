@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCourses } from '../hooks/useCourses';
-import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database } from 'lucide-react';
+import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database, Wrench, Building2 } from 'lucide-react';
 import CourseCard from '../components/molecules/CourseCard';
 import Spinner from '../components/atoms/Spinner';
 import SkillRadar from '../components/molecules/SkillRadar';
@@ -42,6 +42,16 @@ const courseMetadata: Record<string, any> = {
   },
   'SQL': { 
     icon: Database, 
+    color: 'from-emerald-500 to-emerald-700', 
+    barColor: 'bg-emerald-500', 
+  },
+  'CADDED_Mech': { 
+    icon: Wrench, 
+    color: 'from-orange-500 to-orange-700', 
+    barColor: 'bg-orange-500', 
+  },
+  'CADDED_Civil': { 
+    icon: Building2, 
     color: 'from-emerald-500 to-emerald-700', 
     barColor: 'bg-emerald-500', 
   },
@@ -89,6 +99,8 @@ const Dashboard = () => {
     { label: 'Web Design', value: getSkillValue('WebDesign') || 5, color: '#ec4899' },
     { label: 'Python Scripting', value: getSkillValue('Python') || 5, color: '#eab308' },
     { label: 'SQL DB', value: getSkillValue('SQL') || 5, color: '#10b981' },
+    { label: 'Mech CAD', value: getSkillValue('CADDED_Mech') || 5, color: '#f97316' },
+    { label: 'Civil CAD', value: getSkillValue('CADDED_Civil') || 5, color: '#10b981' },
     { label: 'System Design', value: Math.min(totalQuizzesPassed * 5, 100) || 10, color: '#06b6d4' },
   ];
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api';
-import { Award, Shield, Search, Flame, Zap, Trophy, Medal } from 'lucide-react';
+import { Search, Zap, Trophy, Medal } from 'lucide-react';
 import Spinner from '../atoms/Spinner';
 import Card from '../atoms/Card';
 

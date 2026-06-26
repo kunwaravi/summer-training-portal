@@ -8,7 +8,7 @@ import {
   ShieldCheck, CheckCircle2, Send, MessageSquare, BookOpen, 
   Cpu, Code2, Server, Wifi, Terminal, Settings, Database, 
   Trophy, Medal, Star, ExternalLink, ArrowRight, Zap, Play, Sparkles,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Wrench, Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/atoms/Button';
@@ -127,6 +127,38 @@ const courseDetails = [
       { week: 3, title: 'ACID Transactions & Views', details: 'Data alterations (DML), index speeds, views, and commit/rollback logic', milestone: 'Safe bank account transfer script' },
       { week: 4, title: 'SQL Application Interfacing', details: 'Connecting DB to backend services, schema designs, and indexing queries', milestone: 'Index speed validation script' }
     ]
+  },
+  {
+    id: 'CADDED_Mech',
+    title: 'CADDED Software (Mechanical)',
+    difficulty: 'Beginner to Intermediate',
+    tags: ['AutoCAD 2D', 'SolidWorks', 'CATIA Surfaces', 'CNC G-Code'],
+    color: 'from-orange-500/20 via-orange-600/10 to-transparent border-orange-500/30',
+    icon: Wrench,
+    colSpan: 'md:col-span-3',
+    desc: 'Master mechanical systems engineering with AutoCAD 2D drafts, SolidWorks parts modeling, CATIA surfacing, and CNC G-code toolpath programming.',
+    syllabus: [
+      { week: 1, title: 'AutoCAD 2D & Interface', details: 'Coordinate systems, basic drafting tools, layers, and dimensions', milestone: 'Flange 2D drafting layout' },
+      { week: 2, title: 'SolidWorks Part Modeling', details: 'Parametric modeling, sketches, relations, extrude, and revolve', milestone: 'Hinge bracket 3D part design' },
+      { week: 3, title: 'CATIA Shape Design', details: 'Generative shape design, sweeps, lofts, joins, and spline curves', milestone: 'Turbine aerofoil surface sweep' },
+      { week: 4, title: 'CNC Code & Project Work', details: 'CNC G-code & M-code toolpaths programming and assembly constraints', milestone: 'Pocket milling G-code & Piston assembly' }
+    ]
+  },
+  {
+    id: 'CADDED_Civil',
+    title: 'CADDED Software (Civil/Architecture)',
+    difficulty: 'Beginner to Intermediate',
+    tags: ['AutoCAD Civil', '3DS Max Render', 'SketchUp', 'Revit BIM'],
+    color: 'from-emerald-500/20 via-emerald-600/10 to-transparent border-emerald-500/30',
+    icon: Building2,
+    colSpan: 'md:col-span-3',
+    desc: 'Master civil site plans in AutoCAD Civil, 3DS Max architectural renders, Google SketchUp layouts, and Revit BIM structural grid designs.',
+    syllabus: [
+      { week: 1, title: 'AutoCAD Civil Site Plans', details: 'Drafting floor plans, sections, elevations, and municipal standards', milestone: '2BHK residential plan layout' },
+      { week: 2, title: '3DS Max Render & SketchUp', details: 'V-Ray rendering, material mapping, camera views, and rapid SketchUp models', milestone: 'Villa exterior rendering & kitchen layout' },
+      { week: 3, title: 'Revit Structural Analysis', details: 'Slabs, foundations, columns, beams grid alignment, and concrete reinforcement', milestone: 'Beam-Column junction steel detail' },
+      { week: 4, title: 'Revit BIM & Project Work', details: 'BIM walls/roofs families, window schedules, documentation viewports sheets', milestone: 'G+3 building BIM portfolio sheets' }
+    ]
   }
 ];
 
@@ -167,6 +199,8 @@ const getGlowStyles = (id: string) => {
     case 'WebDesign': return 'hover:border-pink-500/50 hover:shadow-[0_0_20px_rgba(236,72,153,0.15)]';
     case 'Python': return 'hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]';
     case 'SQL': return 'hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]';
+    case 'CADDED_Mech': return 'hover:border-orange-500/50 hover:shadow-[0_0_20px_rgba(249,115,22,0.15)]';
+    case 'CADDED_Civil': return 'hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]';
     default: return 'hover:border-slate-700/80';
   }
 };
@@ -472,7 +506,7 @@ const Home = () => {
           <p className="text-slate-500 text-xs font-black uppercase tracking-widest">Accredited Students</p>
         </div>
         <div className="text-center space-y-1 border-y sm:border-y-0 sm:border-x border-slate-800/80 py-4 sm:py-0">
-          <h2 className="text-3xl font-black text-amber-500 tracking-tight sm:text-4xl">7 Tracks</h2>
+          <h2 className="text-3xl font-black text-amber-500 tracking-tight sm:text-4xl">9 Tracks</h2>
           <p className="text-slate-500 text-xs font-black uppercase tracking-widest">Specialized Courses</p>
         </div>
         <div className="text-center space-y-1">

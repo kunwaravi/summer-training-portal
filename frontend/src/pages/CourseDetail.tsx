@@ -7,7 +7,7 @@ import api from '../api';
 import { 
   Lock, Play, Clipboard, 
   CheckCircle2, Zap, Eye, Code2, Briefcase, FileText,
-  MessageSquare, Cpu, ExternalLink, RefreshCw, ChevronRight
+  MessageSquare, Cpu, ExternalLink, ChevronRight
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -468,7 +468,6 @@ const CourseDetail = () => {
                 </span>
                 <h2 className="text-2xl font-black text-white">{courseTitle}</h2>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  {/* @ts-ignore */}
                   {courseConf?.desc || 'Welcome to this specialized curriculum track. Learn low-level hardware constraints, memory mappings, and system programming paradigms.'}
                 </p>
               </div>

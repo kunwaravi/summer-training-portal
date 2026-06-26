@@ -17,6 +17,8 @@ export class CertificateService {
       case "WebDesign": return "Web Design & Frontend Development";
       case "Python": return "Python Programming & Scripting";
       case "SQL": return "Database Management & SQL";
+      case "CADDED_Mech": return "CADDED Software (Mechanical)";
+      case "CADDED_Civil": return "CADDED Software (Civil/Architecture)";
       default: return "Advanced Computing Solutions";
     }
   }
@@ -158,6 +160,8 @@ export class CertificateService {
     else if (cleanCourseKey === "WEBDESIGN_SYSTEMS") courseId = "WebDesign";
     else if (cleanCourseKey === "PYTHON_SYSTEMS") courseId = "Python";
     else if (cleanCourseKey === "SQL_SYSTEMS") courseId = "SQL";
+    else if (cleanCourseKey === "CADDED_MECH_SYSTEMS") courseId = "CADDED_Mech";
+    else if (cleanCourseKey === "CADDED_CIVIL_SYSTEMS") courseId = "CADDED_Civil";
     else {
       throw new AppError('Unknown course key in credential.', 400);
     }

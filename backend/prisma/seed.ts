@@ -83,6 +83,31 @@ const coursesList = [
       "Inserting & Updating Data", "Indexes & Performance", "Views & Store Procedures", "Transactions & ACID Properties", "Database Security Basics",
       "Connecting SQL to Python/Node", "Mini-Project: Library System Database", "Schema Design Polish", "Query Optimizations", "Final Project Submission"
     ]
+  },
+  {
+    id: "CADDED_Mech",
+    title: "CADDED Software (Mechanical)",
+    description: "Master AutoCAD, SolidWorks, CATIA, CNC Programming, and mechanical drafting systems.",
+    modules: [
+      "AutoCAD 2D Drafting & Interface Baselines",
+      "SolidWorks Parametric Part Modeling & Features",
+      "CATIA Surface Design & Generative Shapes",
+      "CNC Code Architectures (G-Codes & M-Codes)",
+      "Integrated Project Work & Assemblies Drafting"
+    ]
+  },
+  {
+    id: "CADDED_Civil",
+    title: "CADDED Software (Civil/Architecture)",
+    description: "Master AutoCAD Civil, 3DS Max rendering, Google SketchUp, and Revit BIM systems.",
+    modules: [
+      "AutoCAD Civil Site Drafting & Residential Plans",
+      "3DS Max Architectural Visualization & Texturing",
+      "Google SketchUp Rapid 3D Prototyping Layouts",
+      "Revit (Civil) Structural Detailing & Analysis",
+      "Revit (Architecture) BIM Modeling & Schedules",
+      "Integrated Architectural Project Work & Blueprints"
+    ]
   }
 ];
 
@@ -124,6 +149,16 @@ function generateModuleQuizzes(courseId: string, week: number, title: string) {
       "SELECT queries joins", "FOREIGN KEY relations", "Index scanning speeds", "Aggregate group queries",
       "subquery nested scans", "Transactions commit rollback", "ACID constraints", "Table normalization forms",
       "Store procedure calls", "Views query compilation", "DB user privileges", "Query optimization plans"
+    ],
+    CADDED_Mech: [
+      "AutoCAD interface", "SolidWorks extrusion", "CATIA surface loft", "CNC G-code milling",
+      "assembly coincident mates", "dimension lines layers", "parametric reference planes", "sweep guide curves",
+      "spindle rotation codes", "BOM balloon detailing", "degree of freedom", "stress distribution analysis"
+    ],
+    CADDED_Civil: [
+      "AutoCAD wall offsets", "3ds Max textures V-Ray", "SketchUp push-pull face", "Revit concrete rebar",
+      "Revit wall families", "drawing sheet viewports", "site alignment parcels", "Arnold camera lighting",
+      "component groups layout", "beam structural grid", "window schedule columns", "clash detection reports"
     ]
   };
 
@@ -354,6 +389,65 @@ function getDynamicTopicsForModule(courseId: string, week: number, moduleTitle: 
       topics[3].code = `#include <iostream>\n#include <memory>\nclass Device {\npublic:\n    Device() { std::cout << "Device active\\n"; }\n    ~Device() { std::cout << "Device shut down\\n"; }\n};\nint main() {\n    std::unique_ptr<Device> dev = std::make_unique<Device>();\n    return 0;\n}`;
       topics[3].note = "Unique pointer scopes automatic variable deletes avoid heap leak errors.";
     }
+  } else if (courseId === "CADDED_Mech") {
+    if (week === 1) {
+      topics[1].text = `### AutoCAD 2D Drafting Baselines: User interface, 2D coordinates, basic drafting tools (lines, circles, arcs), layers, and dimensioning.\n\n**Hinglish Notes (सरल भाषा में):**\nAutoCAD me 2D layout design drafting standard guidelines follow karte hain. Co-ordinate systems coordinates values X aur Y mapping define parameters set variables values checks standard layouts.\n\n**Real-World Industry Case:**\nDrafting precise machine components blueprints mapping exact coordinate axes for manufacturing units.`;
+      topics[3].text = `### Lab Task: Create 2D Flange Profile\nCreate a standard flange 2D drawing detailing bolt holes and central bore coordinates.\n\n**CAD Playground Simulator (बिना सॉफ्टवेयर सीखें):**\nNo CAD software installed? Run basic command lines here:\n- [CAD Command Sandbox Simulation](https://www.autodesk.com/products/autocad)\n\n**Hinglish Lab Instructions:**\n1. Flange circle diameters define geometry coordinate points set checks.\n2. Add multi-hole center coordinates layout.`;
+      topics[3].code = `LINE 0,0 100,0\nCIRCLE 50,50 25\nDIMLINEAR 0,0 100,0`;
+      topics[3].note = "Always verify layer designations for dimensions vs object lines.";
+    } else if (week === 2) {
+      topics[1].text = `### SolidWorks Parametric Part Modeling\nExtrude, Revolve, sketch relations, dimensions, and building robust reference geometry.\n\n**Hinglish Notes (सरल भाषा में):**\nSolidWorks me sketches dimensions relations parameters check tools configure options select shapes extrude profile design structure shapes mapping.\n\n**Real-World Industry Case:**\nDesigning standardized parametric brackets and casing structures for electric vehicle battery packs.`;
+      topics[3].text = `### Lab Task: Extruded Hinge Bracket\nModel a parametric hinge pin bracket with custom reference planes.\n\n**CAD Playground Simulator:**\nOpen parametric modeling design sheets:\n- [SolidWorks Modeling Sandbox](https://my.solidworks.com)\n\n**Hinglish Lab Instructions:**\n1. Front plane sketch profiles specify dimensions values check.\n2. Extrude base geometry and add fillet radius.`;
+      topics[3].code = `// SolidWorks API Macro snippet\nPart.Extension.SelectByID2("Front Plane", "PLANE", 0, 0, 0, False, 0, Nothing, 0)\nPart.FeatureManager.FeatureExtrude2(True, False, False, 0, 0, 0.05, 0.05, False, False, False, False, 0, 0, False, False, False, False, True, True, True, 0, 0, False)`;
+      topics[3].note = "Ensure sketch is fully defined (turned black) before executing extrude.";
+    } else if (week === 3) {
+      topics[1].text = `### CATIA Surface Modeling & Generative Shape Design\nWireframe and Surface design workbenches, sweeps, lofts, joins, and splines.\n\n**Hinglish Notes (सरल भाषा में):**\nCATIA Generative Shape Design workbench surface design layouts surface sweeps shape guidelines curves configurations setups trace mapping.\n\n**Real-World Industry Case:**\nAerodynamic surfaces lofting and surfacing profiles design for aircraft wings modeling layout.`;
+      topics[3].text = `### Lab Task: Aerofoil Surface Sweep\nDesign a turbine blade surface using CATIA Generative Shape Design.\n\n**CAD Playground Simulator:**\nOpen surface modeling systems references:\n- [CATIA Shape Design Sandbox](https://3ds.com/products-services/catia)\n\n**Hinglish Lab Instructions:**\n1. Define spline coordinates profile contours checks.\n2. Sweep surface profile curves.`;
+      topics[3].code = `// CATIA Scripting sweep surface snippet\nSet hybridShapeSweepCircle = hybridShapeFactory.AddNewSweepCircle(hybridShapeCircle)\nhybridBody.AppendHybridShape hybridShapeSweepCircle`;
+      topics[3].note = "Verify surface tangency continuity (G1/G2) curves transitions.";
+    } else if (week === 4) {
+      topics[1].text = `### CNC Code Architectures: G-Codes & M-Codes\nDecoupling tool coordinates. G-codes (G00, G01, G02, G03) and M-codes (M03, M05, M08) for milling.\n\n**Hinglish Notes (सरल भाषा में):**\nCNC milling turning operations coordinates values instructions define code blocks spindle speed direction controls set rules mapping.\n\n**Real-World Industry Case:**\nAutomated machining of custom engine manifold heads from aluminum blocks using precision G-code.`;
+      topics[3].text = `### Lab Task: Pocket Milling G-Code\nWrite G-code to mill a 50x50mm pocket with safety retract coordinates.\n\n**CNC Simulator Sandbox:**\nVerify toolpaths simulation online here:\n- [Interactive CNC Simulator Playground](https://ncviewer.com)\n\n**Hinglish Lab Instructions:**\n1. Setup feed rates coordinates absolute values G90.\n2. Write tool path contours coordinates M30 program end.`;
+      topics[3].code = `G90 G21 G17 (Absolute Coordinates, Metric)\nG00 Z5.0 (Safety Retract)\nM03 S1200 (Spindle On)\nG00 X10.0 Y10.0\nG01 Z-2.0 F100\nG01 X40.0 Y10.0 F300\nG01 X40.0 Y40.0\nG01 X10.0 Y40.0\nG01 X10.0 Y10.0\nG00 Z5.0\nM30`;
+      topics[3].note = "Always simulate toolpaths in virtual dry run viewer before running on live CNC milling systems.";
+    } else {
+      topics[1].text = `### Integrated Project Work: Mechanical Assembly\nAssemblies design, bill of materials (BOM), assembly constraints, exploded views, and production drafting.\n\n**Hinglish Notes (सरल भाषा में):**\nAssembly design components mates specify constraints check parts alignments design structure verification options.\n\n**Real-World Industry Case:**\nFull assembly design of multi-cylinder internal combustion engines with detailed BOM and stress analysis.`;
+      topics[3].text = `### Lab Task: Piston-Cylinder Assembly design\nDraft a complete mechanical assembly layout of a piston-cylinder mechanism.\n\n**CAD Playground Simulator:**\nAssemble components layout templates:\n- [Integrated Assembly Sandbox](https://www.autodesk.com/solutions/cad-cam)\n\n**Hinglish Lab Instructions:**\n1. Insert piston cylinder models references check.\n2. Specify mates constraints concentric axis coincident surfaces.`;
+      topics[3].code = `// Assembly Constraint Definition\nComponent1.Mate(Component2, Coincident, Axis1, Axis2)\nComponent1.Mate(Component2, Distance, Plane1, Plane2, 10.0)`;
+      topics[3].note = "Check assembly degrees of freedom (DOF) to ensure no loose parts remain.";
+    }
+  } else if (courseId === "CADDED_Civil") {
+    if (week === 1) {
+      topics[1].text = `### AutoCAD Civil Drafting & Residential Plans\nCoordinate systems, alignments, parcels, profiles, cross-sections, and building layout drafting.\n\n**Hinglish Notes (सरल भाषा में):**\nCivil layout design plans drawings layers configuration dimensions lines alignments structural maps configure check.\n\n**Real-World Industry Case:**\nStandardized residential building structural plans submission matching municipal drawing guidelines.`;
+      topics[3].text = `### Lab Task: 2BHK Plan Drafting\nDraft a standard 2BHK residential building layout layout.\n\n**CAD Playground Simulator:**\nRun basic command lines here:\n- [CAD Command Sandbox Simulation](https://www.autodesk.com/products/autocad)\n\n**Hinglish Lab Instructions:**\n1. Set grid sizes structural layout grids markers set.\n2. Offset walls and place door/window symbols.`;
+      topics[3].code = `OFFSET 230 (Wall thickness)\nLINE 0,0 3500,0 (Bedroom Width)\nRECTANG 0,0 4200,3600 (Living Room)`;
+      topics[3].note = "Always verify structural dimensions standards before detailing column layouts.";
+    } else if (week === 2) {
+      topics[1].text = `### 3DS Max Architectural Rendering & Textures\nPoly modeling, material mapping, textures, V-Ray/Arnold rendering setup, and camera placements.\n\n**Hinglish Notes (सरल भाषा में):**\n3DS Max interior exterior photorealistic rendering modeling cameras lighting material textures check tools setup configurations.\n\n**Real-World Industry Case:**\nHigh-end marketing visual materials generation for luxury villa housing developments.`;
+      topics[3].text = `### Lab Task: Exterior Camera Lighting Setup\nCreate a photorealistic exterior rendering for a modern villa.\n\n**CAD Playground Simulator:**\nOpen rendering scene blueprints:\n- [3ds Max Modeling Sandbox](https://autodesk.com/products/3ds-max)\n\n**Hinglish Lab Instructions:**\n1. Set sunlight shadows V-Ray Sun parameters.\n2. Map concrete textures Diffuse Bump map files.`;
+      topics[3].code = `// 3ds Max MaxScript helper\nvray = VRayMtl()\nvray.diffuse = color 128 128 128\n$.material = vray`;
+      topics[3].note = "Adjust ambient occlusion values to get high depth realism in final renderings.";
+    } else if (week === 3) {
+      topics[1].text = `### Google SketchUp: Rapid 3D Prototyping\nPush/Pull operations, components group, dynamic components, styles, and landscape architecture.\n\n**Hinglish Notes (सरल भाषा में):**\nGoogle SketchUp rapid modeling tool groups component library styles design push pull dimensions trace check.\n\n**Real-World Industry Case:**\nRapid structural modeling of commercial retail space layouts to present design options to stakeholders.`;
+      topics[3].text = `### Lab Task: Modular Kitchen modeling\nModel a modular kitchen design layout using custom components.\n\n**CAD Playground Simulator:**\nOpen rapid modeling scenes:\n- [SketchUp Web Sandbox](https://app.sketchup.com)\n\n**Hinglish Lab Instructions:**\n1. Create base rectangular shapes face profiles.\n2. Push-pull vertical heights and import preset components.`;
+      topics[3].code = `// Ruby API SketchUp snippet\nmodel = Sketchup.active_model\nentities = model.active_entities\nface = entities.add_face [0,0,0], [10,0,0], [10,10,0], [0,10,0]\nface.pushpull -5`;
+      topics[3].note = "Ensure all distinct wall parts are grouped to prevent sticky face issues.";
+    } else if (week === 4) {
+      topics[1].text = `### Revit (Civil): Structural Detailing & Analytical Modeling\nColumns, beams, structural slabs, foundations, reinforcement detail maps, and structural analytical models.\n\n**Hinglish Notes (सरल भाषा में):**\nRevit Structural tools slab foundation beam columns steel rebar rebar distribution detailing checks modeling configurations.\n\n**Real-World Industry Case:**\nConstructing structural BIM model detailing reinforcement schedules for concrete high-rise foundations.`;
+      topics[3].text = `### Lab Task: Beam-Column Junction rebar\nModel a reinforced concrete column-beam junction detailing steel rebar layouts.\n\n**CAD Playground Simulator:**\nOpen structural detail template sheets:\n- [Revit Structural Sandbox](https://autodesk.com/products/revit)\n\n**Hinglish Lab Instructions:**\n1. Place structural grids concrete profiles dimensions.\n2. Run reinforcement detailing paths specify spacing values.`;
+      topics[3].code = `// Revit C# API Structural Member Creation\nFamilyInstance beam = doc.Create.NewFamilyInstance(point, beamType, structuralLevel, StructuralType.Beam);`;
+      topics[3].note = "Verify grid connections to keep alignment in analytical loads calculations.";
+    } else if (week === 5) {
+      topics[1].text = `### Revit (Architecture): BIM Modeling & Sheet Layouts\nWalls, windows, doors, stairs, roofs, families customization, scheduling, and building documentation sheets.\n\n**Hinglish Notes (सरल भाषा में):**\nRevit Architecture BIM tools floor plans sections schedules doors windows documentation sheets layout design checks.\n\n**Real-World Industry Case:**\nCreating building permit documentation package containing detailed architectural floor plans, sections, and schedules.`;
+      topics[3].text = `### Lab Task: Floor Plan BIM scheduling\nCreate a comprehensive multi-story commercial building sheets layout with door/window schedules.\n\n**CAD Playground Simulator:**\nOpen architectural BIM projects:\n- [Revit Architecture Sandbox](https://autodesk.com/products/revit)\n\n**Hinglish Lab Instructions:**\n1. Place exterior brick walls internal plaster divisions.\n2. Create door schedules sheets verify items count.`;
+      topics[3].code = `// Revit C# API Wall Creation\nWall wall = Wall.Create(document, curve, levelId, false);`;
+      topics[3].note = "Always align room bounding options for precise floor area calculations.";
+    } else {
+      topics[1].text = `### Integrated Architectural Project Work\nIntegrated Architectural Project: Design of a multi-story residential building, structural planning, visual rendering, and BIM documentation.\n\n**Hinglish Notes (सरल भाषा में):**\nCivil blueprint creation structural schedules drawings loads layouts reports portfolio design compilation checks.\n\n**Real-World Industry Case:**\nFinal portfolio submission of a complete G+3 commercial building design with full architectural, structural, and BIM documentation.`;
+      topics[3].text = `### Lab Task: Comprehensive Building Portfolio\nAssemble the complete architectural blueprint and structural load calculations portfolio.\n\n**CAD Playground Simulator:**\nOpen integrated BIM drawings:\n- [BIM Projects Sandbox](https://autodesk.com/solutions/bim)\n\n**Hinglish Lab Instructions:**\n1. Link structural model architectural coordinates setup.\n2. Generate final sheet layouts drawing viewports.`;
+      topics[3].code = `// Documentation Sheet Creation\nViewSheet sheet = ViewSheet.Create(document, titleBlockId);\nViewport.Create(document, sheet.Id, viewId, xyzLocation);`;
+      topics[3].note = "Perform interference check checks to resolve collisions between services.";
+    }
   }
 
   return topics;
@@ -475,7 +569,7 @@ async function main() {
       });
     }
 
-    console.log(`Seeded 20 Modules, 120 Topics, 200 Quiz Questions, and 50 Final Exam Questions for ${course.id}`);
+    console.log(`Seeded ${courseData.modules.length} Modules, ${courseData.modules.length * 6} Topics, ${courseData.modules.length * 10} Quiz Questions, and 50 Final Exam Questions for ${course.id}`);
   }
 
   // Seed default admin account

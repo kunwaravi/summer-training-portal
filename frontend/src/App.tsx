@@ -5,7 +5,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import React, { Suspense } from 'react';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPassword from './pages/ResetPassword';
 import Verify from './pages/Verify';

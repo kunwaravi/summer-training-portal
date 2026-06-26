@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { useTheme } from '../context/ThemeContext';
-import { LogOut, LayoutDashboard, ShieldCheck, Send, Menu, X, MessageCircle, Sun, Moon } from 'lucide-react';
+import { LogOut, LayoutDashboard, ShieldCheck, Menu, X, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
 import Button from './atoms/Button';
 

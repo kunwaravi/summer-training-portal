@@ -1,4 +1,4 @@
-import { Code, Box, Wifi, Cpu, Globe, Terminal, Database } from 'lucide-react';
+import { Code, Box, Wifi, Cpu, Globe, Terminal, Database, Wrench, Building2 } from 'lucide-react';
 
 export interface SyllabusItem {
   order: number;
@@ -10,7 +10,7 @@ export interface CourseConfigItem {
   id: string;
   title: string;
   titleShort: string;
-  category: 'Programming' | 'Electronics';
+  category: 'Programming' | 'Electronics' | 'Mechanical' | 'Civil';
   difficulty: string;
   tags: string[];
   colorLight: string;
@@ -187,6 +187,53 @@ export const coursesConfig: CourseConfigItem[] = [
       { order: 3, title: 'Data Definition & Manipulation (DDL/DML)', details: 'Creating/altering tables, primary/foreign key constraints, and inserting/updating/deleting rows.' },
       { order: 4, title: 'Indexes, Transactions & Views', details: 'Optimizing queries with indexes, ACID properties, commit/rollback, and database views.' },
       { order: 5, title: 'SQL in Applications & Project', details: 'Connecting databases to backend services, schema design, and query optimizations.' }
+    ]
+  },
+  {
+    id: 'CADDED_Mech',
+    title: 'CADDED Software (Mechanical)',
+    titleShort: 'CADDED Mech',
+    category: 'Mechanical',
+    difficulty: 'Beginner to Intermediate',
+    tags: ['AutoCAD', 'SolidWorks', 'CATIA', 'CNC'],
+    colorLight: 'from-orange-500/10 to-orange-600/5',
+    colorDark: 'from-orange-500 to-orange-700',
+    iconColor: 'text-orange-500 bg-orange-500/10',
+    textColor: 'text-orange-400',
+    barColor: 'bg-orange-500',
+    desc: 'Master mechanical systems engineering with hands-on AutoCAD 2D drafts, SolidWorks parts, CATIA shape designs, and CNC G-code programming.',
+    descShort: 'Master AutoCAD 2D, SolidWorks modeling, CATIA surfacing, and CNC G-code programs.',
+    icon: Wrench,
+    syllabus: [
+      { order: 1, title: 'AutoCAD 2D Drafting & Interface', details: 'AutoCAD interface, coordinate systems, 2D drafting tools, layers, and dimensions.' },
+      { order: 2, title: 'SolidWorks Part Modeling & Features', details: 'Parametric modeling, sketches, relations, extrude, revolve, and reference geometry.' },
+      { order: 3, title: 'CATIA Surface Design & Shape Design', details: 'Wireframe, surfaces workbench, sweeps, lofts, joins, and splines.' },
+      { order: 4, title: 'CNC Code Architectures & Operations', details: 'CNC G-code & M-code programming, toolpaths, and machining dry runs.' },
+      { order: 5, title: 'Integrated Assembly Project', details: 'Assemblies design, mates constraints, BOM creation, and mechanical blueprinting.' }
+    ]
+  },
+  {
+    id: 'CADDED_Civil',
+    title: 'CADDED Software (Civil/Architecture)',
+    titleShort: 'CADDED Civil',
+    category: 'Civil',
+    difficulty: 'Beginner to Intermediate',
+    tags: ['AutoCAD Civil', '3DS Max', 'Google SketchUp', 'Revit'],
+    colorLight: 'from-emerald-500/10 to-emerald-600/5',
+    colorDark: 'from-emerald-500 to-emerald-700',
+    iconColor: 'text-emerald-500 bg-emerald-500/10',
+    textColor: 'text-emerald-400',
+    barColor: 'bg-emerald-500',
+    desc: 'Master civil site drafting plans in AutoCAD Civil, 3DS Max architectural visualizations, Google SketchUp dynamic components, and Revit BIM structural analytical grids.',
+    descShort: 'Master AutoCAD Civil site plans, 3DS Max render visuals, SketchUp models, and Revit BIM structural grid designs.',
+    icon: Building2,
+    syllabus: [
+      { order: 1, title: 'AutoCAD Civil Drafting & Residential Plans', details: 'Civil layouts, drawing standard guidelines, floor plans, sections, and elevations.' },
+      { order: 2, title: '3DS Max Architectural Rendering & Visuals', details: 'Poly modeling, materials mapping, textures, V-Ray/Arnold setup, and camera views.' },
+      { order: 3, title: 'Google SketchUp Rapid 3D Prototyping', details: 'Push/pull, components, landscape design, and rapid retail space prototyping.' },
+      { order: 4, title: 'Revit Structural Detailing & Analysis', details: 'Slabs, foundations, columns, beams, reinforcement detailing, and grid loads.' },
+      { order: 5, title: 'Revit Architecture BIM Modeling & schedules', details: 'Walls, roofs, doors/windows placement, custom families, schedules, and sheets.' },
+      { order: 6, title: 'Integrated Architectural Blueprint Project', details: 'G+3 building design, structural load linkage, viewports sheet compilation.' }
     ]
   }
 ];
