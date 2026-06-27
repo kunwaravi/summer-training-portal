@@ -304,8 +304,8 @@ const AdminDashboard = () => {
   }, []);
 
   // Fetch all topics and quiz questions for a module once expanded
-  const handleToggleExpandModule = async (moduleId: number, courseId: string, week: number) => {
-    if (expandedModuleId === moduleId) {
+  const handleToggleExpandModule = async (moduleId: number, courseId: string, week: number, forceRefresh = false) => {
+    if (expandedModuleId === moduleId && !forceRefresh) {
       setExpandedModuleId(null);
       return;
     }
@@ -314,19 +314,13 @@ const AdminDashboard = () => {
       const res = await api.get(`/courses/${courseId}/module/${week}`);
       const detailedModule = res.data;
       
-      // Update local state with rich details
-      if (selectedCourse) {
-        const updatedModules = selectedCourse.modules?.map(m => 
-          m.id === moduleId ? { ...m, topics: detailedModule.topics } : m
-        );
-        setSelectedCourse({ ...selectedCourse, modules: updatedModules });
-      }
-      
       // Also fetch quiz questions from REST API
       const quizRes = await api.get(`/quiz/questions/${courseId}/${week}`);
+      
+      // Update local state with both rich details and quiz questions in one batch to prevent race condition/state overwrite
       if (selectedCourse) {
         const updatedModules = selectedCourse.modules?.map(m => 
-          m.id === moduleId ? { ...m, topics: m.topics, quizQuestions: quizRes.data.questions } : m
+          m.id === moduleId ? { ...m, topics: detailedModule.topics, quizQuestions: quizRes.data.questions } : m
         );
         setSelectedCourse({ ...selectedCourse, modules: updatedModules });
       }
@@ -372,7 +366,7 @@ const AdminDashboard = () => {
       // Refresh curriculum details
       const activeModule = selectedCourse.modules?.find(m => m.id === topicModuleId);
       if (activeModule) {
-        await handleToggleExpandModule(topicModuleId, selectedCourse.id, activeModule.week);
+        await handleToggleExpandModule(topicModuleId, selectedCourse.id, activeModule.week, true);
         // Toggle open back again
         setExpandedModuleId(topicModuleId);
       }
@@ -392,7 +386,7 @@ const AdminDashboard = () => {
       if (selectedCourse) {
         const activeModule = selectedCourse.modules?.find(m => m.id === moduleId);
         if (activeModule) {
-          await handleToggleExpandModule(moduleId, selectedCourse.id, activeModule.week);
+          await handleToggleExpandModule(moduleId, selectedCourse.id, activeModule.week, true);
           setExpandedModuleId(moduleId);
         }
       }
@@ -423,7 +417,7 @@ const AdminDashboard = () => {
       await api.put(`/courses/topic/${topicsList[topicIndex].id}`, { order: topicsList[topicIndex].order });
       await api.put(`/courses/topic/${topicsList[targetIndex].id}`, { order: topicsList[targetIndex].order });
       
-      await handleToggleExpandModule(moduleId, selectedCourse.id, activeModule.week);
+      await handleToggleExpandModule(moduleId, selectedCourse.id, activeModule.week, true);
       setExpandedModuleId(moduleId);
     } catch (err) {
       console.error('Failed to shift topic ordering:', err);
@@ -460,7 +454,7 @@ const AdminDashboard = () => {
       // Refresh curriculum details
       const activeModule = selectedCourse.modules?.find(m => m.id === quizModuleId);
       if (activeModule) {
-        await handleToggleExpandModule(quizModuleId, selectedCourse.id, activeModule.week);
+        await handleToggleExpandModule(quizModuleId, selectedCourse.id, activeModule.week, true);
         setExpandedModuleId(quizModuleId);
       }
 
@@ -479,7 +473,7 @@ const AdminDashboard = () => {
       if (selectedCourse) {
         const activeModule = selectedCourse.modules?.find(m => m.id === moduleId);
         if (activeModule) {
-          await handleToggleExpandModule(moduleId, selectedCourse.id, activeModule.week);
+          await handleToggleExpandModule(moduleId, selectedCourse.id, activeModule.week, true);
           setExpandedModuleId(moduleId);
         }
       }
