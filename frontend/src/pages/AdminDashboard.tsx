@@ -83,6 +83,19 @@ const AdminDashboard = () => {
   const [sortField, setSortField] = useState<'id' | 'name' | 'createdAt' | 'referralCount'>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Course & Module creation states
+  const [showAddCourseModal, setShowAddCourseModal] = useState(false);
+  const [newCourseId, setNewCourseId] = useState('');
+  const [newCourseTitle, setNewCourseTitle] = useState('');
+  const [newCourseDesc, setNewCourseDesc] = useState('');
+  const [newCoursePrice, setNewCoursePrice] = useState(999);
+
+  const [showAddModuleModal, setShowAddModuleModal] = useState(false);
+  const [newModuleCourseId, setNewModuleCourseId] = useState('');
+  const [newModuleWeek, setNewModuleWeek] = useState(1);
+  const [newModuleTitle, setNewModuleTitle] = useState('');
+  const [newModuleDesc, setNewModuleDesc] = useState('');
+
   const handleSort = (field: 'id' | 'name' | 'createdAt' | 'referralCount') => {
     if (sortField === field) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
@@ -153,7 +166,7 @@ const AdminDashboard = () => {
   };
 
   // Fetch syllabus courses and dynamic module data
-  const fetchCmsCourses = async () => {
+  const fetchCmsCourses = async (courseIdToSelect?: string) => {
     setLoadingCms(true);
     try {
       const res = await api.get('/courses');
@@ -166,12 +179,118 @@ const AdminDashboard = () => {
       }));
       setCourses(formatted);
       if (formatted.length > 0) {
-        setSelectedCourse(formatted[0]);
+        const preserveId = courseIdToSelect || selectedCourse?.id;
+        const matched = formatted.find(c => c.id === preserveId);
+        setSelectedCourse(matched || formatted[0]);
+      } else {
+        setSelectedCourse(null);
       }
     } catch (err) {
       console.error('Failed to load courses for CMS:', err);
     } finally {
       setLoadingCms(false);
+    }
+  };
+
+  const handleCreateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCourseId || !newCourseTitle) {
+      alert('Course ID and Title are required.');
+      return;
+    }
+    try {
+      const payload = {
+        id: newCourseId.trim(),
+        title: newCourseTitle.trim(),
+        description: newCourseDesc.trim(),
+        price: Number(newCoursePrice)
+      };
+      await api.post('/courses', payload);
+      alert(`Course "${newCourseTitle}" created successfully.`);
+      
+      const createdId = newCourseId.trim();
+      // Clear fields
+      setNewCourseId('');
+      setNewCourseTitle('');
+      setNewCourseDesc('');
+      setNewCoursePrice(999);
+      setShowAddCourseModal(false);
+
+      // Refresh list and select the newly created course
+      await fetchCmsCourses(createdId);
+    } catch (err: any) {
+      console.error('Failed to create course:', err);
+      alert(err.response?.data?.message || 'Failed to create course.');
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string, courseTitle: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete course "${courseTitle}" (${courseId})? All modules, topics, and quiz questions associated with this course will be permanently wiped out.`)) {
+      return;
+    }
+    try {
+      await api.delete(`/courses/${courseId}`);
+      alert(`Course "${courseTitle}" was successfully deleted.`);
+      // Refresh list of courses
+      await fetchCmsCourses();
+    } catch (err: any) {
+      console.error('Failed to delete course:', err);
+      alert(err.response?.data?.message || 'Failed to delete course. Ensure no students have active progress or payments for this course first.');
+    }
+  };
+
+  const handleAddModuleClick = (courseId: string) => {
+    const activeCourse = courses.find(c => c.id === courseId);
+    const nextWeek = activeCourse && activeCourse.modules ? activeCourse.modules.length + 1 : 1;
+    setNewModuleCourseId(courseId);
+    setNewModuleWeek(nextWeek);
+    setNewModuleTitle('');
+    setNewModuleDesc('');
+    setShowAddModuleModal(true);
+  };
+
+  const handleCreateModule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newModuleCourseId || !newModuleTitle) {
+      alert('Module Title is required.');
+      return;
+    }
+    try {
+      const payload = {
+        week: Number(newModuleWeek),
+        title: newModuleTitle.trim(),
+        description: newModuleDesc.trim()
+      };
+      await api.post(`/courses/${newModuleCourseId}/module`, payload);
+      alert(`Week ${newModuleWeek} Module created successfully.`);
+      
+      const targetCourseId = newModuleCourseId;
+      // Clear fields
+      setNewModuleCourseId('');
+      setNewModuleWeek(1);
+      setNewModuleTitle('');
+      setNewModuleDesc('');
+      setShowAddModuleModal(false);
+
+      // Refresh list
+      await fetchCmsCourses(targetCourseId);
+    } catch (err: any) {
+      console.error('Failed to create module:', err);
+      alert(err.response?.data?.message || 'Failed to create module.');
+    }
+  };
+
+  const handleDeleteModule = async (moduleId: number, weekNum: number) => {
+    if (!window.confirm(`Are you sure you want to permanently delete Week ${weekNum} Module? This will wipe out all topics and quiz questions in this module.`)) {
+      return;
+    }
+    try {
+      await api.delete(`/courses/module/${moduleId}`);
+      alert(`Week ${weekNum} Module deleted successfully.`);
+      await fetchCmsCourses(selectedCourse?.id);
+    } catch (err: any) {
+      console.error('Failed to delete module:', err);
+      alert(err.response?.data?.message || 'Failed to delete module.');
     }
   };
 
@@ -539,23 +658,46 @@ const AdminDashboard = () => {
             
             {/* Sidebar Tracks */}
             <div className="w-full lg:w-1/4 bg-slate-900/40 border border-slate-800 rounded-2xl p-4 space-y-3 shrink-0">
-              <h3 className="text-sm font-bold uppercase tracking-wider px-2 pb-2 border-b border-slate-800 text-slate-350">
-                Learning Tracks
-              </h3>
+              <div className="flex justify-between items-center px-2 pb-2 border-b border-slate-800">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-350">
+                  Learning Tracks
+                </h3>
+                <button
+                  onClick={() => setShowAddCourseModal(true)}
+                  className="px-2 py-1 bg-cyan-500 hover:bg-cyan-600 text-slate-950 rounded text-[10px] font-black uppercase transition flex items-center gap-1 focus:outline-none"
+                  title="Create New Course Track"
+                >
+                  <Plus size={11} /> Add
+                </button>
+              </div>
               <div className="space-y-2">
                 {courses.map((c) => (
-                  <button
+                  <div
                     key={c.id}
-                    onClick={() => { setSelectedCourse(c); setExpandedModuleId(null); }}
-                    className={`w-full text-left px-4 py-3 rounded-xl border flex items-center justify-between transition-all ${
+                    className={`w-full px-4 py-3 rounded-xl border flex items-center justify-between transition-all ${
                       selectedCourse?.id === c.id
                         ? 'bg-cyan-500/10 border-cyan-500/50 text-white font-extrabold shadow shadow-cyan-500/5'
                         : 'bg-slate-850/20 border-slate-800/80 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                     }`}
                   >
-                    <span className="text-xs uppercase font-black tracking-wider">{c.id} curriculum</span>
-                    <ChevronRight size={14} className="text-slate-500" />
-                  </button>
+                    <button
+                      onClick={() => { setSelectedCourse(c); setExpandedModuleId(null); }}
+                      className="flex-1 text-left text-xs uppercase font-black tracking-wider focus:outline-none truncate pr-2"
+                      title={c.title}
+                    >
+                      {c.id}
+                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => handleDeleteCourse(c.id, c.title)}
+                        className="p-1 hover:bg-slate-800 rounded text-rose-500 transition focus:outline-none"
+                        title="Delete Course Track"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                      <ChevronRight size={14} className="text-slate-500" />
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -575,46 +717,70 @@ const AdminDashboard = () => {
                       </span>
                       <h2 className="text-lg font-black text-white mt-1.5">Syllabus Weeks & Modules</h2>
                     </div>
+                    <button
+                      onClick={() => handleAddModuleClick(selectedCourse.id)}
+                      className="px-3 py-2 bg-slate-850 hover:bg-slate-800 text-cyan-400 hover:text-white border border-slate-800 rounded-xl text-xs font-black uppercase transition flex items-center gap-1.5 focus:outline-none"
+                    >
+                      <Plus size={14} /> Add Week Module
+                    </button>
                   </div>
 
                   {/* Modules Accordions */}
                   <div className="space-y-4">
-                    {selectedCourse.modules?.map((m) => {
-                      const isExpanded = expandedModuleId === m.id;
-                      return (
-                        <div key={m.id} className="border border-slate-850 rounded-xl bg-slate-950/20 overflow-hidden">
-                          
-                          {/* Module Header Bar */}
-                          <div 
-                            onClick={() => handleToggleExpandModule(m.id, selectedCourse.id, m.week)}
-                            className="p-4 bg-slate-900/40 hover:bg-slate-900/80 flex items-center justify-between cursor-pointer transition select-none"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-xs font-black text-slate-300">
-                                W{m.week}
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-bold text-slate-200">{m.title}</h4>
-                                <p className="text-[10px] text-slate-500 truncate max-w-[320px]">{m.description}</p>
-                              </div>
-                            </div>
+                    {(!selectedCourse.modules || selectedCourse.modules.length === 0) ? (
+                      <div className="py-12 text-center text-slate-500 border border-dashed border-slate-800 rounded-xl text-sm font-semibold">
+                        No syllabus weeks/modules defined for this course yet.<br />
+                        <button
+                          onClick={() => handleAddModuleClick(selectedCourse.id)}
+                          className="mt-3 px-4 py-2 bg-cyan-500 text-slate-950 rounded-xl text-xs font-black uppercase hover:bg-cyan-600 transition inline-flex items-center gap-1 focus:outline-none"
+                        >
+                          <Plus size={13} /> Add Week 1 Module
+                        </button>
+                      </div>
+                    ) : (
+                      selectedCourse.modules.map((m) => {
+                        const isExpanded = expandedModuleId === m.id;
+                        return (
+                          <div key={m.id} className="border border-slate-850 rounded-xl bg-slate-950/20 overflow-hidden">
                             
-                            <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                              <button 
-                                onClick={() => handleOpenAddTopic(m.id)}
-                                className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1"
-                              >
-                                <Plus size={12} /> Add Topic
-                              </button>
-                              <button 
-                                onClick={() => handleOpenAddQuiz(m.id)}
-                                className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-yellow-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1"
-                              >
-                                <Plus size={12} /> Add Quiz Q
-                              </button>
-                              {isExpanded ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />}
+                            {/* Module Header Bar */}
+                            <div 
+                              onClick={() => handleToggleExpandModule(m.id, selectedCourse.id, m.week)}
+                              className="p-4 bg-slate-900/40 hover:bg-slate-900/80 flex items-center justify-between cursor-pointer transition select-none"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-xs font-black text-slate-300">
+                                  W{m.week}
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-bold text-slate-200">{m.title}</h4>
+                                  <p className="text-[10px] text-slate-500 truncate max-w-[320px]">{m.description}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2.5" onClick={e => e.stopPropagation()}>
+                                <button 
+                                  onClick={() => handleOpenAddTopic(m.id)}
+                                  className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1"
+                                >
+                                  <Plus size={12} /> Add Topic
+                                </button>
+                                <button 
+                                  onClick={() => handleOpenAddQuiz(m.id)}
+                                  className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-yellow-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1"
+                                >
+                                  <Plus size={12} /> Add Quiz Q
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteModule(m.id, m.week)}
+                                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 hover:text-white rounded-lg text-[10px] font-bold transition flex items-center justify-center"
+                                  title="Delete Module"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                                {isExpanded ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />}
+                              </div>
                             </div>
-                          </div>
 
                           {/* Expanded Content View */}
                           <AnimatePresence>
@@ -727,7 +893,7 @@ const AdminDashboard = () => {
                           </AnimatePresence>
                         </div>
                       );
-                    })}
+                    }))}
                   </div>
 
                 </div>
@@ -1526,6 +1692,192 @@ const AdminDashboard = () => {
                 </button>
               </div>
 
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Create New Learning Track (Course) Modal */}
+      <AnimatePresence>
+        {showAddCourseModal && (
+          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 text-left space-y-5"
+            >
+              <div className="flex items-center gap-2 text-cyan-400 pb-2 border-b border-slate-900">
+                <BookOpen size={18} />
+                <h3 className="text-sm font-black uppercase tracking-wider">
+                  Create New Course Track
+                </h3>
+              </div>
+
+              <form onSubmit={handleCreateCourse} className="space-y-4">
+                
+                {/* Course ID */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Course Identifier (ID)</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="e.g. CADDED_Mech"
+                    value={newCourseId}
+                    onChange={(e) => setNewCourseId(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-cyan-500 transition font-bold"
+                  />
+                  <p className="text-[9px] text-slate-500 leading-normal">This should be unique, alphanumeric and without spaces (e.g. `IoT`, `WebDesign`).</p>
+                </div>
+
+                {/* Course Title */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Course Title</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="e.g. CADDED Software (Mechanical)"
+                    value={newCourseTitle}
+                    onChange={(e) => setNewCourseTitle(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-cyan-500 transition"
+                  />
+                </div>
+
+                {/* Course Description */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Course Description</label>
+                  <textarea 
+                    required
+                    placeholder="Provide a comprehensive description of the curriculum learning outcomes..."
+                    value={newCourseDesc}
+                    onChange={(e) => setNewCourseDesc(e.target.value)}
+                    rows={3}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-cyan-500 transition resize-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Course Price */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Course Registration Price (INR)</label>
+                  <input 
+                    type="number"
+                    required
+                    min={0}
+                    value={newCoursePrice}
+                    onChange={(e) => setNewCoursePrice(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 transition font-bold"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-900">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowAddCourseModal(false);
+                      setNewCourseId('');
+                      setNewCourseTitle('');
+                      setNewCourseDesc('');
+                      setNewCoursePrice(999);
+                    }}
+                    className="px-4 py-2 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl text-xs font-bold uppercase transition"
+                  >
+                    Discard
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-[0.98]"
+                  >
+                    Create Track
+                  </button>
+                </div>
+
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Create New Week Module Modal */}
+      <AnimatePresence>
+        {showAddModuleModal && (
+          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 text-left space-y-5"
+            >
+              <div className="flex items-center gap-2 text-cyan-400 pb-2 border-b border-slate-900">
+                <BookOpen size={18} />
+                <h3 className="text-sm font-black uppercase tracking-wider">
+                  Create Week {newModuleWeek} Module
+                </h3>
+              </div>
+
+              <form onSubmit={handleCreateModule} className="space-y-4">
+                
+                {/* Module Week Number */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Week Number</label>
+                  <input 
+                    type="number"
+                    required
+                    min={1}
+                    value={newModuleWeek}
+                    onChange={(e) => setNewModuleWeek(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 transition font-bold"
+                  />
+                </div>
+
+                {/* Module Title */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Module Title</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="e.g. AutoCAD 2D Drafting & Interface"
+                    value={newModuleTitle}
+                    onChange={(e) => setNewModuleTitle(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-cyan-500 transition"
+                  />
+                </div>
+
+                {/* Module Description */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Module Description</label>
+                  <textarea 
+                    required
+                    placeholder="Brief description of the topics covered in this week..."
+                    value={newModuleDesc}
+                    onChange={(e) => setNewModuleDesc(e.target.value)}
+                    rows={3}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-cyan-500 transition resize-none leading-relaxed"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-900">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowAddModuleModal(false);
+                      setNewModuleCourseId('');
+                      setNewModuleWeek(1);
+                      setNewModuleTitle('');
+                      setNewModuleDesc('');
+                    }}
+                    className="px-4 py-2 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl text-xs font-bold uppercase transition"
+                  >
+                    Discard
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-[0.98]"
+                  >
+                    Create Module
+                  </button>
+                </div>
+
+              </form>
             </motion.div>
           </div>
         )}
