@@ -13,6 +13,7 @@ import practiceRoutes from './routes/practice';
 import forumRoutes from './routes/forum';
 import assignmentRoutes from './routes/assignment';
 import projectRoutes from './routes/project';
+import contactRoutes from './routes/contact';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -62,6 +63,7 @@ app.use('/api/practice', practiceRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health Check Instrumentation Endpoint
 app.get('/health', async (req, res) => {

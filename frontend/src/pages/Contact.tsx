@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Building, Mail, Phone, Clock, Globe, Send } from 'lucide-react';
 import { useUI } from '../context/UIContext';
+import api from '../api';
 
 const Contact = () => {
   const { addToast } = useUI();
@@ -12,13 +13,32 @@ const Contact = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [settings, setSettings] = useState({
+    COMPANY_NAME: 'EduNexus Pro',
+    WEBSITE_URL: 'https://edunexus.kibm.in',
+    CONTACT_EMAIL: 'edunexuspro@gmail.com',
+    CONTACT_PHONE: '+91 99999 99999',
+    CONTACT_HOURS: 'Monday to Saturday | 10:00 AM – 6:00 PM (IST)'
+  });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/contact/settings');
+        setSettings(prev => ({ ...prev, ...res.data }));
+      } catch (err) {
+        console.error('Failed to load contact settings:', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) {
       addToast('Please fill out all required fields.', 'error');
@@ -26,16 +46,17 @@ const Contact = () => {
     }
     
     setIsSubmitting(true);
-    // Simulate sending message
-    setTimeout(() => {
+    try {
+      await api.post('/contact', formData);
       addToast('Thank you! Your message has been received. Our team will contact you shortly.', 'success');
       setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch (err: any) {
+      console.error('Failed to send message:', err);
+      addToast(err.response?.data?.message || 'Failed to send message. Please try again.', 'error');
+    } finally {
       setIsSubmitting(false);
-    }, 1200);
+    }
   };
-
-  // Keep contact number editable easily. Change the value here to update the contact number shown on the page.
-  const CONTACT_NUMBER = "+91 99999 99999"; 
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-12 px-4 sm:px-6 lg:px-8 selection:bg-indigo-500/20 selection:text-indigo-300">
@@ -83,7 +104,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Company</h3>
-                    <p className="text-sm font-semibold text-slate-200">EduNexus Pro</p>
+                    <p className="text-sm font-semibold text-slate-200">{settings.COMPANY_NAME}</p>
                   </div>
                 </div>
 
@@ -94,8 +115,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Website</h3>
-                    <a href="https://edunexus.kibm.in" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-indigo-450 hover:underline">
-                      edunexus.kibm.in
+                    <a href={settings.WEBSITE_URL} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-indigo-450 hover:underline break-all">
+                      {settings.WEBSITE_URL.replace('https://', '').replace('http://', '')}
                     </a>
                   </div>
                 </div>
@@ -107,8 +128,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email</h3>
-                    <a href="mailto:edunexuspro@gmail.com" className="text-sm font-semibold text-slate-200 hover:text-indigo-400">
-                      edunexuspro@gmail.com
+                    <a href={`mailto:${settings.CONTACT_EMAIL}`} className="text-sm font-semibold text-slate-200 hover:text-indigo-400 break-all">
+                      {settings.CONTACT_EMAIL}
                     </a>
                   </div>
                 </div>
@@ -120,7 +141,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Contact Number</h3>
-                    <p className="text-sm font-semibold text-slate-250 select-all">{CONTACT_NUMBER}</p>
+                    <p className="text-sm font-semibold text-slate-250 select-all">{settings.CONTACT_PHONE}</p>
                   </div>
                 </div>
 
@@ -132,8 +153,7 @@ const Contact = () => {
                   <div>
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Business Hours</h3>
                     <p className="text-xs text-slate-350 mt-1 leading-relaxed">
-                      Monday to Saturday <br />
-                      10:00 AM – 6:00 PM (IST)
+                      {settings.CONTACT_HOURS}
                     </p>
                   </div>
                 </div>

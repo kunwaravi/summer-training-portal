@@ -4,7 +4,7 @@ import {
   Shield, Users, Award, BookOpen, Edit3, Trash2, Plus, 
   ArrowUp, ArrowDown, Eye, DollarSign, 
   Save, FileText, Image, RefreshCw, ChevronDown, ChevronRight,
-  TrendingUp, Share2
+  TrendingUp, Share2, Mail, Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminPaymentTable from '../components/organisms/AdminPaymentTable';
@@ -43,7 +43,7 @@ interface Course {
 }
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'analytics' | 'referrals'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'analytics' | 'referrals' | 'messages' | 'settings'>('transactions');
   
   // Transaction logs states
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -95,6 +95,65 @@ const AdminDashboard = () => {
   const [newModuleWeek, setNewModuleWeek] = useState(1);
   const [newModuleTitle, setNewModuleTitle] = useState('');
   const [newModuleDesc, setNewModuleDesc] = useState('');
+
+  // Contact Us Messages & Settings States
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [contactSettings, setContactSettings] = useState({
+    COMPANY_NAME: '',
+    WEBSITE_URL: '',
+    CONTACT_EMAIL: '',
+    CONTACT_PHONE: '',
+    CONTACT_HOURS: ''
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  const fetchMessages = async () => {
+    setLoadingMessages(true);
+    try {
+      const res = await api.get('/contact/messages');
+      setMessages(res.data);
+    } catch (err) {
+      console.error('Failed to fetch contact messages:', err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  const fetchContactSettings = async () => {
+    try {
+      const res = await api.get('/contact/settings');
+      setContactSettings(res.data);
+    } catch (err) {
+      console.error('Failed to fetch contact settings:', err);
+    }
+  };
+
+  const handleSaveContactSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      await api.put('/contact/settings', contactSettings);
+      alert('System settings updated successfully!');
+    } catch (err: any) {
+      console.error('Failed to save settings:', err);
+      alert(err.response?.data?.message || 'Failed to save settings.');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const handleDeleteMessage = async (id: number) => {
+    if (!window.confirm('Are you sure you want to permanently delete this message?')) return;
+    try {
+      await api.delete(`/contact/messages/${id}`);
+      alert('Message deleted successfully.');
+      fetchMessages();
+    } catch (err) {
+      console.error('Failed to delete message:', err);
+      alert('Failed to delete message.');
+    }
+  };
 
   const handleSort = (field: 'id' | 'name' | 'createdAt' | 'referralCount') => {
     if (sortField === field) {
@@ -299,6 +358,8 @@ const AdminDashboard = () => {
       fetchTransactions();
       fetchCmsCourses();
       fetchUsers();
+      fetchMessages();
+      fetchContactSettings();
     }, 0);
     return () => clearTimeout(timer);
   }, []);
@@ -579,6 +640,26 @@ const AdminDashboard = () => {
           }`}
         >
           <TrendingUp size={16} /> Analytics
+        </button>
+        <button
+          onClick={() => setActiveTab('messages')}
+          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'messages'
+              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Mail size={16} /> Contact Messages
+        </button>
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'settings'
+              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Settings size={16} /> Contact Settings
         </button>
       </div>
 
@@ -1054,6 +1135,151 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'messages' && (
+          <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-6 space-y-4 animate-fade-in">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
+              <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <Mail size={18} className="text-cyan-400" /> Contact Messages Registry
+              </h3>
+              <span className="text-[10px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold">
+                {messages.length} Messages
+              </span>
+            </div>
+
+            {loadingMessages ? (
+              <div className="py-12 text-center text-slate-500 font-semibold text-sm">Loading contact messages...</div>
+            ) : messages.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 border border-dashed border-slate-800 rounded-xl text-sm font-semibold text-slate-400">
+                No messages submitted yet.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
+                      <th className="py-3 px-4">Date</th>
+                      <th className="py-3 px-4">From</th>
+                      <th className="py-3 px-4">Subject</th>
+                      <th className="py-3 px-4">Message</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850">
+                    {messages.map((m) => (
+                      <tr key={m.id} className="hover:bg-slate-900/40 text-slate-300 transition align-top">
+                        <td className="py-3.5 px-4 font-mono text-slate-500 whitespace-nowrap">
+                          {new Date(m.createdAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-white">{m.name}</div>
+                          <div className="text-[10px] text-slate-550 font-mono">{m.email}</div>
+                        </td>
+                        <td className="py-3.5 px-4 font-semibold text-slate-350">{m.subject || 'N/A'}</td>
+                        <td className="py-3.5 px-4 max-w-sm whitespace-pre-wrap leading-relaxed text-slate-405">{m.message}</td>
+                        <td className="py-3.5 px-4 text-right">
+                          <button
+                            onClick={() => handleDeleteMessage(m.id)}
+                            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition"
+                            title="Remove Message"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-6 space-y-6 animate-fade-in">
+            <div className="pb-2 border-b border-slate-800/80">
+              <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <Settings size={18} className="text-cyan-400" /> Contact Support Settings
+              </h3>
+              <p className="text-slate-400 text-xs mt-1">Configure company support metadata and contact desk parameters shown across the public portal.</p>
+            </div>
+
+            <form onSubmit={handleSaveContactSettings} className="space-y-4 max-w-xl">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Company Name</label>
+                <input 
+                  type="text"
+                  required
+                  value={contactSettings.COMPANY_NAME}
+                  onChange={(e) => setContactSettings(prev => ({ ...prev, COMPANY_NAME: e.target.value }))}
+                  placeholder="e.g. EduNexus Pro"
+                  className="w-full bg-slate-950 border border-slate-850 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 transition outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Website URL</label>
+                <input 
+                  type="url"
+                  required
+                  value={contactSettings.WEBSITE_URL}
+                  onChange={(e) => setContactSettings(prev => ({ ...prev, WEBSITE_URL: e.target.value }))}
+                  placeholder="https://..."
+                  className="w-full bg-slate-950 border border-slate-855 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 transition outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Support Email</label>
+                <input 
+                  type="email"
+                  required
+                  value={contactSettings.CONTACT_EMAIL}
+                  onChange={(e) => setContactSettings(prev => ({ ...prev, CONTACT_EMAIL: e.target.value }))}
+                  placeholder="support@..."
+                  className="w-full bg-slate-950 border border-slate-855 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 transition outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Contact Mobile Number</label>
+                <input 
+                  type="text"
+                  required
+                  value={contactSettings.CONTACT_PHONE}
+                  onChange={(e) => setContactSettings(prev => ({ ...prev, CONTACT_PHONE: e.target.value }))}
+                  placeholder="+91..."
+                  className="w-full bg-slate-950 border border-slate-855 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 transition outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Business Hours</label>
+                <input 
+                  type="text"
+                  required
+                  value={contactSettings.CONTACT_HOURS}
+                  onChange={(e) => setContactSettings(prev => ({ ...prev, CONTACT_HOURS: e.target.value }))}
+                  placeholder="Monday to Saturday | 10:00 AM - 6:00 PM (IST)"
+                  className="w-full bg-slate-950 border border-slate-855 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 transition outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={savingSettings}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-750 text-white font-black text-xs uppercase tracking-widest rounded-xl transition shadow active:scale-95 disabled:opacity-50"
+              >
+                <Save size={14} /> {savingSettings ? 'Saving...' : 'Save Settings'}
+              </button>
+            </form>
           </div>
         )}
 

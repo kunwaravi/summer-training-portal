@@ -647,6 +647,29 @@ async function main() {
     await prisma.practiceQuestion.create({ data: pq });
   }
   console.log('Practice Questions Seeded successfully!');
+
+  // Seed Default System Settings
+  console.log('Seeding Default System Settings...');
+  const defaultSettings = [
+    { key: 'COMPANY_NAME', value: 'EduNexus Pro' },
+    { key: 'WEBSITE_URL', value: 'https://edunexus.kibm.in' },
+    { key: 'CONTACT_EMAIL', value: 'edunexuspro@gmail.com' },
+    { key: 'CONTACT_PHONE', value: '+91 99999 99999' },
+    { key: 'CONTACT_HOURS', value: 'Monday to Saturday | 10:00 AM – 6:00 PM (IST)' }
+  ];
+
+  for (const setting of defaultSettings) {
+    await prisma.setting.upsert({
+      where: { key: setting.key },
+      update: {},
+      create: {
+        key: setting.key,
+        value: setting.value
+      }
+    });
+  }
+  console.log('System Settings Seeded successfully!');
+
   console.log('Database seeding successfully finished!');
 }
 
