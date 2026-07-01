@@ -1,43 +1,47 @@
-# Walkthrough - Admin CMS, Certificate & User Management Upgrades
+# Walkthrough - Legal Pages & Pricing Upgrades
 
-I have successfully implemented the Admin Course Syllabus CMS fix, added security-gated certificate retrieval for administrators, added a comprehensive User Management dashboard, and deployed all updates to the Hostinger VPS.
+I have successfully updated the Terms, Privacy, and Refund policies, added professional About Us and Contact Us pages, implemented the course price increase to ₹699, added 499 special coupon code overrides, and successfully deployed all changes to the Hostinger VPS.
 
 ## Changes Made
 
 ### Frontend Changes
-1. **Admin Syllabus CMS Fix:**
-   - Modified `fetchCmsCourses` in [AdminDashboard.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/AdminDashboard.tsx) to map over the backend course array directly.
-2. **Student Payment Logs Upgrade:**
-   - Added a new `Certificate` column to the "Student Verification & Checkout Registry" table in [AdminPaymentTable.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/components/organisms/AdminPaymentTable.tsx).
-   - Displayed a `View / Issue` button for each student row pointing to `/certificate?courseId=${t.courseId}&userId=${t.user.id}`.
-   - Updated the `Transaction` TypeScript interface to include `id?: number` inside `user`.
-3. **Certificate Page Integration:**
-   - Modified [Certificate.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/Certificate.tsx) to parse an optional `userId` query parameter.
-   - If `userId` is present, it fetches the certificate details for that user and course using the secure backend admin endpoint.
-4. **User Management Dashboard Tab:**
-   - Added a new **User Management** tab to the Admin Dashboard ([AdminDashboard.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/AdminDashboard.tsx)).
-   - Renders a responsive list of all registered candidates in the system (showing name, email, college, branch, role, and registration date).
-   - Added a trash button to permanently delete any candidate's account (protected with a confirm modal).
+
+1. **New Pages & Routes:**
+   - **About Us Page:** Created [About.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/About.tsx) describing **EduNexus Pro's** 4-Week Summer Industrial Training programs.
+   - **Contact Us Page:** Created [Contact.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/Contact.tsx) with company metadata, support desk timings, and an interactive message form.
+   - **App Routing & Navigation:** Updated [App.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/App.tsx) to lazy-load these new routes and added links inside the footer component.
+
+2. **Policy Page Updates:**
+   - **Privacy Policy:** Updated [Privacy.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/Privacy.tsx) to outline collected data, purpose of usage, secure storage, no third-party sales, limited sharing with payment providers, cookie usage, and user rights.
+   - **Terms & Conditions:** Updated [Terms.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/Terms.tsx) to specify acceptance of terms, account sharing prohibition, intellectual property protection, certification rules, and updates policy.
+   - **Refund Policy:** Updated [Refund.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/Refund.tsx) to outline general non-refundability, duplicate payment resolution within 7-10 days, and technical access support.
+
+3. **Pricing & Coupons Integration:**
+   - Updated `BASE_PRICE` to `699` in [EnrollmentPanel.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/components/organisms/EnrollmentPanel.tsx).
+   - Added special discount codes `NEXUS499`, `EDU499`, and `SPECIAL499` to lower the price to ₹499.
+   - Updated visual labels to dynamically output base prices and display custom success messages when the 499 coupons are applied.
 
 ### Backend Changes
-1. **Certificate Service Admin Bypass & Stable Duration:**
-   - Enhanced `generateCertificate` in [certificateService.ts](file:///home/abhi/repo/summer-training-portal/backend/src/services/certificateService.ts) with an `isAdmin` boolean flag.
-   - If `isAdmin` is `true`, it bypasses the course week completion (4 weeks) and payment status checks.
-   - Calculations use the user's registration date (`user.createdAt`) as `startDate` and add exactly 28 days (4 weeks) to compute a stable `endDate` and `completionDate`. This ensures any student can download their certificate anytime, and it always displays the exact 4-week duration.
-   - Included `startDate` and `endDate` fields in the generated payload to populate certificate metadata on the frontend.
-2. **Certificate Routes & Access Control:**
-   - Updated [certificate.ts](file:///home/abhi/repo/summer-training-portal/backend/src/routes/certificate.ts).
-   - Added `GET /api/certificate/:courseId` for standard users to fetch their own certificates.
-   - Gated `GET /api/certificate/:userId/:courseId` to prevent unauthorized users from viewing others' certificates (now only accessible by `ADMIN` or the user themselves), and forwarded their admin status to the service layer.
-3. **User Management Directory & Account Deletion:**
-   - Updated `getAllUsers` and added `deleteUser` inside [authService.ts](file:///home/abhi/repo/summer-training-portal/backend/src/services/authService.ts) to select detailed candidate profiles and handle deletions.
-   - Added `DELETE /api/auth/admin/users/:userId` endpoint inside [auth.ts](file:///home/abhi/repo/summer-training-portal/backend/src/routes/auth.ts) to process student deletion requests with safeguards to block self-deletion.
+
+1. **Coupon Validation:**
+   - Updated [paymentService.ts](file:///home/abhi/repo/summer-training-portal/backend/src/services/paymentService.ts) to match the frontend, adding validation logic for `NEXUS499`, `EDU499`, and `SPECIAL499` to apply a discount fraction equivalent to ₹200 off (reducing the price from 699 to 499).
+
+2. **Database Course Seed:**
+   - Updated course default pricing from 499 to 699 in [seed.ts](file:///home/abhi/repo/summer-training-portal/backend/prisma/seed.ts).
+   - Re-executed database seeding on the VPS to update course values in the production PostgreSQL tables.
+
+### Deployment & Infrastructure
+
+1. **Compose env_file Support:**
+   - Modified [docker-compose.yml](file:///home/abhi/repo/summer-training-portal/docker-compose.yml) to add `env_file: .env` to the backend service. This resolves deployment startup issues by correctly loading database and JWT secrets from the system `.env` file without hardcoding keys in Git.
+   - Verified that the frontend successfully binds to port `8090` without conflicting with port `8080` on the VPS.
 
 ---
 
 ## Validation Results
 
-- Both frontend and backend builds successfully completed locally.
-- Seeding and container rebuild on Hostinger VPS (`edunexus.kibm.in`) completed with zero errors.
-- Verified that all five co-tenant environments on the VPS remain fully operational.
+- Both frontend and backend builds completed successfully with zero TypeScript or bundling errors.
+- Pulled updates to VPS, verified clean container boots, and ran database migrations.
+- Verified that all courses retrieve correctly via `/api/courses` with the updated price of `699`.
+- Verified that all other environments sharing the VPS (like nexustrade, mudra) remain unaffected.
 
