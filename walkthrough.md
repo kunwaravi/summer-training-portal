@@ -28,6 +28,9 @@ I have successfully updated the Terms, Privacy, and Refund policies, added profe
 
 2. **Database Course Seed:**
    - Updated course default pricing from 499 to 699 in [seed.ts](file:///home/abhi/repo/summer-training-portal/backend/prisma/seed.ts).
+   - Integrated the user's custom CADDED Mechanical (5 weeks) and Civil (5 weeks) syllabus structures (modules & topics names) directly into `seed.ts` as the codebase baseline.
+   - Added dynamic module cleanup logic to automatically delete orphan weeks in the database that are no longer part of the seed configuration (cleaning up week 6 for CADDED Civil).
+   - Added an automatic `existingTopicsCount` skip condition to protect dynamic CADDED curriculum modules from being overwritten or deleted on future seeder executions if they have manual admin modifications.
    - Re-executed database seeding on the VPS to update course values in the production PostgreSQL tables.
 
 ### Deployment & Infrastructure
@@ -43,5 +46,6 @@ I have successfully updated the Terms, Privacy, and Refund policies, added profe
 - Both frontend and backend builds completed successfully with zero TypeScript or bundling errors.
 - Pulled updates to VPS, verified clean container boots, and ran database migrations.
 - Verified that all courses retrieve correctly via `/api/courses` with the updated price of `699`.
+- Verified that CADDED Mechanical and Civil are fully restored to exactly 5 modules and 30 customized topics.
 - Verified that all other environments sharing the VPS (like nexustrade, mudra) remain unaffected.
 
