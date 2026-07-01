@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Eye, Lock, FileKey } from 'lucide-react';
+import { ArrowLeft, Eye, Lock, FileKey, ShieldAlert, Cookie, UserCheck } from 'lucide-react';
 
 const Privacy = () => {
   return (
@@ -15,7 +15,7 @@ const Privacy = () => {
           >
             <ArrowLeft size={16} /> Back to Home
           </Link>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-950/30 border border-indigo-900/40 px-2.5 py-0.5 rounded-full">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/30 border border-emerald-900/40 px-2.5 py-0.5 rounded-full">
             Data Privacy
           </span>
         </div>
@@ -26,44 +26,102 @@ const Privacy = () => {
             Privacy <span className="text-emerald-400">Policy</span>
           </h1>
           <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">
-            Last Updated: June 2026 • Edunexus Automation Labs (Faridabad, Haryana)
+            Last Updated: June 2026 • EduNexus Pro
           </p>
         </div>
 
         {/* Content Card */}
-        <div className="bg-slate-900/30 border border-slate-900/60 rounded-2xl p-6 sm:p-8 space-y-6 backdrop-blur-sm">
+        <div className="bg-slate-900/30 border border-slate-900/60 rounded-2xl p-6 sm:p-8 space-y-8 backdrop-blur-sm">
           
+          {/* 1. Information We Collect */}
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <Eye size={18} className="text-emerald-400" />
-              1. What Data We Collect
+              1. Information We Collect
             </h2>
-            <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
-              We collect minimal information to help you learn and track your progress:
+            <p className="text-slate-355 text-xs sm:text-sm leading-relaxed">
+              We collect the following personal and academic details from you when you register and enroll on our platform:
             </p>
             <ul className="list-disc pl-5 space-y-1 text-slate-400 text-xs sm:text-sm">
-              <li>Your Name, Email, College Name, and Branch (for generating accurate certificates).</li>
-              <li>Your Course Progress, Quiz Scores, and Payment UTR numbers (for course activation).</li>
+              <li><strong>Personal Identifiers:</strong> Your Full Name, Email Address, and Mobile Number.</li>
+              <li><strong>Enrollment Details:</strong> College Name, Department/Branch, and training track choice.</li>
+              <li><strong>Payment Information:</strong> UPI ID, transaction Reference Number (UTR), or other details necessary to verify course enrollment and process purchases securely.</li>
             </ul>
           </div>
 
+          {/* 2. Purpose of Collection */}
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <UserCheck size={18} className="text-emerald-400" />
+              2. Purpose of Collecting Data
+            </h2>
+            <p className="text-slate-355 text-xs sm:text-sm leading-relaxed">
+              The data we collect is utilized strictly for:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-slate-400 text-xs sm:text-sm">
+              <li>Setting up and managing your student account.</li>
+              <li>Providing and unlocking course materials, tracking quiz progress, and generating verified Course Completion Certificates.</li>
+              <li>Verifying payment records to activate training access.</li>
+              <li>Communicating important updates, training schedules, and support responses.</li>
+            </ul>
+          </div>
+
+          {/* 3. Secure Storage of Information */}
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <Lock size={18} className="text-emerald-400" />
-              2. Absolute Privacy & No Spam
+              3. Secure Data Storage
             </h2>
-            <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
-              We have a strict <strong>Zero Third-Party Sharing Policy</strong>. We will never sell, share, or rent your email address or academic details to any external marketing agencies or brokers. Your data is 100% safe and encrypted.
+            <p className="text-slate-355 text-xs sm:text-sm leading-relaxed">
+              Your personal information is stored securely in encrypted databases and protected by industry-standard security protocols. We take comprehensive technical measures to guard your data against unauthorized access, loss, misuse, or alteration.
             </p>
           </div>
 
+          {/* 4. No Selling of Personal Information */}
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <ShieldAlert size={18} className="text-emerald-400" />
+              4. Zero Third-Party Selling Policy
+            </h2>
+            <p className="text-slate-355 text-xs sm:text-sm leading-relaxed">
+              We strictly enforce a <strong>No Selling Policy</strong>. We will never sell, rent, lease, or trade your personal information, email address, or contact details to third-party marketing agencies or external brokers.
+            </p>
+          </div>
+
+          {/* 5. Limited Sharing */}
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <FileKey size={18} className="text-emerald-400" />
-              3. Local Storage Usage
+              5. Limited Sharing & Disclosures
             </h2>
-            <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
-              We use secure browser cache storage (<code className="text-emerald-400 bg-emerald-950/20 px-1 py-0.5 rounded font-mono">localStorage</code>) to keep you logged in, remember your Dark/Light theme preferences, and sync your course checkboxes. These items remain locally inside your device.
+            <p className="text-slate-355 text-xs sm:text-sm leading-relaxed">
+              Your information is shared only under the following strict conditions:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-slate-400 text-xs sm:text-sm">
+              <li><strong>Payment Providers:</strong> Sharing verified payment identifiers with UPI/gateway operators to securely process and verify transactions.</li>
+              <li><strong>Legal Obligations:</strong> When required by applicable law, court order, or regulatory authorities.</li>
+            </ul>
+          </div>
+
+          {/* 6. Cookie Usage */}
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Cookie size={18} className="text-emerald-400" />
+              6. Cookie Usage
+            </h2>
+            <p className="text-slate-355 text-xs sm:text-sm leading-relaxed">
+              We use functional cookies and browser storage (such as <code className="text-emerald-400 bg-emerald-950/20 px-1 py-0.5 rounded font-mono">localStorage</code>) to enhance your user experience. These include remembering your login session, dark/light theme preferences, and course checkbox progress. You can disable cookies in your browser settings, but it may affect some features of the platform.
+            </p>
+          </div>
+
+          {/* 7. User Rights */}
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <UserCheck size={18} className="text-emerald-400" />
+              7. Your Rights
+            </h2>
+            <p className="text-slate-355 text-xs sm:text-sm leading-relaxed">
+              As a user, you have the right to request access to the personal data we store, request updates or corrections to any incorrect information, or request the deletion of your account (subject to active enrollment verification). To exercise these rights, you can reach out to our official support email.
             </p>
           </div>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, RefreshCcw, Landmark, AlertCircle } from 'lucide-react';
+import { ArrowLeft, RefreshCcw, Landmark, AlertCircle, ShieldAlert } from 'lucide-react';
 
 const Refund = () => {
   return (
@@ -16,58 +16,67 @@ const Refund = () => {
             <ArrowLeft size={16} /> Back to Home
           </Link>
           <span className="text-[10px] font-bold uppercase tracking-wider text-red-400 bg-red-950/30 border border-red-900/40 px-2.5 py-0.5 rounded-full">
-            Refund Rules
+            Refund & Cancellation
           </span>
         </div>
 
         {/* Header */}
         <div className="space-y-2">
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white uppercase">
-            Refund <span className="text-red-400">Policy</span>
+            Refund & <span className="text-red-400">Cancellation Policy</span>
           </h1>
           <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">
-            Last Updated: June 2026 • Edunexus Automation Labs (Faridabad, Haryana)
+            Last Updated: June 2026 • EduNexus Pro
           </p>
         </div>
 
         {/* Content Card */}
         <div className="bg-slate-900/30 border border-slate-900/60 rounded-2xl p-6 sm:p-8 space-y-6 backdrop-blur-sm">
           
+          {/* 1. General Refund Policy */}
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <RefreshCcw size={18} className="text-red-400" />
-              1. Digital Content Unlock Rules
+              1. General Course Purchase Rules
             </h2>
             <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
-              Because our premium video recordings, hardware notes, codes, and verified training certifications are instantly unlocked upon payment verification, all completed activations are final and <strong>non-refundable</strong>.
+              Because our premium video recordings, study resources, practices, and automated verified certifications are instantly unlocked and made accessible upon successful payment verification, course fees are generally <strong>non-refundable</strong> after a successful purchase.
             </p>
           </div>
 
+          {/* 2. Cancellation Requests */}
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <AlertCircle size={18} className="text-red-400" />
-              2. Failed or Rejected Transactions
+              <ShieldAlert size={18} className="text-red-400" />
+              2. Cancellation Requests
             </h2>
-            <div className="text-slate-350 text-xs sm:text-sm leading-relaxed space-y-2">
-              <p>
-                If you made a payment via UPI but your transaction was rejected, is taking too long to unlock, or you typed the UTR number wrong:
-              </p>
-              <div className="p-4 rounded-xl bg-indigo-950/30 border border-indigo-900/40 text-indigo-300 text-xs font-semibold leading-relaxed">
-                <strong>Instant Action:</strong> Message our official <a href="https://t.me/+tCapxtLwxNNlZjY1" target="_blank" rel="noopener noreferrer" className="underline hover:text-white font-bold">Telegram Support Group</a> with your Email ID, payment reference number, and transaction screenshot. Our team will verify it live and activate it immediately!
-              </div>
-              <p>
-                If the payment failed on your bank server's end, the deducted amount will automatically revert back to your bank account within <strong>5-7 working days</strong>.
-              </p>
-            </div>
+            <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
+              Cancellation requests submitted after course access has been granted to the student's account are generally not eligible for a refund, unless explicitly required by applicable law or consumer protection regulations.
+            </p>
           </div>
 
+          {/* 3. Duplicate Payments */}
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <Landmark size={18} className="text-red-400" />
               3. Duplicate Payments
             </h2>
             <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
-              If you paid twice for the same training track by mistake due to internet network issues, message the WhatsApp support group or Telegram group. We will verify the duplicate entry and return the extra amount back to your UPI/bank source within <strong>7-10 working days</strong>.
+              If you paid twice for the same training track by mistake due to internet lag or session timeout issues:
+            </p>
+            <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-900/80 text-slate-300 text-xs sm:text-sm leading-relaxed">
+              Please message our support desk with your Email ID, transaction reference numbers (UTR), and screenshots. Once verified, the duplicate amount will be refunded and credited back to your original payment source within <strong>7-10 working days</strong>.
+            </div>
+          </div>
+
+          {/* 4. Technical Issues */}
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <AlertCircle size={18} className="text-red-400" />
+              4. Technical Access Issues
+            </h2>
+            <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
+              If your payment was successful but your course is not unlocked, or if you encounter any technical loading issues while accessing the training, please report it to our support team immediately. Technical access problems will be prioritized and resolved by the support team as quickly as possible.
             </p>
           </div>
 

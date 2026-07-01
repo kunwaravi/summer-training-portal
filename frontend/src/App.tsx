@@ -18,6 +18,8 @@ const PracticeArena = React.lazy(() => import('./pages/PracticeArena'));
 const Terms = React.lazy(() => import('./pages/Terms'));
 const Privacy = React.lazy(() => import('./pages/Privacy'));
 const Refund = React.lazy(() => import('./pages/Refund'));
+const About = React.lazy(() => import('./pages/About'));
+const Contact = React.lazy(() => import('./pages/Contact'));
 import Navbar from './components/Navbar';
 import FloatingSupportWidget from './components/atoms/FloatingSupportWidget';
 import './App.css';
@@ -63,6 +65,8 @@ function AppRoutes() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/refund" element={<Refund />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
           </Routes>
         </Suspense>
       </div>
@@ -74,7 +78,11 @@ function AppRoutes() {
             <p className="text-slate-400">© 2026 Edunexus Automation Labs. All rights reserved.</p>
             <p className="text-[10px] text-slate-600">Technical Support: Available via WhatsApp & Telegram Support Groups</p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center sm:justify-end">
+            <Link to="/about" className="hover:text-slate-350 transition-colors">About Us</Link>
+            <span>•</span>
+            <Link to="/contact" className="hover:text-slate-350 transition-colors">Contact Us</Link>
+            <span>•</span>
             <Link to="/terms" className="hover:text-slate-350 transition-colors">Terms of Service</Link>
             <span>•</span>
             <Link to="/privacy" className="hover:text-slate-350 transition-colors">Privacy Policy</Link>
