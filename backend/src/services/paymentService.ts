@@ -78,6 +78,7 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
     if (code === 'SAVI10') couponDiscount = 1.0;
     else if (code === 'AVI050') couponDiscount = 0.5;
     else if (code === 'AVI030') couponDiscount = 0.3;
+    else if (code === 'NEXUS499' || code === 'EDU499' || code === 'SPECIAL499') couponDiscount = basePrice > 0 ? 200 / basePrice : 0;
   }
 
   // Calculate final discount-adjusted price (using maximum of referral or coupon discount)

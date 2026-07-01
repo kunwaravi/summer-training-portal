@@ -34,7 +34,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
   // After submit: show pending confirmation instead of closing modal
   const [paymentSubmitted, setPaymentSubmitted] = useState(false);
 
-  const BASE_PRICE = 499;
+  const BASE_PRICE = 699;
 
   const referralCount = user?.referralCount || 0;
   let referralDiscount = 0;
@@ -46,7 +46,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
 
   const handleApplyCoupon = () => {
     setCouponError('');
-    const code = couponCode.toUpperCase();
+    const code = couponCode.toUpperCase().trim();
 
     if (code === 'SAVI10') {
       setDiscount(1);
@@ -56,6 +56,10 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
       setIsCouponApplied(true);
     } else if (code === 'AVI030') {
       setDiscount(0.3);
+      setIsCouponApplied(true);
+    } else if (code === 'NEXUS499' || code === 'EDU499' || code === 'SPECIAL499') {
+      // 499 price: discount of 200 off from 699 base price
+      setDiscount(200 / 699);
       setIsCouponApplied(true);
     } else {
       setCouponError('Invalid coupon code');
@@ -259,20 +263,18 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                       <span className="text-slate-400 font-bold uppercase">Accreditation Fee</span>
                       <div className="flex flex-col items-end">
                         {(discount > 0 || referralDiscount > 0) && (
-                          <span className="text-slate-500 line-through text-[10px]">₹499.00</span>
+                          <span className="text-slate-500 line-through text-[10px]">₹{BASE_PRICE}.00</span>
                         )}
                         <span className="text-cyan-400 font-black text-sm">₹{currentPrice.toFixed(2)}</span>
                       </div>
                     </div>
-
                     {/* Coupon */}
                     <div className="space-y-1.5">
                       <label className="text-[10px] uppercase font-bold text-slate-400">Discount Coupon</label>
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          placeholder="Enter 6-digit code"
-                          maxLength={6}
+                          placeholder="Enter coupon code"
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value)}
                           className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono uppercase"
@@ -286,8 +288,14 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                         </button>
                       </div>
                       {couponError && <p className="text-[9px] text-red-500 font-bold ml-1">{couponError}</p>}
-                       {isCouponApplied && <p className="text-[9px] text-green-500 font-bold ml-1">Coupon Applied: {Math.round(discount * 100)}% OFF!</p>}
-                       {referralDiscount > 0 && <p className="text-[9px] text-emerald-500 font-bold ml-1">Referral Reward: {Math.round(referralDiscount * 100)}% OFF via {referralCount} referrals!</p>}
+                      {isCouponApplied && (
+                        <p className="text-[9px] text-green-500 font-bold ml-1">
+                          {['NEXUS499', 'EDU499', 'SPECIAL499'].includes(couponCode.toUpperCase().trim())
+                            ? 'Coupon Applied: Course price reduced to ₹499!'
+                            : `Coupon Applied: ${Math.round(discount * 100)}% OFF!`}
+                        </p>
+                      )}
+                      {referralDiscount > 0 && <p className="text-[9px] text-emerald-500 font-bold ml-1">Referral Reward: {Math.round(referralDiscount * 100)}% OFF via {referralCount} referrals!</p>}
                     </div>
 
                     {currentPrice > 0 ? (
