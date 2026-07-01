@@ -5,6 +5,7 @@ services:
     build: ./backend
     ports:
       - "5000:5000"
+    env_file: .env
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-nexusadmin}:${DB_PASSWORD:-nexuspassword}@db:5432/${DB_NAME:-nexus}?schema=public
       - PORT=5000
