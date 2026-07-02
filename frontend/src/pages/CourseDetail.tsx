@@ -170,6 +170,11 @@ const CourseDetail = () => {
   const [activePlayground, setActivePlayground] = useState<number | null>(null);
   const [activeCodeStep, setActiveCodeStep] = useState<string | null>(null);
 
+  // Reset scroll to top when active topic, week or view state changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTopicIndex, activeWeekIndex, viewState]);
+
   // Deliverables State
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
