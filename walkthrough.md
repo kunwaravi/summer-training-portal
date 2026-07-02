@@ -41,11 +41,21 @@ I have successfully updated the Terms, Privacy, and Refund policies, added profe
 
 ---
 
-## Validation Results
+## Validation & CADDED Restoration Results
+
+1. **ChatGPT Curriculum Extraction:**
+   - Parsed chat transcript `transcript.jsonl` to extract 60 structured topics (30 Civil + 30 Mechanical) from ChatGPT.
+   - Compiled detailed curriculum bodies into `backend/prisma/cadded_curriculum.json`.
+   - Programmed the database seeder [seed.ts](file:///home/abhi/repo/summer-training-portal/backend/prisma/seed.ts) to load custom topics dynamically from this JSON, falling back to defaults if not present.
+
+2. **Production Database Seeding:**
+   - Overwrote existing placeholder/empty topics in the production PostgreSQL database.
+   - Verified that all 30 custom topics for CADDED Mechanical and all 30 custom topics for CADDED Civil are successfully seeded and populated with rich markdown text bodies.
+
+3. **Restored Edit Protection:**
+   - Restored the protection check in `seed.ts` after the import to ensure that any future seeding does not overwrite or destroy manual edits that administrators make through the admin panel.
 
 - Both frontend and backend builds completed successfully with zero TypeScript or bundling errors.
 - Pulled updates to VPS, verified clean container boots, and ran database migrations.
-- Verified that all courses retrieve correctly via `/api/courses` with the updated price of `699`.
 - Verified that CADDED Mechanical and Civil are fully restored to exactly 5 modules and 30 customized topics.
 - Verified that all other environments sharing the VPS (like nexustrade, mudra) remain unaffected.
-
