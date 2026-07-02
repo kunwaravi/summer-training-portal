@@ -608,6 +608,11 @@ async function main() {
       }
 
       // Safe clean up of existing leaf nodes for this module to prevent duplicate seeding
+      const existingTopicsCount = await prisma.topic.count({ where: { moduleId: modRecord.id } });
+      if ((course.id === 'CADDED_Mech' || course.id === 'CADDED_Civil') && existingTopicsCount > 0) {
+        console.log(`Skipping topic/quiz seeding for ${course.id} module W${moduleOrder} to preserve manual admin edits.`);
+        continue;
+      }
 
       await prisma.topic.deleteMany({ where: { moduleId: modRecord.id } });
       await prisma.quizQuestion.deleteMany({ where: { moduleId: modRecord.id } });
