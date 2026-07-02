@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -221,6 +223,22 @@ function generateFinalExamQuestions(courseId: string) {
 }
 
 function getDynamicTopicsForModule(courseId: string, week: number, moduleTitle: string) {
+  if (courseId === 'CADDED_Mech' || courseId === 'CADDED_Civil') {
+    try {
+      const filePath = path.join(__dirname, 'cadded_curriculum.json');
+      if (fs.existsSync(filePath)) {
+        const rawData = fs.readFileSync(filePath, 'utf-8');
+        const curriculum = JSON.parse(rawData);
+        const courseData = curriculum[courseId];
+        if (courseData && courseData[week.toString()]) {
+          return courseData[week.toString()];
+        }
+      }
+    } catch (err) {
+      console.error(`Error loading custom CADDED curriculum from JSON:`, err);
+    }
+  }
+
   const topics = [
     {
       title: "Learning Objectives",
@@ -590,11 +608,6 @@ async function main() {
       }
 
       // Safe clean up of existing leaf nodes for this module to prevent duplicate seeding
-      const existingTopicsCount = await prisma.topic.count({ where: { moduleId: modRecord.id } });
-      if ((course.id === 'CADDED_Mech' || course.id === 'CADDED_Civil') && existingTopicsCount > 0) {
-        console.log(`Skipping topic/quiz seeding for ${course.id} module W${moduleOrder} to preserve manual admin edits.`);
-        continue;
-      }
 
       await prisma.topic.deleteMany({ where: { moduleId: modRecord.id } });
       await prisma.quizQuestion.deleteMany({ where: { moduleId: modRecord.id } });
