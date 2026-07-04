@@ -73,7 +73,7 @@ const Certificate = () => {
     collegeName: user?.collegeName || "GOVERNMENT POLYTECHNIC GHAZIABAD",
     branchName: user?.branchName || "Electronics Engineering",
     courseName: "C++ & OOP for Embedded Systems",
-    credentialId: "ENL-2026-EDM5926",
+    credentialId: "NEX-CPP_EMBEDDED-AVINASH1001-VERIFIED",
     startDate: "June 1, 2026",
     endDate: "June 28, 2026",
     grade: "Outstanding"

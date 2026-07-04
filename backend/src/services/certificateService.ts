@@ -3,7 +3,7 @@ import { AppError } from '../middleware/errorHandler';
 
 export class CertificateService {
   private static generateCredentialId(userId: number, name: string, courseId: string) {
-    const cleanFirstName = name.split(' ')[0].toUpperCase();
+    const cleanFirstName = name.trim().split(' ')[0].toUpperCase();
     const cleanCourseKey = courseId.toUpperCase() === "C++" ? "CPP_EMBEDDED" : courseId.toUpperCase() + "_SYSTEMS";
     return `NEX-${cleanCourseKey}-${cleanFirstName}${1000 + userId}-VERIFIED`;
   }
@@ -125,7 +125,7 @@ export class CertificateService {
   }
 
   static async verifyCertificate(credentialId: string) {
-    const match = credentialId.match(/-[A-Z0-9_]+([0-9]{4})-VERIFIED$/i);
+    const match = credentialId.match(/-[A-Z0-9_.\s-]+?([0-9]+)-VERIFIED$/i);
     if (!match) {
       throw new AppError('Invalid Credential ID format.', 400);
     }
@@ -183,7 +183,7 @@ export class CertificateService {
       }
     });
 
-    if (!isCompleted && !successPayment) {
+    if (!isCompleted || !successPayment) {
       throw new AppError('Credential is still active/uncompleted or unpaid in database.', 403);
     }
 
