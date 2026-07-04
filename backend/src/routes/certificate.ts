@@ -4,6 +4,17 @@ import { CertificateService } from '../services/certificateService';
 
 const router = Router();
 
+// GET /api/certificate/verify/:credentialId - Public verification registry endpoint
+router.get('/verify/:credentialId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const credentialId = req.params.credentialId as string;
+    const verificationData = await CertificateService.verifyCertificate(credentialId);
+    res.json(verificationData);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/certificate/:courseId - Generate certificate data for the current authenticated user
 router.get('/:courseId', authenticateToken, async (req: any, res: Response, next: NextFunction) => {
   try {
@@ -46,17 +57,6 @@ router.get('/:userId/:courseId', authenticateToken, async (req: any, res: Respon
         paymentRequired: true
       });
     }
-    next(error);
-  }
-});
-
-// GET /api/certificate/verify/:credentialId - Public verification registry endpoint
-router.get('/verify/:credentialId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const credentialId = req.params.credentialId as string;
-    const verificationData = await CertificateService.verifyCertificate(credentialId);
-    res.json(verificationData);
-  } catch (error) {
     next(error);
   }
 });
