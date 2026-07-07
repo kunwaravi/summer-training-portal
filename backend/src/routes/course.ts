@@ -32,12 +32,13 @@ router.get('/:courseId/public', async (req: any, res: any, next: any) => {
 });
 
 // GET /api/courses/:courseId/module/:week - Dynamic fetch for ONE module's full topics (Lazy loading detail view)
-router.get('/:courseId/module/:week', async (req: any, res: any, next: any) => {
+router.get('/:courseId/module/:week', authenticateToken, async (req: any, res: any, next: any) => {
   try {
     const { courseId, week } = req.params;
     const weekNum = parseInt(week);
+    const userId = req.user.id;
 
-    const moduleRecord = await courseService.getModuleByWeek(courseId, weekNum);
+    const moduleRecord = await courseService.getModuleByWeek(courseId, weekNum, userId);
 
     if (!moduleRecord) {
       return res.status(404).json({ message: `Week ${week} for course ${courseId} not found.` });

@@ -42,6 +42,7 @@ model User {
   practiceAttempts  PracticeAttempt[]
   projects          ProjectSubmission[]
   results           QuizResult[]
+  topicProgresses   TopicProgress[]
 }
 
 model CourseProgress {
@@ -110,16 +111,18 @@ model Module {
 }
 
 model Topic {
-  id        Int      @id @default(autoincrement())
-  moduleId  Int
-  title     String
-  text      String
-  code      String?
-  note      String?
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  id            Int             @id @default(autoincrement())
+  moduleId      Int
+  title         String
+  text          String
+  code          String?
+  note          String?
+  order         Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  module        Module          @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  quizQuestions QuizQuestion[]
+  progresses    TopicProgress[]
 
   @@index([moduleId])
 }
@@ -127,14 +130,17 @@ model Topic {
 model QuizQuestion {
   id            Int      @id @default(autoincrement())
   moduleId      Int
+  topicId       Int?
   text          String
   options       String[]
   correctAnswer String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   module        Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  topic         Topic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   @@index([moduleId])
+  @@index([topicId])
 }
 
 model Payment {
@@ -308,4 +314,20 @@ model Setting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model TopicProgress {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  courseId   String
+  topicId    Int
+  completed  Boolean  @default(false)
+  quizPassed Boolean  @default(false)
+  quizScore  Int?
+  updatedAt  DateTime @updatedAt
+  topic      Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId, courseId])
 }

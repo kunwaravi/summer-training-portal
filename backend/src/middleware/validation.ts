@@ -52,6 +52,7 @@ export const quizSubmissionSchema = z.object({
     userId: z.number().or(z.string()),
     courseId: z.string(),
     week: z.number().or(z.string()),
+    topicId: z.number().or(z.string()).optional(),
     answers: z.record(z.string(), z.string().or(z.number())),
   }),
 });

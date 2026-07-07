@@ -19,7 +19,7 @@ export const getAllCourses = async () => {
   return courses;
 };
 
-export const getModuleByWeek = async (courseId: string, week: number) => {
+export const getModuleByWeek = async (courseId: string, week: number, userId?: number) => {
   const moduleRecord = await prisma.module.findFirst({
     where: {
       courseId,
@@ -33,6 +33,34 @@ export const getModuleByWeek = async (courseId: string, week: number) => {
       }
     }
   });
+
+  if (!moduleRecord) return null;
+
+  if (userId) {
+    const topicIds = moduleRecord.topics.map(t => t.id);
+    const progressRecords = await prisma.topicProgress.findMany({
+      where: {
+        userId,
+        topicId: { in: topicIds }
+      }
+    });
+
+    const topicsWithProgress = moduleRecord.topics.map(topic => {
+      const progress = progressRecords.find((p: any) => p.topicId === topic.id);
+      return {
+        ...topic,
+        completed: progress?.completed || false,
+        quizPassed: progress?.quizPassed || false,
+        quizScore: progress?.quizScore || null
+      };
+    });
+
+    return {
+      ...moduleRecord,
+      topics: topicsWithProgress
+    };
+  }
+
   return moduleRecord;
 };
 

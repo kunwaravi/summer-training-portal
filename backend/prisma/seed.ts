@@ -222,6 +222,211 @@ function generateFinalExamQuestions(courseId: string) {
   return questions;
 }
 
+function getCaddedStyleText(courseId: string, week: number, topicTitle: string, moduleTitle: string, note: string) {
+  let overview = "";
+  let detailsText = "";
+  let hinglishText = "";
+  let industryCase = "";
+
+  if (topicTitle === "Learning Objectives") {
+    overview = `By the end of this module on **${moduleTitle}**, you will establish a rigorous understanding of the underlying concepts, parameters, and architectures.`;
+    detailsText = `### Key Milestones & Directives
+1. **Core Concept Mastery**: Understand the design rules and execution patterns of ${moduleTitle} under varying production loads.
+2. **Boundary Validation**: Learn to implement safety filters and diagnostic registers to catch out-of-bound errors.
+3. **Execution Profiling**: Design and execute performance test benchmarks on simulated or physical setups.`;
+    hinglishText = `Is topic me hum target guidelines aur learning goals set karenge. Module clear karne ke baad aap logic execution boundaries, direct registers configuration settings, aur safe development practices implementation seekh jayenge.`;
+    industryCase = `**Safety-Critical Avionics and Automotive Systems**:\nIn professional systems, engineers define strict objectives before writing drivers to ensure that standard error counters are mapped to dedicated warning interrupts, preventing runtime crashes.`;
+  } else if (topicTitle === "Detailed Notes") {
+    overview = `This section details the theoretical foundations, memory mappings, and execution pipelines of **${moduleTitle}**.`;
+    detailsText = `### Deep Technical Foundations
+Relational tables, compiler structures, or hardware registers function as bounded entities in memory. When executing instructions in safety-critical modes:
+- **Optimization**: Compiler optimizations shift variables into local registries to avoid stack frame latency.
+- **Thread Safety**: Mutex locks and interrupt vectors prevent race conditions and priority inversion from stalling critical tasks.
+- **Resource Constraints**: Dynamically allocated structures are avoided in real-time execution loops to guarantee static execution speeds.`;
+    hinglishText = `Is deep theory section me hum low-level structures and data parsing constraints parameters ko deeply clear karenge. Variable limits aur structure layout checks memory bounds verify state manage functions dynamically execute safety standard guidelines.`;
+    industryCase = `**Automotive ECU Register Lockdowns**:\nSafety-critical embedded controllers restrict memory layout write access. Any attempt to write registers without clock gating causes immediate hardware hard-faults.`;
+  } else if (topicTitle === "Examples") {
+    overview = `Here is a complete, verified application example demonstrating standard implementation patterns for **${moduleTitle}**.`;
+    detailsText = `### Analysis of the Example
+The code utilizes strict boundaries checks and validates pointers/values before executing the logic. Key segments:
+- **Variable Bounds**: Assert checking ensures variables stay within limits.
+- **Bitwise Masking**: Directly operates on memory locations for fast state transitions.
+- **Exit Verification**: Return values are checked to catch unexpected execution sequences.`;
+    hinglishText = `Yeh sample code runtime error handle parameters check loops implement configuration logic compile run outputs verify karne ke liye structure guidelines show karta hai. Custom debug functions variables inputs correctly map status report details prints.`;
+    industryCase = `**Flight Control Telemetry Logs**:\nTelemetry loops write sensor data blocks to local circular queues. If a queue bounds check fails, the fallback system instantly recovers the state using secondary vectors.`;
+  } else if (topicTitle === "Practical Exercises") {
+    overview = `Perform these hands-on lab exercises to build confidence in **${moduleTitle}** systems development.`;
+    detailsText = `### Step-by-Step Lab Guidelines
+1. **Scenario 1**: Implement safe bounds checking logic that halts execution if values exceed standard ranges.
+2. **Scenario 2**: Write a routine to test your logic under boundary conditions (e.g., maximum integer limits, empty data frames).
+3. **Scenario 3**: Run the compiled binary/logic inside the sandbox environment and verify standard logs format.`;
+    hinglishText = `Is lab task exercise me aapko safe register masking limits, loops validation conditions check logic, aur boundary variables error handling tasks code manually edit karke testing tools runtime check rules verify output output outputs report.`;
+    industryCase = `**Greenhouse Automated Relay Timers**:\nPractical sensors checking humidity values must average readings over multiple cycles before triggering relays to avoid false relays switching from noise spikes.`;
+  } else if (topicTitle === "Code Examples") {
+    overview = `Below is the verified, production-grade code template representing standard configurations for **${moduleTitle}** operations in resource-constrained environments.`;
+    detailsText = `### Code Configuration Attributes
+- **Optimized Headers**: Includes only required components to reduce binary footprint.
+- **Static Allocations**: Forces the compiler to layout buffers in the data segment.
+- **Deterministic Paths**: Guarantees constant time execution bounds regardless of input values.`;
+    hinglishText = `Yeh high quality code block compiler configuration standard limits layout details variables tracking options prints structure details verification tools correct behavior confirm instructions execution timing compile parameters.`;
+    industryCase = `**Industrial Boiler Temperature Monitor Interrupts**:\nboilers monitoring sensor values write to peripheral registers directly. High priority interrupt registers NVIC bypass normal RTOS task priorities.`;
+  } else { // Downloadable Resources
+    overview = `Access laboratory documents, schematic guides, and cheat sheets for **${moduleTitle}** to aid in your manual experiments.`;
+    detailsText = `### References & Documents List
+- **Technical Specifications Manual (PDF)**: Details physical layout guidelines and standard protocols.
+- **Hardware Reference Board Pinout (PDF)**: Guides direct pin mapping and electrical boundaries.
+- **Complete Verification Source Code Package (ZIP)**: Code skeletons and reference outputs for self-checks.`;
+    hinglishText = `Is section resources references sheets, PDF layouts guides download parameters check guidelines setup manual checks compile run environment set.`;
+    industryCase = `**ISO-9001 Compliance Guidelines**:\nAerospace and medical devices require warning-free compilation profiles and fully documented references for audit trails.`;
+  }
+
+  return `# ${topicTitle} — ${moduleTitle}
+  
+## 1. Overview
+${overview}
+
+---
+
+## 2. Technical Deep-Dive & Design Principles
+${detailsText}
+
+---
+
+## 3. Hinglish Study Guide (सरल शब्दों में)
+**Hinglish Explanations (आसान भाषा में):**
+${hinglishText}
+
+---
+
+## 4. Real-World Industry Use Case
+${industryCase}
+
+---
+
+## 5. Summary & Key Takeaways
+- **Key Directive**: Always check system limits and memory bounds.
+- **Safety Standard**: Adhere to standard ISO and MISRA-C conventions.
+- **Verification Rule**: Test boundaries under simulated conditions before production load.
+
+💡 **Core Takeaway (याद रखने योग्य बात):**
+${note}
+`;
+}
+
+function generateTopicQuizzes(courseId: string, week: number, topicTitle: string, topicOrder: number) {
+  const questions = [];
+  const subjects: Record<string, string[]> = {
+    C: [
+      "compilation flags", "register allocation", "pointer storage", "memory boundaries",
+      "stack allocation", "heap fragmentation", "alignment attributes", "struct layout",
+      "bitmasking registers", "linker mappings", "interrupt service", "volatile variables"
+    ],
+    "C++": [
+      "RAII templates", "virtual tables", "copy elision", "inline namespace",
+      "rvalue reference", "smart pointer life", "exception boundaries", "multiple inheritance",
+      "operator overloading", "friend relationships", "template arguments", "const correctness"
+    ],
+    IoT: [
+      "MQTT payload bounds", "TLS handshake size", "Deep sleep currents", "OTA integrity check",
+      "ADC scaling values", "I2C clock stretching", "SPI transmission mode", "WiFi power modes",
+      "RESTful HTTP latency", "JSON buffer limits", "Watchdog interrupt rules", "LoRa spreading factors"
+    ],
+    Embedded: [
+      "FreeRTOS scheduling", "Priority inversion prevention", "Mutex deadlock rules", "ISR stack checks",
+      "DMA burst lengths", "Hardware debouncers", "PLL frequency steps", "Memory-mapped I/O offsets",
+      "Bootloader checksum", "Zero-copy configurations", "Context switch timing", "Critical sections"
+    ],
+    WebDesign: [
+      "HTML5 semantic layouts", "Flexbox alignment properties", "DOM event capturing", "Viewport responsive rules",
+      "CSS Grid areas", "Tailwind styling syntax", "Fetch API error handling", "JSON payload formatting",
+      "Responsive navigation logic", "Session storage access", "CSS Transforms timing", "Local storage limits"
+    ],
+    Python: [
+      "list comprehension loops", "try-except block scopes", "Pandas DataFrame grouping", "Matplotlib subplots",
+      "file context managers", "dictionary comprehension", "multiple inheritance order", "variable scope lookups",
+      "standard module imports", "pip virtual environment", "regex pattern matching", "CSV dialect parsing"
+    ],
+    SQL: [
+      "SELECT join constraints", "FOREIGN KEY cascading", "Index scan types", "Aggregate having filters",
+      "subquery execution order", "Transaction rollback state", "ACID consistency locks", "Normalization constraints",
+      "Stored procedure parameters", "Materialized views update", "Grant privilege control", "Query optimizer nodes"
+    ]
+  };
+
+  const currentSubjects = subjects[courseId] || ["general concepts"];
+  const term = currentSubjects[(week + topicOrder) % currentSubjects.length];
+
+  for (let q = 1; q <= 10; q++) {
+    const qNum = q;
+    let text = "";
+    let options: string[] = [];
+    
+    if (topicOrder === 0) { // Objectives
+      text = `Regarding the objectives of ${topicTitle} in Week ${week} of ${courseId}, what is the primary learning outcome for ${term}?`;
+      options = [
+        `Identify core parameters and configuration bounds of ${term} safely`,
+        `Enable automatic background compilation for ${term}`,
+        `Bypass hardware boundary checks during ${term} loops`,
+        `Delete all temporary data directories associated with ${term}`
+      ];
+    } else if (topicOrder === 1) { // Detailed Notes (Theory)
+      text = `In the theoretical notes for ${topicTitle}, how does the system register evaluate a failure state of ${term}?`;
+      options = [
+        `By checking the status register bitmask and returning a structured fault flag`,
+        `By triggering a physical reset of the main motherboard supervisor line`,
+        `By printing a standard text alert to the serial monitor without halting`,
+        `By ignoring the signal and continuing execution at a reduced frequency`
+      ];
+    } else if (topicOrder === 2) { // Examples
+      text = `Reviewing the code or layout example in ${topicTitle}, which statement accurately describes the handling of ${term}?`;
+      options = [
+        `Direct memory references are validated before dereferencing to prevent crashes`,
+        `Variables are declared globally to allow rapid access across concurrent threads`,
+        `Standard loop bounds are overridden using compiler compiler optimization attributes`,
+        `Execution logs are written directly to flash storage sector 0`
+      ];
+    } else if (topicOrder === 3) { // Practical Exercises
+      text = `For the practical exercises in ${topicTitle}, what debugging strategy is recommended to resolve conflicts in ${term}?`;
+      options = [
+        `Configure a logic analyzer to trace signal transitions and check voltage thresholds`,
+        `Double the system clock frequency to see if the timing race condition resolves`,
+        `Comment out the boundary validation code to allow high-throughput packets`,
+        `Reinstall the IDE and drivers to reset internal compiler environment parameters`
+      ];
+    } else if (topicOrder === 4) { // Code Examples
+      text = `Analyzing the production template in ${topicTitle}, what is the main purpose of volatile masking for ${term}?`;
+      options = [
+        `Forces the compiler to reload the registers from physical memory on every check`,
+        `Allows the optimizer to completely inline the peripheral driver functions`,
+        `Encrypts the variables in RAM to protect against remote buffer exploits`,
+        `Allocates variables on the stack instead of using global heap memory`
+      ];
+    } else { // Resources & References
+      text = `According to the industry references listed in ${topicTitle}, which standard governs the deployment constraints of ${term}?`;
+      options = [
+        `The standard ISO and MISRA safety-critical development guidelines`,
+        `The open-source community layout template for public testing`,
+        `The default legacy vendor documentation for prototype boards`,
+        `The standard generic API mapping for testing purposes`
+      ];
+    }
+
+    const rotate = (qNum * week + topicOrder) % 4;
+    for (let i = 0; i < rotate; i++) options.push(options.shift()!);
+    const correctAnswer = options[(4 - rotate) % 4];
+
+    text = `[Q${qNum}] ${text} (Focus: ${term} behavior under load)`;
+    
+    questions.push({
+      text,
+      options,
+      correctAnswer
+    });
+  }
+
+  return questions;
+}
+
 function getDynamicTopicsForModule(courseId: string, week: number, moduleTitle: string) {
   if (courseId === 'CADDED_Mech' || courseId === 'CADDED_Civil') {
     try {
@@ -277,6 +482,12 @@ function getDynamicTopicsForModule(courseId: string, week: number, moduleTitle: 
       note: "Download resources locally and use them during your practical experiments."
     }
   ];
+
+  if (courseId !== 'CADDED_Mech' && courseId !== 'CADDED_Civil') {
+    for (let i = 0; i < topics.length; i++) {
+      topics[i].text = getCaddedStyleText(courseId, week, topics[i].title, moduleTitle, topics[i].note);
+    }
+  }
 
   if (courseId === "IoT") {
     if (week === 1) {
@@ -620,9 +831,10 @@ async function main() {
       // Seed exactly 6 topics matching module content requirements
       const topicsData = getDynamicTopicsForModule(course.id, moduleOrder, moduleTitle);
 
+      const topicsCreated = [];
       for (let t = 0; t < topicsData.length; t++) {
         const top = topicsData[t];
-        await prisma.topic.create({
+        const topicRecord = await prisma.topic.create({
           data: {
             moduleId: modRecord.id,
             title: top.title,
@@ -632,19 +844,39 @@ async function main() {
             order: t
           }
         });
+        topicsCreated.push(topicRecord);
       }
 
-      // Seed 10 Quiz Questions for this module
-      const questionsData = generateModuleQuizzes(course.id, moduleOrder, moduleTitle);
-      for (const qData of questionsData) {
-        await prisma.quizQuestion.create({
-          data: {
-            moduleId: modRecord.id,
-            text: qData.text,
-            options: qData.options,
-            correctAnswer: qData.correctAnswer
+      if (course.id === 'CADDED_Mech' || course.id === 'CADDED_Civil') {
+        // Seed 10 Quiz Questions for this module
+        const questionsData = generateModuleQuizzes(course.id, moduleOrder, moduleTitle);
+        for (const qData of questionsData) {
+          await prisma.quizQuestion.create({
+            data: {
+              moduleId: modRecord.id,
+              text: qData.text,
+              options: qData.options,
+              correctAnswer: qData.correctAnswer
+            }
+          });
+        }
+      } else {
+        // Seed 10 Quiz Questions for EACH topic of this module
+        for (let t = 0; t < topicsCreated.length; t++) {
+          const topic = topicsCreated[t];
+          const questionsData = generateTopicQuizzes(course.id, moduleOrder, topic.title, t);
+          for (const qData of questionsData) {
+            await prisma.quizQuestion.create({
+              data: {
+                moduleId: modRecord.id,
+                topicId: topic.id,
+                text: qData.text,
+                options: qData.options,
+                correctAnswer: qData.correctAnswer
+              }
+            });
           }
-        });
+        }
       }
     }
 

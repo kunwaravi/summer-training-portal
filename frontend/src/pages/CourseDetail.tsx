@@ -630,29 +630,72 @@ const CourseDetail = () => {
                           <div className="space-y-3.5 text-left">
                             <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Curriculum Study Topics</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {activeModuleDetail?.topics?.map((topic: any, idx: number) => (
-                                <div 
-                                  key={idx}
-                                  onClick={() => {
-                                    setActiveTopicIndex(idx);
-                                    setViewState('topic-reader');
-                                  }}
-                                  className="p-5 bg-slate-950/40 hover:bg-slate-950/20 border border-slate-850 hover:border-cyan-500/50 rounded-2xl transition duration-300 cursor-pointer group flex flex-col justify-between h-36 shadow-inner text-left"
-                                >
-                                  <div className="space-y-1.5">
-                                    <span className="text-[9px] font-black uppercase tracking-wider text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                                      Topic {idx + 1}
-                                    </span>
-                                    <h4 className="text-sm font-bold text-white group-hover:text-cyan-400 transition truncate">{topic.title}</h4>
-                                    <p className="text-[10px] text-slate-500 line-clamp-2">
-                                      {topic.text ? topic.text.replace(/[#*`_]/g, '').slice(0, 100) : 'Learn about this core concepts in detail.'}
-                                    </p>
+                              {activeModuleDetail?.topics?.map((topic: any, idx: number) => {
+                                const isCadded = id?.startsWith('CADDED_');
+                                const isLocked = !isCadded && idx > 0 && activeModuleDetail?.topics?.[idx - 1]?.quizPassed !== true;
+                                const isPassed = !isCadded && topic.quizPassed;
+                                
+                                return (
+                                  <div 
+                                    key={idx}
+                                    onClick={() => {
+                                      if (isLocked) {
+                                        addToast(`Please complete the quiz for Topic ${idx} "${activeModuleDetail.topics[idx - 1].title}" first!`, 'warning');
+                                        return;
+                                      }
+                                      setActiveTopicIndex(idx);
+                                      setViewState('topic-reader');
+                                    }}
+                                    className={`p-5 rounded-2xl border transition duration-300 flex flex-col justify-between h-36 shadow-inner text-left ${
+                                      isLocked 
+                                        ? 'bg-slate-950/20 border-slate-900/40 opacity-50 cursor-not-allowed' 
+                                        : 'bg-slate-950/40 hover:bg-slate-950/25 border-slate-850 hover:border-cyan-500/50 cursor-pointer group'
+                                    }`}
+                                  >
+                                    <div className="space-y-1.5">
+                                      <div className="flex justify-between items-center">
+                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+                                          isLocked 
+                                            ? 'text-slate-500 bg-slate-900 border border-slate-800' 
+                                            : isPassed 
+                                              ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
+                                              : 'text-cyan-400 bg-cyan-500/10 border border-cyan-500/20'
+                                        }`}>
+                                          Topic {idx + 1}
+                                        </span>
+                                        {isLocked && <Lock size={12} className="text-slate-550" />}
+                                        {isPassed && <CheckCircle2 size={12} className="text-emerald-400" />}
+                                      </div>
+                                      
+                                      <h4 className={`text-sm font-bold truncate transition ${
+                                        isLocked 
+                                          ? 'text-slate-550' 
+                                          : 'text-white group-hover:text-cyan-400'
+                                      }`}>{topic.title}</h4>
+                                      
+                                      <p className="text-[10px] text-slate-500 line-clamp-2">
+                                        {topic.text ? topic.text.replace(/[#*`_]/g, '').slice(0, 100) : 'Learn about this core concepts in detail.'}
+                                      </p>
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
+                                      {isLocked ? (
+                                        <span className="text-slate-650 flex items-center gap-1">
+                                          Locked <Lock size={8} />
+                                        </span>
+                                      ) : isPassed ? (
+                                        <span className="text-emerald-400 flex items-center gap-1">
+                                          Quiz Passed ({topic.quizScore}%) <CheckCircle2 size={8} />
+                                        </span>
+                                      ) : (
+                                        <span className="text-slate-450 group-hover:text-white transition flex items-center gap-1">
+                                          Start Reading <ChevronRight size={10} />
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-450 group-hover:text-white transition flex items-center gap-1">
-                                    Start Reading <ChevronRight size={10} />
-                                  </span>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
 
@@ -948,6 +991,35 @@ const CourseDetail = () => {
                                 </div>
                               )}
 
+                              {/* Integrated Topic Quiz Card for non-CADDED courses */}
+                              {!id?.startsWith('CADDED_') && (
+                                <div className="p-6 rounded-2xl border border-slate-800/80 bg-slate-950/50 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-6 mt-8">
+                                  <div className="space-y-1.5 text-left flex-grow">
+                                    <div className="flex items-center gap-2">
+                                      <Clipboard size={16} className={topic.quizPassed ? 'text-emerald-400' : 'text-amber-500'} />
+                                      <h4 className="text-base font-bold text-white">Topic {topicIndex + 1} Quiz</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-400 max-w-xl">
+                                      {topic.quizPassed
+                                        ? `Congratulations! You passed this topic's quiz with a score of ${topic.quizScore}%. You have unlocked the next sections of the curriculum.`
+                                        : `To advance to the next topic in this module, you must test your understanding and pass a 5-question quiz on this topic (score >= 60%).`}
+                                    </p>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      navigate(`/quiz/${id}/${selectedWeek?.week}/${topic.id}`);
+                                    }}
+                                    className={`px-6 py-3 rounded-xl text-xs font-extrabold uppercase tracking-widest transition cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-md ${
+                                      topic.quizPassed
+                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white hover:shadow-emerald-500/10'
+                                        : 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white animate-pulse'
+                                    }`}
+                                  >
+                                    {topic.quizPassed ? 'Retake Quiz' : 'Start Topic Quiz'} <ChevronRight size={14} />
+                                  </button>
+                                </div>
+                              )}
+
                               {/* Reader Control Row */}
                               <div className="flex justify-between items-center pt-6 border-t border-slate-800 mt-8">
                                 <button
@@ -963,9 +1035,17 @@ const CourseDetail = () => {
                                 >
                                   ← {hasPrev ? 'Prev Topic' : 'Back to Outline'}
                                 </button>
-                                
+                                 
                                 <button
                                   onClick={() => {
+                                    const isCadded = id?.startsWith('CADDED_');
+                                    const canMoveNext = isCadded || topic.quizPassed;
+                                    
+                                    if (!canMoveNext) {
+                                      addToast(`Please pass the quiz for Topic ${topicIndex + 1} "${topic.title}" before moving to the next topic!`, 'warning');
+                                      return;
+                                    }
+
                                     if (hasNext) {
                                       setActiveTopicIndex(topicIndex + 1);
                                       setActiveCodeStep(null);
@@ -980,9 +1060,15 @@ const CourseDetail = () => {
                                       }, 100);
                                     }
                                   }}
-                                  className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-widest transition cursor-pointer shadow-lg shadow-cyan-600/10"
+                                  className={`px-5 py-2 font-extrabold uppercase rounded-lg text-[10px] tracking-widest transition cursor-pointer shadow-lg ${
+                                    (id?.startsWith('CADDED_') || topic.quizPassed)
+                                      ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-600/10'
+                                      : 'bg-slate-850 text-slate-550 border border-slate-800 cursor-not-allowed opacity-60'
+                                  }`}
                                 >
-                                  {hasNext ? 'Next Topic →' : 'Done & Go to Quiz'}
+                                  {hasNext 
+                                    ? ((id?.startsWith('CADDED_') || topic.quizPassed) ? 'Next Topic →' : 'Next Topic Locked 🔒') 
+                                    : (id?.startsWith('CADDED_') ? 'Done & Go to Quiz' : 'Complete Module 🎉')}
                                 </button>
                               </div>
                             </motion.div>

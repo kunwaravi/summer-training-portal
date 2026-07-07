@@ -24,22 +24,21 @@ export const getQuizQuestions = async (courseId: string, week: number) => {
   };
 };
 
-export const submitQuiz = async (userId: number, courseId: string, week: number, answers: Record<number, string>) => {
-  const moduleRecord = await prisma.module.findFirst({
+export const submitQuiz = async (userId: number, courseId: string, week: number, answers: Record<number, string>, topicId?: number) => {
+  const questionIds = Object.keys(answers).map(id => parseInt(id));
+  if (questionIds.length === 0) return null;
+
+  const questions = await prisma.quizQuestion.findMany({
     where: {
-      courseId,
-      week
-    },
-    include: {
-      quizQuestions: true
+      id: { in: questionIds }
     }
   });
 
-  if (!moduleRecord || moduleRecord.quizQuestions.length === 0) return null;
+  if (questions.length === 0) return null;
 
   let correctCount = 0;
-  const totalQuestions = moduleRecord.quizQuestions.length;
-  const breakdown = moduleRecord.quizQuestions.map(q => {
+  const totalQuestions = questions.length;
+  const breakdown = questions.map(q => {
     const userAnswer = answers[q.id];
     const isCorrect = userAnswer === q.correctAnswer;
     if (isCorrect) correctCount++;
@@ -92,38 +91,174 @@ export const submitQuiz = async (userId: number, courseId: string, week: number,
       });
     }
 
-    const currentProgress = await prisma.courseProgress.findUnique({
-      where: {
-        userId_courseId: {
+    if (topicId) {
+      // Create/Update TopicProgress
+      await prisma.topicProgress.upsert({
+        where: {
+          userId_topicId: {
+            userId,
+            topicId
+          }
+        },
+        update: {
+          completed: true,
+          quizPassed: true,
+          quizScore: score
+        },
+        create: {
           userId,
-          courseId
+          courseId,
+          topicId,
+          completed: true,
+          quizPassed: true,
+          quizScore: score
+        }
+      });
+
+      // Verify if it is the last topic to mark module/course completion
+      const topicRecord = await prisma.topic.findUnique({
+        where: { id: topicId },
+        include: {
+          module: {
+            include: {
+              topics: {
+                orderBy: { order: 'asc' }
+              }
+            }
+          }
+        }
+      });
+
+      if (topicRecord) {
+        const topicsInModule = topicRecord.module.topics;
+        const lastTopic = topicsInModule[topicsInModule.length - 1];
+
+        if (lastTopic && lastTopic.id === topicId) {
+          // Mark module-level progress as completed
+          await prisma.moduleProgress.upsert({
+            where: {
+              userId_moduleId: {
+                userId,
+                moduleId: topicRecord.moduleId
+              }
+            },
+            update: {
+              completed: true,
+              quizPassed: true,
+              quizScore: score
+            },
+            create: {
+              userId,
+              courseId,
+              moduleId: topicRecord.moduleId,
+              completed: true,
+              quizPassed: true,
+              quizScore: score
+            }
+          });
+
+          // Advance overall CourseProgress
+          const currentProgress = await prisma.courseProgress.findUnique({
+            where: {
+              userId_courseId: {
+                userId,
+                courseId
+              }
+            }
+          });
+
+          const currentWeekCompleted = currentProgress?.weekCompleted || 0;
+
+          if (week > currentWeekCompleted) {
+            await prisma.courseProgress.upsert({
+              where: {
+                userId_courseId: {
+                  userId,
+                  courseId
+                }
+              },
+              update: {
+                weekCompleted: week,
+                progress: Math.min(Math.round((week / 20) * 100), 100),
+                completed: week >= 20
+              },
+              create: {
+                userId,
+                courseId,
+                weekCompleted: week,
+                progress: Math.min(Math.round((week / 20) * 100), 100),
+                completed: week >= 20
+              }
+            });
+          }
         }
       }
-    });
+    } else {
+      // Standard Module-level progress update (e.g. CADDED)
+      const moduleRecord = await prisma.module.findFirst({
+        where: {
+          courseId,
+          week
+        }
+      });
 
-    const currentWeekCompleted = currentProgress?.weekCompleted || 0;
-    
-    if (week > currentWeekCompleted) {
-      await prisma.courseProgress.upsert({
+      if (moduleRecord) {
+        await prisma.moduleProgress.upsert({
+          where: {
+            userId_moduleId: {
+              userId,
+              moduleId: moduleRecord.id
+            }
+          },
+          update: {
+            completed: true,
+            quizPassed: true,
+            quizScore: score
+          },
+          create: {
+            userId,
+            courseId,
+            moduleId: moduleRecord.id,
+            completed: true,
+            quizPassed: true,
+            quizScore: score
+          }
+        });
+      }
+
+      const currentProgress = await prisma.courseProgress.findUnique({
         where: {
           userId_courseId: {
             userId,
             courseId
           }
-        },
-        update: {
-          weekCompleted: week,
-          progress: Math.min(Math.round((week / 20) * 100), 100),
-          completed: week >= 20
-        },
-        create: {
-          userId,
-          courseId,
-          weekCompleted: week,
-          progress: Math.min(Math.round((week / 20) * 100), 100),
-          completed: week >= 20
         }
       });
+
+      const currentWeekCompleted = currentProgress?.weekCompleted || 0;
+
+      if (week > currentWeekCompleted) {
+        await prisma.courseProgress.upsert({
+          where: {
+            userId_courseId: {
+              userId,
+              courseId
+            }
+          },
+          update: {
+            weekCompleted: week,
+            progress: Math.min(Math.round((week / 20) * 100), 100),
+            completed: week >= 20
+          },
+          create: {
+            userId,
+            courseId,
+            weekCompleted: week,
+            progress: Math.min(Math.round((week / 20) * 100), 100),
+            completed: week >= 20
+          }
+        });
+      }
     }
   }
 
@@ -170,4 +305,34 @@ export const updateQuizQuestion = async (questionId: number, data: { text?: stri
 
 export const deleteQuizQuestion = async (questionId: number) => {
   return await prisma.quizQuestion.delete({ where: { id: questionId } });
+};
+
+export const getTopicQuizQuestions = async (topicId: number) => {
+  const questions = await prisma.quizQuestion.findMany({
+    where: { topicId }
+  });
+
+  if (questions.length === 0) return null;
+
+  // Shuffle and take 5 random questions to create a dynamic/randomized question bank experience
+  const shuffled = [...questions].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 5);
+
+  const safeQuestions = selected.map(({ correctAnswer, ...q }) => ({
+    ...q
+  }));
+
+  const topicRecord = await prisma.topic.findUnique({
+    where: { id: topicId },
+    include: {
+      module: true
+    }
+  });
+
+  return {
+    courseId: topicRecord?.module.courseId || '',
+    week: topicRecord?.module.week || 0,
+    topicId,
+    questions: safeQuestions
+  };
 };

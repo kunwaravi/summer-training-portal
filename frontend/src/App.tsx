@@ -57,6 +57,7 @@ function AppRoutes() {
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/course/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
             <Route path="/quiz/:courseId/:week" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+            <Route path="/quiz/:courseId/:week/:topicId" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
             <Route path="/practice/arena" element={<ProtectedRoute><PracticeArena /></ProtectedRoute>} />
             <Route path="/certificate" element={<ProtectedRoute><Certificate /></ProtectedRoute>} />
             <Route path="/verify" element={<Verify />} />

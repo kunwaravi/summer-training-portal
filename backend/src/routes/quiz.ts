@@ -23,14 +23,31 @@ router.get('/questions/:courseId/:week', async (req: any, res: any, next: any) =
   }
 });
 
+// GET /api/quiz/questions/topic/:topicId - Fetch questions for a specific topic's quiz (omitting correct answers)
+router.get('/questions/topic/:topicId', async (req: any, res: any, next: any) => {
+  try {
+    const topicId = parseInt(req.params.topicId);
+    const quizData = await quizService.getTopicQuizQuestions(topicId);
+
+    if (!quizData) {
+      return res.status(404).json({ message: 'Quiz for this topic not found' });
+    }
+
+    res.json(quizData);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // POST /api/quiz/submit - Grade quiz submissions and update course progress
 router.post('/submit', validate(quizSubmissionSchema), async (req: any, res: any, next: any) => {
   try {
-    const { userId, courseId, week, answers } = req.body;
+    const { userId, courseId, week, topicId, answers } = req.body;
     const weekNum = parseInt(week);
     const userIdNum = parseInt(userId);
+    const topicIdNum = topicId ? parseInt(topicId) : undefined;
 
-    const submissionResult = await quizService.submitQuiz(userIdNum, courseId, weekNum, answers);
+    const submissionResult = await quizService.submitQuiz(userIdNum, courseId, weekNum, answers, topicIdNum);
 
     if (!submissionResult) {
       return res.status(404).json({ message: 'Quiz for this week not found' });

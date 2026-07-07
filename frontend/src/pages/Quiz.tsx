@@ -13,12 +13,12 @@ import Button from '../components/atoms/Button';
 import Spinner from '../components/atoms/Spinner';
 
 const Quiz = () => {
-  const { courseId, week } = useParams();
+  const { courseId, week, topicId } = useParams();
   const navigate = useNavigate();
   const { user, login } = useAuth();
   const { addToast } = useUI();
   
-  const { data: quizData, loading: fetchingQuiz, error: fetchError, submitQuiz } = useQuiz(courseId, week);
+  const { data: quizData, loading: fetchingQuiz, error: fetchError, submitQuiz } = useQuiz(courseId, week, topicId);
   
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
