@@ -12,6 +12,42 @@ const generateReferralCode = (name: string) => {
   return `REF-${cleanName}-${randomSuffix}`;
 };
 
+export const getReferralStats = async (referralCode: string | null) => {
+  if (!referralCode) {
+    return {
+      referralCount: 0,
+      referralPaidCount: 0,
+      referralSuccess: false
+    };
+  }
+
+  const referredUsers = await prisma.user.findMany({
+    where: {
+      referredBy: {
+        equals: referralCode,
+        mode: 'insensitive'
+      }
+    },
+    include: {
+      payments: {
+        where: {
+          status: 'VERIFIED'
+        }
+      }
+    }
+  });
+
+  const referralCount = referredUsers.length;
+  const referralPaidCount = referredUsers.filter(u => u.payments.length > 0).length;
+  const referralSuccess = referralCount >= 15 && referralPaidCount >= 5;
+
+  return {
+    referralCount,
+    referralPaidCount,
+    referralSuccess
+  };
+};
+
 export const registerUser = async (userData: any) => {
   const { email, password, name, fatherName, collegeName, branchName, referredBy } = userData;
   
@@ -56,12 +92,11 @@ export const registerUser = async (userData: any) => {
 
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1d' });
   
-  // Newly registered user has 0 referrals
-  const referralCount = 0;
+  const stats = await getReferralStats(user.referralCode);
   
   // Omit password from return
   const { password: _, ...userWithoutPassword } = user;
-  return { token, user: { ...userWithoutPassword, referralCount } };
+  return { token, user: { ...userWithoutPassword, ...stats } };
 };
 
 export const loginUser = async (credentials: any) => {
@@ -96,18 +131,11 @@ export const loginUser = async (credentials: any) => {
 
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1d' });
   
-  const referralCount = await prisma.user.count({
-    where: {
-      referredBy: {
-        equals: user.referralCode,
-        mode: 'insensitive'
-      }
-    }
-  });
+  const stats = await getReferralStats(user.referralCode);
 
   // Omit password from return
   const { password: _, ...userWithoutPassword } = user;
-  return { token, user: { ...userWithoutPassword, referralCount } };
+  return { token, user: { ...userWithoutPassword, ...stats } };
 };
 
 export const getUserById = async (userId: number) => {
@@ -133,17 +161,10 @@ export const getUserById = async (userId: number) => {
     user.referralCode = generatedCode;
   }
 
-  const referralCount = await prisma.user.count({
-    where: {
-      referredBy: {
-        equals: user.referralCode,
-        mode: 'insensitive'
-      }
-    }
-  });
+  const stats = await getReferralStats(user.referralCode);
 
   const { password: _, ...userWithoutPassword } = user;
-  return { ...userWithoutPassword, referralCount };
+  return { ...userWithoutPassword, ...stats };
 };
 
 export const getAllUsers = async () => {
@@ -176,19 +197,41 @@ export const getAllUsers = async () => {
     }
   });
 
-  // Calculate referral counts in memory from referredBy frequencies (case-insensitive)
+  // Calculate referral and paid counts in memory to prevent N+1 queries
   const referralCounts = new Map<string, number>();
+  const referralPaidCounts = new Map<string, number>();
+
+  // Helper mapping of userId to whether they have a verified payment
+  const userHasVerifiedPayment = new Map<number, boolean>();
+  users.forEach(u => {
+    const hasVerified = u.payments.some(p => p.status === 'VERIFIED');
+    userHasVerifiedPayment.set(u.id, hasVerified);
+  });
+
   users.forEach(u => {
     if (u.referredBy) {
       const code = u.referredBy.trim().toUpperCase();
       referralCounts.set(code, (referralCounts.get(code) || 0) + 1);
+      
+      const isPaid = userHasVerifiedPayment.get(u.id) || false;
+      if (isPaid) {
+        referralPaidCounts.set(code, (referralPaidCounts.get(code) || 0) + 1);
+      }
     }
   });
 
-  return users.map(u => ({
-    ...u,
-    referralCount: u.referralCode ? (referralCounts.get(u.referralCode.trim().toUpperCase()) || 0) : 0
-  }));
+  return users.map(u => {
+    const code = u.referralCode ? u.referralCode.trim().toUpperCase() : '';
+    const referralCount = code ? (referralCounts.get(code) || 0) : 0;
+    const referralPaidCount = code ? (referralPaidCounts.get(code) || 0) : 0;
+    const referralSuccess = referralCount >= 15 && referralPaidCount >= 5;
+    return {
+      ...u,
+      referralCount,
+      referralPaidCount,
+      referralSuccess
+    };
+  });
 };
 
 export const deleteUser = async (userId: number) => {

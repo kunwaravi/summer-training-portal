@@ -426,20 +426,22 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Successful Invites</span>
-                <h3 className="text-3xl font-black text-emerald-400 mt-1">{user?.referralCount || 0}</h3>
+            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex flex-wrap items-center gap-6 w-full md:w-auto text-left">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">Referred Registrations</span>
+                  <h3 className="text-2xl font-black text-emerald-400 mt-1">{user?.referralCount || 0} <span className="text-xs text-slate-500 font-normal">/ 15</span></h3>
+                </div>
+                <div className="border-l border-slate-800 h-10 hidden md:block"></div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">Referred Payments</span>
+                  <h3 className="text-2xl font-black text-cyan-400 mt-1">{user?.referralPaidCount || 0} <span className="text-xs text-slate-500 font-normal">/ 5</span></h3>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Current Discount</span>
-                <h3 className="text-xl font-bold text-white mt-1">
-                  {(() => {
-                    const count = user?.referralCount || 0;
-                    if (count >= 10) return "100% OFF (FREE)";
-                    if (count >= 5) return "50% OFF";
-                    return "0% OFF";
-                  })()}
+              <div className="text-right w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 border-slate-850">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">Referral Status</span>
+                <h3 className={`text-lg font-black mt-1 ${user?.referralSuccess ? 'text-green-400' : 'text-amber-400'}`}>
+                  {user?.referralSuccess ? "SUCCESSFUL (100% OFF)" : "IN PROGRESS (0% OFF)"}
                 </h3>
               </div>
             </div>
@@ -447,32 +449,43 @@ const Dashboard = () => {
 
           {/* Discount Tiers Progression */}
           <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-2xl space-y-6">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Rewards & Tiers Progression</h4>
-            <div className="space-y-6">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Referral Targets & Milestones</h4>
+            <div className="space-y-6 text-left">
               {[
-                { target: 5, discount: "50% Discount", desc: "Unlock half-price (50% discount) on any course enrollment certificate", color: "from-indigo-500 to-purple-600" },
-                { target: 10, discount: "100% Discount (FREE)", desc: "Unlock complete 100% discount - get course certificate completely FREE!", color: "from-emerald-500 to-teal-600" }
+                { 
+                  label: "1. Referred Registrations", 
+                  current: user?.referralCount || 0, 
+                  target: 15, 
+                  desc: "Referred users must complete registration on the summer training portal using your referral code or link.", 
+                  color: "from-blue-500 to-indigo-600" 
+                },
+                { 
+                  label: "2. Successful Payments", 
+                  current: user?.referralPaidCount || 0, 
+                  target: 5, 
+                  desc: "At least 5 of those registered referrals must successfully purchase/verify a course certificate.", 
+                  color: "from-emerald-500 to-teal-600" 
+                }
               ].map((tier, idx) => {
-                const referrals = user?.referralCount || 0;
-                const isUnlocked = referrals >= tier.target;
-                const pct = Math.min((referrals / tier.target) * 100, 100);
+                const isCompleted = tier.current >= tier.target;
+                const pct = Math.min((tier.current / tier.target) * 100, 100);
 
                 return (
                   <div key={idx} className="p-4 bg-slate-950/40 border border-slate-850 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1">
+                    <div className="space-y-1 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${isUnlocked ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-500'}`}>
-                          {isUnlocked ? "✓ Unlocked" : `Locked: Needs ${tier.target - referrals} more`}
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${isCompleted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-500'}`}>
+                          {isCompleted ? "✓ Completed" : `Needs ${tier.target - tier.current} more`}
                         </span>
-                        <h5 className="text-xs font-bold text-white">{tier.discount}</h5>
+                        <h5 className="text-xs font-bold text-white">{tier.label}</h5>
                       </div>
                       <p className="text-[10px] text-slate-500">{tier.desc}</p>
                     </div>
 
-                    <div className="w-full md:w-1/3 space-y-1">
+                    <div className="w-full md:w-1/3 space-y-1 shrink-0">
                       <div className="flex justify-between items-center text-[8px] font-black uppercase text-slate-500">
-                        <span>Target: {tier.target} Signups</span>
-                        <span className="font-mono">{referrals} / {tier.target}</span>
+                        <span>Target: {tier.target} Users</span>
+                        <span className="font-mono">{tier.current} / {tier.target}</span>
                       </div>
                       <div className="h-1.5 bg-slate-900 rounded-full overflow-hidden p-[1px] border border-slate-850">
                         <div

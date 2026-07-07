@@ -132,26 +132,39 @@ async function main() {
     }
   });
 
-  // For simplicity in this surgical re-seed, we delete existing C modules and recreate
-  // Warning: This is only for the C track.
-  const oldModules = await prisma.module.findMany({ where: { courseId } });
-  const oldModuleIds = oldModules.map(m => m.id);
-
-  await prisma.topic.deleteMany({ where: { moduleId: { in: oldModuleIds } } });
-  await prisma.quizQuestion.deleteMany({ where: { moduleId: { in: oldModuleIds } } });
-  await prisma.moduleProgress.deleteMany({ where: { moduleId: { in: oldModuleIds } } });
-  await prisma.module.deleteMany({ where: { courseId } });
-
   // Seed the new high-quality content
   for (const weekData of cCourseBeginnerContent) {
-    const module = await prisma.module.create({
-      data: {
-        courseId,
-        week: weekData.week,
-        title: weekData.title,
-        description: weekData.description
+    let module = await prisma.module.findUnique({
+      where: {
+        courseId_week: {
+          courseId,
+          week: weekData.week
+        }
       }
     });
+
+    if (module) {
+      module = await prisma.module.update({
+        where: { id: module.id },
+        data: {
+          title: weekData.title,
+          description: weekData.description
+        }
+      });
+    } else {
+      module = await prisma.module.create({
+        data: {
+          courseId,
+          week: weekData.week,
+          title: weekData.title,
+          description: weekData.description
+        }
+      });
+    }
+
+    // Safe clean up of topics/quizzes for this specific module
+    await prisma.topic.deleteMany({ where: { moduleId: module.id } });
+    await prisma.quizQuestion.deleteMany({ where: { moduleId: module.id } });
 
     // Seed Topics
     for (let i = 0; i < weekData.topics.length; i++) {
@@ -193,15 +206,34 @@ async function main() {
 
   for (let i = 0; i < placeholderModules.length; i++) {
     const weekNum = i + 5;
-    await prisma.module.create({
-      data: {
-        courseId,
-        week: weekNum,
-        title: placeholderModules[i],
-        description: `Expand your C knowledge into ${placeholderModules[i].toLowerCase()}. This module covers industrial-standard implementation patterns.`
+    let module = await prisma.module.findUnique({
+      where: {
+        courseId_week: {
+          courseId,
+          week: weekNum
+        }
       }
     });
-    console.log(`- Created placeholder for Week ${weekNum}`);
+
+    if (module) {
+      module = await prisma.module.update({
+        where: { id: module.id },
+        data: {
+          title: placeholderModules[i],
+          description: `Expand your C knowledge into ${placeholderModules[i].toLowerCase()}. This module covers industrial-standard implementation patterns.`
+        }
+      });
+    } else {
+      module = await prisma.module.create({
+        data: {
+          courseId,
+          week: weekNum,
+          title: placeholderModules[i],
+          description: `Expand your C knowledge into ${placeholderModules[i].toLowerCase()}. This module covers industrial-standard implementation patterns.`
+        }
+      });
+    }
+    console.log(`- Created/Updated placeholder for Week ${weekNum}`);
   }
 
   console.log('--- C TRACK CONTENT UPGRADE COMPLETED ---');

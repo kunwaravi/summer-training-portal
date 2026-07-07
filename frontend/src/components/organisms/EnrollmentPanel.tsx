@@ -37,9 +37,9 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
   const BASE_PRICE = 699;
 
   const referralCount = user?.referralCount || 0;
-  let referralDiscount = 0;
-  if (referralCount >= 10) referralDiscount = 1.0;
-  else if (referralCount >= 5) referralDiscount = 0.5;
+  const referralPaidCount = user?.referralPaidCount || 0;
+  const referralSuccess = user?.referralSuccess || false;
+  const referralDiscount = referralSuccess ? 1.0 : 0;
 
   const finalDiscount = Math.max(discount, referralDiscount);
   const currentPrice = Math.round(BASE_PRICE * (1 - finalDiscount));
@@ -295,7 +295,11 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                             : `Coupon Applied: ${Math.round(discount * 100)}% OFF!`}
                         </p>
                       )}
-                      {referralDiscount > 0 && <p className="text-[9px] text-emerald-500 font-bold ml-1">Referral Reward: {Math.round(referralDiscount * 100)}% OFF via {referralCount} referrals!</p>}
+                      {referralSuccess ? (
+                        <p className="text-[9px] text-emerald-500 font-bold ml-1">Referral Reward: 100% OFF unlocked! ({referralCount}/15 registered, {referralPaidCount}/5 paid)</p>
+                      ) : (
+                        <p className="text-[9px] text-slate-500 font-medium ml-1">Referral Progress: {referralCount}/15 registered, {referralPaidCount}/5 paid (Need 15 registrations & 5 payments for 100% OFF)</p>
+                      )}
                     </div>
 
                     {currentPrice > 0 ? (

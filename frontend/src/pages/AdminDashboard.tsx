@@ -1090,7 +1090,7 @@ const AdminDashboard = () => {
                           })()}
                         </div>
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 text-left">
                         <div className="space-y-0.5">
                           <div className="font-semibold text-slate-200">
                             Code: <span className="font-mono text-[10px] text-cyan-400">{u.referralCode || 'N/A'}</span>
@@ -1100,9 +1100,14 @@ const AdminDashboard = () => {
                               Referred By: <span className="font-mono">{u.referredBy}</span>
                             </div>
                           )}
-                          <div className="text-[10px] text-emerald-400 font-bold">
-                            Count: {u.referralCount || 0}
+                          <div className="text-[10px] text-emerald-450 font-bold">
+                            Refers: {u.referralCount || 0} (Paid: {u.referralPaidCount || 0})
                           </div>
+                          {u.referralSuccess && (
+                            <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-green-500/10 text-green-400 border border-green-500/20">
+                              100% OFF Unlocked
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
@@ -1465,8 +1470,9 @@ const AdminDashboard = () => {
                     <tr className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
                       <th className="py-3 px-4">Referrer Details</th>
                       <th className="py-3 px-4">Referral Code</th>
+                      <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4">Referred By</th>
-                      <th className="py-3 px-4 text-center">Successful Refers</th>
+                      <th className="py-3 px-4 text-center">Registrations</th>
                       <th className="py-3 px-4 text-center">Paid Conversions</th>
                       <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
@@ -1516,6 +1522,17 @@ const AdminDashboard = () => {
                                 {referrer.referralCode || 'N/A'}
                               </td>
                               <td className="py-3.5 px-4">
+                                {referrer.referralSuccess ? (
+                                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-green-500/10 text-green-400 border border-green-500/20">
+                                    ✓ SUCCESSFUL
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-slate-900 text-slate-500 border border-slate-800">
+                                    IN PROGRESS
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3.5 px-4">
                                 {referrer.referredBy ? (
                                   <span className="font-mono text-[10px] text-slate-450 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
                                     {referrer.referredBy}
@@ -1525,13 +1542,13 @@ const AdminDashboard = () => {
                                 )}
                               </td>
                               <td className="py-3.5 px-4 text-center font-bold text-white">
-                                {referredStudents.length}
+                                {referredStudents.length} / 15
                               </td>
                               <td className="py-3.5 px-4 text-center">
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                  paidCount > 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-500'
+                                  paidCount >= 5 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : paidCount > 0 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-slate-800 text-slate-500'
                                 }`}>
-                                  {paidCount} paid
+                                  {paidCount} / 5 paid
                                 </span>
                               </td>
                               <td className="py-3.5 px-4 text-right">

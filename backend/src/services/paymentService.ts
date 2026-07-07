@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma';
 import crypto from 'crypto';
+import { getReferralStats } from './authService';
 
 const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || 'nexus_webhook_signature_secret_key_2026';
 
@@ -58,17 +59,11 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
   let referralDiscount = 0;
   let referralCount = 0;
   if (user && user.referralCode) {
-    referralCount = await prisma.user.count({
-      where: {
-        referredBy: {
-          equals: user.referralCode,
-          mode: 'insensitive'
-        }
-      }
-    });
-    
-    if (referralCount >= 10) referralDiscount = 1.0;
-    else if (referralCount >= 5) referralDiscount = 0.5;
+    const stats = await getReferralStats(user.referralCode);
+    referralCount = stats.referralCount;
+    if (stats.referralSuccess) {
+      referralDiscount = 1.0;
+    }
   }
 
   // Calculate coupon discount
