@@ -81,7 +81,7 @@ model Course {
   id                 String              @id
   title              String
   description        String
-  price              Int                 @default(999)
+  price              Int                 @default(699)
   isPublished        Boolean             @default(true)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt

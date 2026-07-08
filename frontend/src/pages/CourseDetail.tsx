@@ -145,6 +145,7 @@ const CourseDetail = () => {
   const [mobileView, setMobileView] = useState<'chapters' | 'content'>('chapters');
   
   const {
+    course,
     weeks,
     activeWeekIndex,
     setActiveWeekIndex,
@@ -158,7 +159,8 @@ const CourseDetail = () => {
   } = useCourseDetail(id);
 
   const courseConf = coursesConfig.find(c => c.id === id);
-  const courseTitle = courseConf ? courseConf.title : 'Specialized Course';
+  const courseTitle = course ? course.title : (courseConf ? courseConf.title : 'Specialized Course');
+  const courseDescription = course ? course.description : (courseConf?.desc || 'Welcome to this specialized curriculum track. Learn low-level hardware constraints, memory mappings, and system programming paradigms.');
 
   const [viewState, setViewState] = useState<'course-home' | 'module-home' | 'topic-reader'>('course-home');
   const [activeTopicIndex, setActiveTopicIndex] = useState<number | null>(null);
@@ -473,7 +475,7 @@ const CourseDetail = () => {
                 </span>
                 <h2 className="text-2xl font-black text-white">{courseTitle}</h2>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  {courseConf?.desc || 'Welcome to this specialized curriculum track. Learn low-level hardware constraints, memory mappings, and system programming paradigms.'}
+                  {courseDescription}
                 </p>
               </div>
 

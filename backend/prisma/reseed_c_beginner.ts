@@ -116,21 +116,29 @@ const cCourseBeginnerContent = [
 async function main() {
   console.log('--- RE-SEEDING C TRACK WITH BEGINNER-FRIENDLY CONTENT ---');
 
-  // Update/Ensure Course exists
+  // Ensure Course exists without overwriting existing data
   const courseId = "C";
-  await prisma.course.upsert({
-    where: { id: courseId },
-    update: {
-      title: "C Programming: The Absolute Beginner's Masterclass",
-      description: "Master the foundations of logic and systems programming from scratch. No prior experience required."
-    },
-    create: {
-      id: courseId,
-      title: "C Programming: The Absolute Beginner's Masterclass",
-      description: "Master the foundations of logic and systems programming from scratch. No prior experience required.",
-      price: 999
+  let course = await prisma.course.findUnique({ where: { id: courseId } });
+  if (!course) {
+    course = await prisma.course.create({
+      data: {
+        id: courseId,
+        title: "C Programming: The Absolute Beginner's Masterclass",
+        description: "Master the foundations of logic and systems programming from scratch. No prior experience required.",
+        price: 699
+      }
+    });
+    console.log(`Created Course: ${courseId}`);
+  } else {
+    console.log(`Course ${courseId} already exists. Skipping update to preserve admin edits.`);
+    if (course.price !== 699) {
+      await prisma.course.update({
+        where: { id: courseId },
+        data: { price: 699 }
+      });
+      console.log(`Updated course ${courseId} price to 699.`);
     }
-  });
+  }
 
   // Seed the new high-quality content
   for (const weekData of cCourseBeginnerContent) {
@@ -143,15 +151,7 @@ async function main() {
       }
     });
 
-    if (module) {
-      module = await prisma.module.update({
-        where: { id: module.id },
-        data: {
-          title: weekData.title,
-          description: weekData.description
-        }
-      });
-    } else {
+    if (!module) {
       module = await prisma.module.create({
         data: {
           courseId,
@@ -160,9 +160,19 @@ async function main() {
           description: weekData.description
         }
       });
+      console.log(`  Created Module: W${weekData.week} - ${weekData.title}`);
+    } else {
+      console.log(`  Module W${weekData.week} already exists. Skipping update to preserve admin edits.`);
     }
 
-    // Safe clean up of topics/quizzes for this specific module
+    // Safe check of topics/quizzes for this specific module
+    const existingTopicsCount = await prisma.topic.count({ where: { moduleId: module.id } });
+    const existingQuizCount = await prisma.quizQuestion.count({ where: { moduleId: module.id } });
+    if (existingTopicsCount > 0 || existingQuizCount > 0) {
+      console.log(`  Skipping topic/quiz seeding for module W${weekData.week} to preserve manual admin edits.`);
+      continue;
+    }
+
     await prisma.topic.deleteMany({ where: { moduleId: module.id } });
     await prisma.quizQuestion.deleteMany({ where: { moduleId: module.id } });
 
@@ -216,13 +226,7 @@ async function main() {
     });
 
     if (module) {
-      module = await prisma.module.update({
-        where: { id: module.id },
-        data: {
-          title: placeholderModules[i],
-          description: `Expand your C knowledge into ${placeholderModules[i].toLowerCase()}. This module covers industrial-standard implementation patterns.`
-        }
-      });
+      console.log(`- Placeholder module for Week ${weekNum} already exists. Skipping update.`);
     } else {
       module = await prisma.module.create({
         data: {
@@ -232,8 +236,8 @@ async function main() {
           description: `Expand your C knowledge into ${placeholderModules[i].toLowerCase()}. This module covers industrial-standard implementation patterns.`
         }
       });
+      console.log(`- Created placeholder for Week ${weekNum}`);
     }
-    console.log(`- Created/Updated placeholder for Week ${weekNum}`);
   }
 
   console.log('--- C TRACK CONTENT UPGRADE COMPLETED ---');

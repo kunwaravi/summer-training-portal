@@ -49,7 +49,7 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
   const course = await prisma.course.findUnique({
     where: { id: courseId }
   });
-  const basePrice = course ? course.price : 999;
+  const basePrice = course ? course.price : 699;
 
   // Fetch user's referral code and calculate referral count
   const user = await prisma.user.findUnique({

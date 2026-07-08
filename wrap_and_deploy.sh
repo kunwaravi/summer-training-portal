@@ -2,10 +2,10 @@
 set -e
 
 # Configuration for KIBM Production VPS
-REMOTE_HOST="187.127.156.138"
+REMOTE_HOST="srv1616850.hstgr.cloud"
 REMOTE_USER="root"
 DEPLOY_PATH="/docker/summertraining"
-SSH_KEY="~/.ssh/hostinger_edunexus.pem"
+SSH_KEY="/home/abhi/.ssh/hostinger_edunexus.pem"
 
 echo "=========================================================="
 echo "    🚀 EDU-NEXUS PRO: Production Deployment Wrapper"
@@ -21,7 +21,7 @@ echo "✅ Build verified."
 echo "[2/4] Transferring source code to production server..."
 # Note: We exclude node_modules and dist for speed, they are built/managed via Docker on server
 rsync -avz --delete \
-  -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+  -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=10" \
   --exclude 'node_modules' \
   --exclude 'dist' \
   --exclude '.git' \
@@ -33,7 +33,7 @@ echo "✅ Transfer complete."
 
 # 3. Executing Remote Deployment
 echo "[3/4] Triggering remote Docker Compose orchestrator..."
-ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} << EOF
+ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=10 ${REMOTE_USER}@${REMOTE_HOST} << EOF
   cd ${DEPLOY_PATH}
 
   # Ensure the .env exists (we don't sync it as it contains secrets)
@@ -44,8 +44,8 @@ ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} << E
   # Stop any active containers from other compose configurations
   docker compose down || true
 
-  # Build backend first to ensure new prisma generation
-  docker compose -f docker-compose.prod.yml build --no-cache backend
+  # Build backend and frontend first to ensure new prisma generation and updated frontend static files
+  docker compose -f docker-compose.prod.yml build --no-cache backend frontend
 
   # Bring up the stack with new images
   docker compose -f docker-compose.prod.yml up -d

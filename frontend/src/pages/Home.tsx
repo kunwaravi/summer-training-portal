@@ -162,6 +162,126 @@ const courseDetails = [
   }
 ];
 
+const courseMetadata: Record<string, any> = {
+  'C': {
+    difficulty: 'Beginner to Intermediate',
+    tags: ['Core Electronics', 'Hardware Mapping'],
+    color: 'from-blue-500/20 via-blue-600/10 to-transparent border-blue-500/30',
+    icon: Code2,
+    colSpan: 'md:col-span-3',
+    milestones: {
+      1: 'Program execution flow diagram',
+      2: 'Function stack visual map',
+      3: 'Custom heap allocator simulator',
+      4: 'Virtual peripheral registers setup'
+    }
+  },
+  'C++': {
+    difficulty: 'Intermediate',
+    tags: ['Object-Oriented', 'High Performance'],
+    color: 'from-purple-500/20 via-purple-600/10 to-transparent border-purple-500/30',
+    icon: Cpu,
+    colSpan: 'md:col-span-3',
+    milestones: {
+      1: 'RAII Smart Lock instance',
+      2: 'VTable dispatch table mockup',
+      3: 'Vector class allocator override',
+      4: 'Zero-overhead custom ring buffer'
+    }
+  },
+  'IoT': {
+    difficulty: 'Intermediate to Advanced',
+    tags: ['Microcontrollers', 'Cloud Services'],
+    color: 'from-teal-500/20 via-teal-600/10 to-transparent border-teal-500/30',
+    icon: Wifi,
+    colSpan: 'md:col-span-2',
+    milestones: {
+      1: 'ESP32 development workspace setup',
+      2: 'Serial protocols logic mapping',
+      3: 'Publish MQTT payload mock',
+      4: 'Realtime line charts telemetry'
+    }
+  },
+  'Embedded': {
+    difficulty: 'Advanced',
+    tags: ['RTOS Kernels', 'Hardware Interrupts'],
+    color: 'from-orange-500/20 via-orange-600/10 to-transparent border-orange-500/30',
+    icon: Server,
+    colSpan: 'md:col-span-4',
+    milestones: {
+      1: 'Visual Cortex-M Startup vector table',
+      2: 'GPIO physical register map tool',
+      3: 'NVIC priority visualizer',
+      4: 'Realtime task context switcher schematic'
+    }
+  },
+  'WebDesign': {
+    difficulty: 'Beginner',
+    tags: ['HTML/CSS', 'Responsive Layouts'],
+    color: 'from-pink-500/20 via-pink-600/10 to-transparent border-pink-500/30',
+    icon: Terminal,
+    colSpan: 'md:col-span-2',
+    milestones: {
+      1: 'Semantic page layout mockup',
+      2: 'Flexbox layout portfolio setup',
+      3: 'Form validator logic handler',
+      4: 'Deploy live page to Vercel/Netlify'
+    }
+  },
+  'Python': {
+    difficulty: 'Beginner to Intermediate',
+    tags: ['Data Analysis', 'Automation Scripting'],
+    color: 'from-amber-500/20 via-amber-600/10 to-transparent border-amber-500/30',
+    icon: Terminal,
+    colSpan: 'md:col-span-2',
+    milestones: {
+      1: 'Basic calculator script',
+      2: 'File sorting dictionary utility',
+      3: 'Employee payroll class schema',
+      4: 'Custom chart plotter for CSV data'
+    }
+  },
+  'SQL': {
+    difficulty: 'Beginner to Intermediate',
+    tags: ['Relational DB', 'Query Optimizations'],
+    color: 'from-emerald-500/20 via-emerald-600/10 to-transparent border-emerald-500/30',
+    icon: Database,
+    colSpan: 'md:col-span-2',
+    milestones: {
+      1: 'Filtered student report cards query',
+      2: 'Multi-table inventory mapping',
+      3: 'Safe bank account transfer script',
+      4: 'Index speed validation script'
+    }
+  },
+  'CADDED_Mech': {
+    difficulty: 'Beginner to Intermediate',
+    tags: ['AutoCAD 2D', 'SolidWorks', 'CATIA Surfaces', 'CNC G-Code'],
+    color: 'from-orange-500/20 via-orange-600/10 to-transparent border-orange-500/30',
+    icon: Wrench,
+    colSpan: 'md:col-span-3',
+    milestones: {
+      1: 'Flange 2D drafting layout',
+      2: 'Hinge bracket 3D part design',
+      3: 'Turbine aerofoil surface sweep',
+      4: 'Pocket milling G-code & Piston assembly'
+    }
+  },
+  'CADDED_Civil': {
+    difficulty: 'Beginner to Intermediate',
+    tags: ['AutoCAD Civil', '3DS Max Render', 'SketchUp', 'Revit BIM'],
+    color: 'from-emerald-500/20 via-emerald-600/10 to-transparent border-emerald-500/30',
+    icon: Building2,
+    colSpan: 'md:col-span-3',
+    milestones: {
+      1: '2BHK residential plan layout',
+      2: 'Villa exterior rendering & kitchen layout',
+      3: 'Beam-Column junction steel detail',
+      4: 'G+3 building BIM portfolio sheets'
+    }
+  }
+};
+
 const ResistorIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
   <svg width={size} height={size} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M4 32h10l4-12 6 24 6-24 6 24 6-24 4 12h18" />
@@ -259,12 +379,58 @@ const Home = () => {
   const [previewCourse, setPreviewCourse] = useState<any | null>(null);
   const [topStudents, setTopStudents] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
-  const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
   const [activeWeekPreview, setActiveWeekPreview] = useState<number>(1);
+  const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
   const { login } = useAuth();
   const { addToast } = useUI();
   const navigate = useNavigate();
+
+  // Fetch courses from backend API
+  useEffect(() => {
+    api.get('/courses')
+      .then(res => {
+        setCourses(res.data);
+      })
+      .catch(err => {
+        console.error('Failed to load courses from API:', err);
+      })
+      .finally(() => {
+        setLoadingCourses(false);
+      });
+  }, []);
+
+  const mappedCourses = courses.map((c: any) => {
+    const meta = courseMetadata[c.id] || {
+      difficulty: 'Beginner to Intermediate',
+      tags: ['Specialized Program'],
+      color: 'from-slate-700/20 via-slate-800/10 to-transparent border-slate-750/30',
+      icon: BookOpen,
+      colSpan: 'md:col-span-2',
+      milestones: {}
+    };
+    
+    return {
+      id: c.id,
+      title: c.title,
+      difficulty: meta.difficulty,
+      tags: meta.tags,
+      color: meta.color,
+      icon: meta.icon,
+      colSpan: meta.colSpan,
+      desc: c.description || 'Welcome to this specialized curriculum track.',
+      syllabus: (c.modules || []).map((m: any) => ({
+        week: m.week,
+        title: m.title,
+        details: m.description || 'Curriculum details for this week.',
+        milestone: meta.milestones?.[m.week] || 'Weekly hands-on lab project'
+      }))
+    };
+  });
+
+  const coursesList = courses.length > 0 ? mappedCourses : courseDetails;
 
   // Scroll Progress Tracker
   useEffect(() => {
@@ -541,7 +707,7 @@ const Home = () => {
           viewport={{ once: true, margin: "-100px" }}
           className="grid grid-cols-1 md:grid-cols-6 gap-6"
         >
-          {courseDetails.map((course) => {
+          {coursesList.map((course) => {
             const IconComp = course.icon;
             const glowStyles = getGlowStyles(course.id);
             return (
@@ -578,7 +744,7 @@ const Home = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      {course.tags.map((tag) => (
+                      {course.tags.map((tag: string) => (
                         <span key={tag} className="text-[9px] font-bold text-slate-450 bg-slate-900/50 px-2 py-0.5 rounded border border-slate-850/60 uppercase">
                           {tag}
                         </span>

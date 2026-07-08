@@ -765,25 +765,17 @@ async function main() {
       });
       console.log(`Created Course: ${course.id}`);
     } else {
-      course = await prisma.course.update({
-        where: { id: courseData.id },
-        data: {
-          title: courseData.title,
-          description: courseData.description,
-          price: 699
-        }
-      });
-      console.log(`Updated Course: ${course.id}`);
+      console.log(`Course ${course.id} already exists. Skipping update to preserve admin edits.`);
+      if (course.price !== 699) {
+        await prisma.course.update({
+          where: { id: course.id },
+          data: { price: 699 }
+        });
+        console.log(`Updated course ${course.id} price to 699.`);
+      }
     }
 
-    // Clean up any extra modules that are not in the seed array to prevent trailing weeks
-    const seedWeeks = courseData.modules.map((_, idx) => idx + 1);
-    await prisma.module.deleteMany({
-      where: {
-        courseId: course.id,
-        week: { notIn: seedWeeks }
-      }
-    });
+    // Skip cleaning up extra modules to ensure administrator custom modules are fully preserved.
 
     // Seed Modules per course
     for (let mIdx = 0; mIdx < courseData.modules.length; mIdx++) {
@@ -808,19 +800,15 @@ async function main() {
             description: `Deep dive into advanced concepts, syntax structures, and system benchmarks for ${moduleTitle}.`
           }
         });
+        console.log(`  Created Module: W${moduleOrder} - ${moduleTitle}`);
       } else {
-        modRecord = await prisma.module.update({
-          where: { id: modRecord.id },
-          data: {
-            title: moduleTitle,
-            description: `Deep dive into advanced concepts, syntax structures, and system benchmarks for ${moduleTitle}.`
-          }
-        });
+        console.log(`  Module W${moduleOrder} already exists. Skipping update to preserve admin edits.`);
       }
 
       // Safe clean up of existing leaf nodes for this module to prevent duplicate seeding
       const existingTopicsCount = await prisma.topic.count({ where: { moduleId: modRecord.id } });
-      if ((course.id === 'CADDED_Mech' || course.id === 'CADDED_Civil') && existingTopicsCount > 0) {
+      const existingQuizCount = await prisma.quizQuestion.count({ where: { moduleId: modRecord.id } });
+      if (existingTopicsCount > 0 || existingQuizCount > 0) {
         console.log(`Skipping topic/quiz seeding for ${course.id} module W${moduleOrder} to preserve manual admin edits.`);
         continue;
       }
@@ -880,23 +868,25 @@ async function main() {
       }
     }
 
-    // Safe clean up of existing final exam questions for this course
-    await prisma.finalExamQuestion.deleteMany({ where: { courseId: course.id } });
-
-    // Seed 50 Final Exam Questions for this course
-    const examQuestions = generateFinalExamQuestions(course.id);
-    for (const eq of examQuestions) {
-      await prisma.finalExamQuestion.create({
-        data: {
-          courseId: course.id,
-          text: eq.text,
-          options: eq.options,
-          correctAnswer: eq.correctAnswer
-        }
-      });
+    // Safe seeding of final exam questions for this course
+    const existingExamCount = await prisma.finalExamQuestion.count({ where: { courseId: course.id } });
+    if (existingExamCount > 0) {
+      console.log(`Final exam questions for ${course.id} already exist. Skipping final exam questions seeding to preserve manual admin edits.`);
+    } else {
+      // Seed 50 Final Exam Questions for this course
+      const examQuestions = generateFinalExamQuestions(course.id);
+      for (const eq of examQuestions) {
+        await prisma.finalExamQuestion.create({
+          data: {
+            courseId: course.id,
+            text: eq.text,
+            options: eq.options,
+            correctAnswer: eq.correctAnswer
+          }
+        });
+      }
+      console.log(`Seeded 50 Final Exam Questions for ${course.id}`);
     }
-
-    console.log(`Seeded ${courseData.modules.length} Modules, ${courseData.modules.length * 6} Topics, ${courseData.modules.length * 10} Quiz Questions, and 50 Final Exam Questions for ${course.id}`);
   }
 
   // Seed default admin account
@@ -920,60 +910,65 @@ async function main() {
   }
 
   // Seed Practice Questions for Practice Arena
-  console.log('Seeding Practice Questions...');
-  await prisma.practiceQuestion.deleteMany();
-  const practiceQuestions = [
-    {
-      category: "Programming",
-      topic: "Systems & Memory",
-      difficulty: "Medium",
-      text: "What is the size of a pointer in a 64-bit operating system?",
-      options: ["2 bytes", "4 bytes", "8 bytes", "Depends on pointed data type"],
-      correctAnswer: "8 bytes",
-      explanation: "On 64-bit systems, a memory address requires 64 bits (8 bytes) of storage, regardless of the data type it points to."
-    },
-    {
-      category: "Programming",
-      topic: "Data Structures",
-      difficulty: "Easy",
-      text: "Which data structure operates on a Last In First Out (LIFO) basis?",
-      options: ["Queue", "Stack", "Linked List", "Binary Tree"],
-      correctAnswer: "Stack",
-      explanation: "A Stack utilizes a LIFO access pattern where elements are pushed and popped from the same end."
-    },
-    {
-      category: "Programming",
-      topic: "C++ OOP",
-      difficulty: "Easy",
-      text: "In C++, which keyword is used to allocate memory on the heap?",
-      options: ["malloc", "new", "alloc", "virtual"],
-      correctAnswer: "new",
-      explanation: "The 'new' operator dynamically allocates memory on the heap and returns a pointer to it."
-    },
-    {
-      category: "Programming",
-      topic: "DSA Analysis",
-      difficulty: "Hard",
-      text: "What is the worst-case time complexity of searching in a balanced Binary Search Tree (BST)?",
-      options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
-      correctAnswer: "O(log n)",
-      explanation: "A balanced BST halves the search space at each level, leading to logarithmic search complexity even in the worst case."
-    },
-    {
-      category: "Electronics",
-      topic: "Serial Protocols",
-      difficulty: "Easy",
-      text: "Which serial communication protocol uses only 2 wires (SDA and SCL)?",
-      options: ["SPI", "UART", "I2C", "CAN Bus"],
-      correctAnswer: "I2C",
-      explanation: "I2C (Inter-Integrated Circuit) uses two bidirectional lines: Serial Data (SDA) and Serial Clock (SCL)."
-    }
-  ];
+  console.log('Checking Practice Questions...');
+  const existingPracticeQuestionsCount = await prisma.practiceQuestion.count();
+  if (existingPracticeQuestionsCount > 0) {
+    console.log('Practice questions already exist. Skipping practice questions seeding to preserve manual admin edits.');
+  } else {
+    console.log('Seeding Practice Questions...');
+    const practiceQuestions = [
+      {
+        category: "Programming",
+        topic: "Systems & Memory",
+        difficulty: "Medium",
+        text: "What is the size of a pointer in a 64-bit operating system?",
+        options: ["2 bytes", "4 bytes", "8 bytes", "Depends on pointed data type"],
+        correctAnswer: "8 bytes",
+        explanation: "On 64-bit systems, a memory address requires 64 bits (8 bytes) of storage, regardless of the data type it points to."
+      },
+      {
+        category: "Programming",
+        topic: "Data Structures",
+        difficulty: "Easy",
+        text: "Which data structure operates on a Last In First Out (LIFO) basis?",
+        options: ["Queue", "Stack", "Linked List", "Binary Tree"],
+        correctAnswer: "Stack",
+        explanation: "A Stack utilizes a LIFO access pattern where elements are pushed and popped from the same end."
+      },
+      {
+        category: "Programming",
+        topic: "C++ OOP",
+        difficulty: "Easy",
+        text: "In C++, which keyword is used to allocate memory on the heap?",
+        options: ["malloc", "new", "alloc", "virtual"],
+        correctAnswer: "new",
+        explanation: "The 'new' operator dynamically allocates memory on the heap and returns a pointer to it."
+      },
+      {
+        category: "Programming",
+        topic: "DSA Analysis",
+        difficulty: "Hard",
+        text: "What is the worst-case time complexity of searching in a balanced Binary Search Tree (BST)?",
+        options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+        correctAnswer: "O(log n)",
+        explanation: "A balanced BST halves the search space at each level, leading to logarithmic search complexity even in the worst case."
+      },
+      {
+        category: "Electronics",
+        topic: "Serial Protocols",
+        difficulty: "Easy",
+        text: "Which serial communication protocol uses only 2 wires (SDA and SCL)?",
+        options: ["SPI", "UART", "I2C", "CAN Bus"],
+        correctAnswer: "I2C",
+        explanation: "I2C (Inter-Integrated Circuit) uses two bidirectional lines: Serial Data (SDA) and Serial Clock (SCL)."
+      }
+    ];
 
-  for (const pq of practiceQuestions) {
-    await prisma.practiceQuestion.create({ data: pq });
+    for (const pq of practiceQuestions) {
+      await prisma.practiceQuestion.create({ data: pq });
+    }
+    console.log('Practice Questions Seeded successfully!');
   }
-  console.log('Practice Questions Seeded successfully!');
 
   // Seed Default System Settings
   console.log('Seeding Default System Settings...');

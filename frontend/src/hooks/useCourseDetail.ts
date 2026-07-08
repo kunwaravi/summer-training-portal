@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 export const useCourseDetail = (courseId: string | undefined) => {
   const { user } = useAuth();
+  const [course, setCourse] = useState<any>(null);
   const [weeks, setWeeks] = useState<any[]>([]);
   const [activeWeekIndex, setActiveWeekIndex] = useState(0);
   const [loadingSyllabus, setLoadingSyllabus] = useState(true);
@@ -21,8 +22,9 @@ export const useCourseDetail = (courseId: string | undefined) => {
     try {
       const res = await api.get('/courses');
       // Find the specific course in the returned array
-      const course = res.data.find((c: any) => c.id === courseId);
-      const courseWeeks = course?.modules || [];
+      const matchedCourse = res.data.find((c: any) => c.id === courseId);
+      setCourse(matchedCourse);
+      const courseWeeks = matchedCourse?.modules || [];
       setWeeks(courseWeeks);
       
       const savedIndex = localStorage.getItem(`last_viewed_week_${courseId}`);
@@ -89,6 +91,7 @@ export const useCourseDetail = (courseId: string | undefined) => {
   };
 
   return {
+    course,
     weeks,
     activeWeekIndex,
     setActiveWeekIndex: setPersistedActiveWeekIndex,

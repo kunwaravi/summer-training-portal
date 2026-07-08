@@ -110,7 +110,7 @@ export const createCourse = async (data: { id: string; title: string; descriptio
       id: data.id,
       title: data.title,
       description: data.description || '',
-      price: data.price || 999
+      price: data.price || 699
     }
   });
 };

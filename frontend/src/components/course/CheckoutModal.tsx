@@ -78,7 +78,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <span className="text-slate-400 font-bold uppercase">Accreditation Fee</span>
                 <div className="flex flex-col items-end">
                   {discount > 0 && (
-                    <span className="text-slate-500 line-through text-[10px]">₹499.00</span>
+                    <span className="text-slate-500 line-through text-[10px]">₹699.00</span>
                   )}
                   <span className="text-cyan-400 font-black text-sm">₹{currentPrice.toFixed(2)}</span>
                 </div>
