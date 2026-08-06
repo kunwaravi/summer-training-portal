@@ -217,8 +217,8 @@ export class CertificateService {
       courseName: displayCourseName,
       grade,
       completionDate,
-      accreditationRegistry: "NEXUS EMBEDDED SYSTEMS CORPORATE REGISTRY (CIN: U72900DL2026PTC394820)",
-      compliance: "Industry Standard & Secure Digitally Verified System Credentials"
+      accreditationRegistry: "EduNexus Pro Credential Registry",
+      compliance: "Verified by EduNexus Pro against training completion records"
     };
   }
 }

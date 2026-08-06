@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { ShieldCheck, ShieldAlert, FileSearch, ArrowLeft, Building2, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, CheckCircle2, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Verify = () => {
@@ -9,6 +9,8 @@ const Verify = () => {
   const query = new URLSearchParams(window.location.search);
   const initialId = query.get('id') || query.get('credentialId') || '';
   const token = query.get('token') || '';
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [credentialId, setCredentialId] = useState(initialId);
   const [loading, setLoading] = useState(false);
@@ -55,6 +57,7 @@ const Verify = () => {
     const targetId = idToVerify || credentialId;
     if (!targetId.trim()) {
       setError('Please enter a valid Credential ID.');
+      inputRef.current?.focus();
       return;
     }
 
@@ -84,12 +87,16 @@ const Verify = () => {
     }
   }
 
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleVerify('');
+  };
+
+  // Email verification (token) branch
   if (token) {
     return (
-      <div className="py-20 max-w-md mx-auto px-4 flex flex-col items-center justify-center min-h-[80vh] no-print">
-        <div className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden text-center">
-          <div className="absolute inset-0 bg-radial-gradient from-cyan-500/5 to-transparent pointer-events-none"></div>
-          
+      <div className="max-w-md mx-auto px-4 py-10">
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center">
           <AnimatePresence mode="wait">
             {verifyingEmail ? (
               <motion.div
@@ -99,9 +106,9 @@ const Verify = () => {
                 exit={{ opacity: 0 }}
                 className="space-y-4 py-8"
               >
-                <div className="w-12 h-12 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto"></div>
-                <h3 className="text-sm font-black uppercase text-cyan-400 tracking-widest">Verifying Academic Account...</h3>
-                <p className="text-xs text-slate-400">Verifying secure token registers in PostgreSQL...</p>
+                <Loader2 size={40} className="animate-spin text-amber-400 mx-auto" />
+                <h3 className="text-sm font-bold text-white uppercase tracking-widest">Verifying your account…</h3>
+                <p className="text-xs text-slate-400">Confirming your registration token.</p>
               </motion.div>
             ) : emailVerificationSuccess ? (
               <motion.div
@@ -116,13 +123,13 @@ const Verify = () => {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-black text-white uppercase tracking-wider">Account Verified!</h3>
-                  <p className="text-xs text-slate-350 leading-relaxed">
-                    Welcome to the Nexus Institute! Your email has been validated. You can now login to access your industrial curriculum.
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Welcome to EduNexus Pro! Your email has been validated. You can now log in to access your curriculum.
                   </p>
                 </div>
                 <button
                   onClick={() => navigate('/')}
-                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition shadow shadow-emerald-500/10 active:scale-[0.98]"
+                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs uppercase tracking-widest rounded-xl transition shadow active:scale-[0.98]"
                 >
                   Proceed to Login
                 </button>
@@ -140,13 +147,13 @@ const Verify = () => {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-black text-rose-400 uppercase tracking-wider">Verification Failed</h3>
-                  <p className="text-xs text-slate-350 leading-relaxed">
+                  <p className="text-xs text-slate-400 leading-relaxed">
                     {emailVerificationError || 'The verification token provided is invalid or has expired.'}
                   </p>
                 </div>
                 <button
                   onClick={() => navigate('/')}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-750 text-white font-black text-xs uppercase tracking-widest rounded-xl transition border border-slate-750 active:scale-[0.98]"
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition border border-slate-700 active:scale-[0.98]"
                 >
                   Back to Registration
                 </button>
@@ -158,135 +165,122 @@ const Verify = () => {
     );
   }
 
+  // Credential verification branch
   return (
-    <div className="py-8 max-w-3xl mx-auto px-4 space-y-8">
-      
-      {/* Top Header Navigation */}
-      <div className="flex justify-between items-center border-b border-slate-800 pb-4 no-print">
-        <button 
-          onClick={() => navigate('/')} 
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition text-xs font-bold uppercase tracking-wider"
-        >
-          <ArrowLeft size={16} /> Exit Registry
-        </button>
-        <span className="text-[10px] tracking-widest text-slate-400 font-bold uppercase bg-slate-900 border border-slate-800 px-3 py-1 rounded-full">
-          NEXUS CORPORATE AUDIT BOARD
-        </span>
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      {/* Branding header */}
+      <div className="text-center mb-8">
+        <p className="text-amber-400 font-black tracking-[0.35em] uppercase text-sm mb-2">EduNexus Pro</p>
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Credential Verification</h1>
+        <p className="text-slate-400 text-sm mt-2">Verify the authenticity of an EduNexus Pro certificate</p>
       </div>
 
-      {/* Main Container */}
-      <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
-        {/* Faint mesh background decoration */}
-        <div className="absolute inset-0 bg-radial-gradient from-amber-500/5 to-transparent pointer-events-none"></div>
-
-        {/* Branding header */}
-        <div className="text-center space-y-1">
-          <div className="inline-flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-widest bg-amber-500/5 border border-amber-500/20 px-3 py-1 rounded-full">
-            <Building2 size={14} /> Corporate Verification Registry
-          </div>
-          <h2 className="text-2xl font-black tracking-tight text-white mt-2">
-            NEXUS EMBEDDED SYSTEMS & IoT SOLUTIONS
-          </h2>
-          <p className="text-slate-450 text-[10px] font-bold uppercase tracking-widest">
-            Online Academic & Corporate Verification Registry
-          </p>
-        </div>
-
-        {/* Verification Form */}
-        <div className="space-y-3 pt-4 border-t border-slate-800/80 no-print">
-          <label className="text-xs font-bold text-slate-350 block uppercase tracking-wider pl-1">
-            Enter Certificate / Credential ID
+      {/* Verification card */}
+      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
+        <form onSubmit={onSubmit} className="space-y-3">
+          <label htmlFor="credential-input" className="text-xs font-semibold text-slate-300 block uppercase tracking-wider">
+            Credential ID
           </label>
           <div className="flex flex-col sm:flex-row gap-3">
-            <input 
+            <input
+              id="credential-input"
+              ref={inputRef}
               type="text"
               placeholder="e.g. NEX-CPP_EMBEDDED-AVIN1001-VERIFIED"
               value={credentialId}
               onChange={(e) => setCredentialId(e.target.value)}
               className="flex-1 px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono placeholder-slate-600 focus:outline-none focus:border-amber-500 text-sm tracking-wide shadow-inner"
+              autoComplete="off"
+              spellCheck={false}
             />
             <button
-              onClick={() => handleVerify('')}
+              type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-sm rounded-xl transition flex items-center justify-center gap-2 shrink-0 active:scale-95 disabled:opacity-70"
+              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shrink-0 active:scale-95 disabled:opacity-70"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></div>
+                <Loader2 size={18} className="animate-spin" />
               ) : (
-                <><FileSearch size={18} /> Audit Code</>
+                <><Search size={18} /> Verify Credential</>
               )}
             </button>
           </div>
-        </div>
+          {!result && !error && (
+            <p className="text-[11px] text-slate-500 pl-1">
+              Enter the credential ID printed on your certificate to confirm its authenticity.
+            </p>
+          )}
+        </form>
 
-        {/* Results / Audit Output */}
         <AnimatePresence mode="wait">
+          {/* Success panel */}
           {result && (
             <motion.div
+              key="success"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="p-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5 space-y-6 mt-4"
+              className="space-y-6 mt-6"
             >
-              {/* Verification Header Badge */}
-              <div className="flex items-center gap-3 pb-4 border-b border-emerald-500/20">
-                <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400">
-                  <ShieldCheck size={28} />
+              <div className="p-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                <div className="flex items-center gap-3 pb-4 border-b border-emerald-500/20">
+                  <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 shrink-0">
+                    <ShieldCheck size={28} />
+                  </div>
+                  <div>
+                    <h4 className="text-emerald-400 font-extrabold text-sm uppercase tracking-wider">
+                      Credential Verified
+                    </h4>
+                    <p className="text-slate-400 text-[11px] font-mono tracking-tight mt-0.5 break-all">
+                      {credentialId.trim().toUpperCase()}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-emerald-400 font-extrabold text-sm uppercase tracking-wider">
-                    STATUS: SECURED & VERIFIED
-                  </h4>
-                  <p className="text-slate-400 text-[10px] font-mono tracking-tight mt-0.5">
-                    REGISTRY REF: {credentialId.toUpperCase()}
-                  </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-xs">
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Candidate Name</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.candidateName}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Institution</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.collegeName}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Branch</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.branchName}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Course</span>
+                    <span className="font-bold text-amber-400 text-sm mt-0.5 block">{result.courseName}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Grade</span>
+                    <span className="font-bold text-emerald-400 text-sm mt-0.5 block">GRADE {result.grade}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Certification Date</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.completionDate}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Verified Details Sheet */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-                <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                  <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-bold">Candidate Name</span>
-                  <span className="font-bold text-white text-base mt-0.5 block">{result.candidateName}</span>
-                </div>
-                <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                  <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-bold">Enrolled Institution</span>
-                  <span className="font-bold text-white uppercase mt-0.5 block">{result.collegeName}</span>
-                </div>
-                <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                  <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-bold">Academic Branch</span>
-                  <span className="font-bold text-white mt-0.5 block">{result.branchName} Engineering</span>
-                </div>
-                <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                  <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-bold">Accredited Specialization</span>
-                  <span className="font-bold text-amber-400 mt-0.5 block">{result.courseName}</span>
-                </div>
-                <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                  <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-bold">Audit Grade</span>
-                  <span className="font-bold text-emerald-400 mt-0.5 block">GRADE {result.grade}</span>
-                </div>
-                <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                  <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-bold">Date of Certification</span>
-                  <span className="font-bold text-white mt-0.5 block">{result.completionDate}</span>
-                </div>
-              </div>
-
-              {/* Course Curriculum Section */}
-              {courseDetails && (
-                <div className="mt-6 pt-6 border-t border-emerald-500/20 space-y-4">
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm uppercase tracking-wider">
+              {/* Course curriculum */}
+              {courseDetails && courseDetails.modules?.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
                     <CheckCircle2 size={14} />
                     Course Curriculum Completed
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {courseDetails.modules.map((module: any) => (
                       <div key={module.week} className="p-3 rounded-lg bg-slate-950/50 border border-slate-800 text-xs">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
-                            <p className="font-bold text-white">Week {module.week}: {module.title}</p>
-                            <p className="text-slate-400 text-[9px] mt-1">{module.description}</p>
+                            <p className="font-semibold text-white">Week {module.week}: {module.title}</p>
+                            <p className="text-slate-500 text-[11px] mt-0.5">{module.description}</p>
                           </div>
-                          <span className="text-[9px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded border border-emerald-500/30 whitespace-nowrap">
+                          <span className="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded border border-emerald-500/30 whitespace-nowrap">
                             {module.topicCount} topics
                           </span>
                         </div>
@@ -296,47 +290,40 @@ const Verify = () => {
                 </div>
               )}
 
-              {/* Legal / Corporate Accreditation Stamp */}
-              <div className="p-4 rounded-lg bg-slate-950/30 border border-slate-800 text-[10px] text-slate-450 leading-relaxed space-y-1.5 font-sans">
-                <p className="flex items-center gap-2 text-slate-300 font-bold">
-                  <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
-                  Nexus Corporate Registry Audit Statement:
-                </p>
-                <p>
-                  This digital credential has been audited and registered under the **{result.accreditationRegistry}**. The candidate has successfully met all training competency milestones and passed all weekly examinations in accordance with **{result.compliance}**.
-                </p>
-              </div>
+              <button
+                onClick={() => { setResult(null); setCredentialId(''); inputRef.current?.focus(); }}
+                className="text-xs text-slate-500 hover:text-slate-300 transition font-semibold"
+              >
+                Verify another credential
+              </button>
             </motion.div>
           )}
 
-          {/* Error Message */}
+          {/* Error panel */}
           {error && (
             <motion.div
+              key="error"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="p-5 rounded-xl border border-red-500/20 bg-red-500/5 flex items-start gap-3 mt-4 text-xs sm:text-sm"
+              className="p-5 rounded-xl border border-rose-500/20 bg-rose-500/5 mt-6 space-y-3"
             >
-              <ShieldAlert className="text-red-400 shrink-0 mt-0.5" size={20} />
-              <div>
-                <strong className="text-red-400 font-bold block mb-0.5">Audit Exception: Registry Mismatch</strong>
-                <span className="text-slate-350">{error}</span>
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="text-rose-400 shrink-0 mt-0.5" size={20} />
+                <div>
+                  <strong className="text-rose-400 font-bold block mb-0.5">Verification Failed</strong>
+                  <span className="text-slate-400 text-sm">{error}</span>
+                </div>
               </div>
+              <button
+                onClick={() => { setError(''); inputRef.current?.focus(); }}
+                className="text-xs text-slate-400 hover:text-white transition font-semibold"
+              >
+                Try again
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* ISO Certified and Corporate Registration Footer Stamp */}
-      <div className="text-center text-[10px] text-slate-500 space-y-1 border-t border-slate-850 pt-6">
-        <p>NEXUS Embedded Systems & IoT Solutions Corporate Registry Console</p>
-        <p>CIN: U72900DL2026PTC394820 | Registered Industrial Training Hub</p>
-        <p className="text-[9px] text-slate-650 mt-1 uppercase font-mono tracking-tighter">
-          Secure Cryptographic Verification Audit Console
-        </p>
-        <p className="text-[8px] text-slate-500 italic mt-2 max-w-md mx-auto leading-relaxed">
-          * Disclaimer: This application is a simulated academic student training portal. All certifications, corporate registrations (CIN), ISO standards, and verification registries presented here are educational simulations and do not represent active real-world operations or accreditations.
-        </p>
       </div>
     </div>
   );
