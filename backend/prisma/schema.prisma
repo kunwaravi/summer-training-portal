@@ -28,6 +28,8 @@ model User {
   resetToken        String?
   resetTokenExpires DateTime?
   createdAt         DateTime               @default(now())
+  certificateStartDate DateTime?
+  certificateEndDate   DateTime?
   streak            Int                    @default(0)
   lastActiveAt      DateTime?              @default(now())
   referralCode      String?                @unique

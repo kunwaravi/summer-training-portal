@@ -6,8 +6,8 @@ import { useUI } from '../context/UIContext';
 import { 
   LogIn, UserPlus, Mail, Lock, User, GraduationCap, 
   ShieldCheck, CheckCircle2, Send, MessageSquare, BookOpen, 
-  Cpu, Code2, Server, Wifi, Terminal, Settings, Database, 
-  Trophy, Medal, Star, ExternalLink, ArrowRight, Zap, Play, Sparkles,
+  Cpu, Code2, Server, Wifi, Terminal, Database, 
+  Trophy, ArrowRight, Zap, Sparkles,
   ChevronDown, ChevronUp, Wrench, Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -378,11 +378,9 @@ const Home = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [previewCourse, setPreviewCourse] = useState<any | null>(null);
   const [topStudents, setTopStudents] = useState<any[]>([]);
-  const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
   const [activeWeekPreview, setActiveWeekPreview] = useState<number>(1);
   const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
   const [courses, setCourses] = useState<any[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(true);
 
   const { login } = useAuth();
   const { addToast } = useUI();
@@ -396,9 +394,6 @@ const Home = () => {
       })
       .catch(err => {
         console.error('Failed to load courses from API:', err);
-      })
-      .finally(() => {
-        setLoadingCourses(false);
       });
   }, []);
 
@@ -460,9 +455,6 @@ const Home = () => {
           { name: 'Gauri Shinde', points: 410, badges: ['bug_hunter'], collegeName: 'Vellore Institute of Technology' },
           { name: 'Vivek Joshi', points: 380, badges: ['perfect_score'], collegeName: 'Delhi Technological University' }
         ]);
-      })
-      .finally(() => {
-        setLoadingLeaderboard(false);
       });
   }, []);
 

@@ -241,3 +241,57 @@ export const deleteUser = async (userId: number) => {
   }
   return await prisma.user.delete({ where: { id: userId } });
 };
+
+export const updateUserByAdmin = async (userId: number, updateData: {
+  name?: string;
+  email?: string;
+  fatherName?: string;
+  collegeName?: string;
+  branchName?: string;
+  courseType?: string;
+  role?: string;
+  points?: number;
+  grade?: string;
+  certificateStartDate?: string;
+  certificateEndDate?: string;
+}) => {
+  const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+  if (!existingUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  if (updateData.email && updateData.email.trim().toLowerCase() !== existingUser.email.toLowerCase()) {
+    const emailCheck = await prisma.user.findUnique({
+      where: { email: updateData.email.trim().toLowerCase() }
+    });
+    if (emailCheck) {
+      throw new AppError('Email address is already in use by another candidate', 400);
+    }
+  }
+
+  const dataToUpdate: any = {};
+  if (updateData.name !== undefined) dataToUpdate.name = updateData.name.trim();
+  if (updateData.email !== undefined) dataToUpdate.email = updateData.email.trim().toLowerCase();
+  if (updateData.fatherName !== undefined) dataToUpdate.fatherName = updateData.fatherName.trim();
+  if (updateData.collegeName !== undefined) dataToUpdate.collegeName = updateData.collegeName.trim();
+  if (updateData.branchName !== undefined) dataToUpdate.branchName = updateData.branchName.trim();
+  if (updateData.courseType !== undefined) dataToUpdate.courseType = updateData.courseType.trim();
+  if (updateData.role !== undefined) dataToUpdate.role = updateData.role.trim();
+  if (updateData.points !== undefined) dataToUpdate.points = Number(updateData.points);
+  if (updateData.grade !== undefined) dataToUpdate.grade = updateData.grade.trim();
+  if (updateData.certificateStartDate !== undefined) {
+    dataToUpdate.certificateStartDate = updateData.certificateStartDate ? new Date(updateData.certificateStartDate) : null;
+  }
+  if (updateData.certificateEndDate !== undefined) {
+    dataToUpdate.certificateEndDate = updateData.certificateEndDate ? new Date(updateData.certificateEndDate) : null;
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: dataToUpdate
+  });
+
+  const { password: _, ...userWithoutPassword } = updatedUser;
+  return userWithoutPassword;
+};
+

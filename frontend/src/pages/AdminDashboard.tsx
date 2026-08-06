@@ -108,6 +108,21 @@ const AdminDashboard = () => {
   });
   const [savingSettings, setSavingSettings] = useState(false);
 
+  // Candidate edit modal state
+  const [editingCandidate, setEditingCandidate] = useState<any | null>(null);
+  const [savingCandidate, setSavingCandidate] = useState(false);
+  const [candidateForm, setCandidateForm] = useState({
+    name: '',
+    email: '',
+    fatherName: '',
+    collegeName: '',
+    branchName: '',
+    courseType: 'Electronics',
+    role: 'USER',
+    certificateStartDate: '',
+    certificateEndDate: ''
+  });
+
   const fetchMessages = async () => {
     setLoadingMessages(true);
     try {
@@ -221,6 +236,40 @@ const AdminDashboard = () => {
     } catch (err: any) {
       console.error('Failed to delete user:', err);
       alert(err.response?.data?.message || 'Failed to delete user.');
+    }
+  };
+
+  const handleOpenEditCandidate = (candidate: any) => {
+    // Convert stored ISO/Date to YYYY-MM-DD for <input type="date">
+    const toDateInput = (d: any) => d ? new Date(d).toISOString().slice(0, 10) : '';
+    setEditingCandidate(candidate);
+    setCandidateForm({
+      name: candidate.name || '',
+      email: candidate.email || '',
+      fatherName: candidate.fatherName || '',
+      collegeName: candidate.collegeName || '',
+      branchName: candidate.branchName || '',
+      courseType: candidate.courseType || 'Electronics',
+      role: candidate.role || 'USER',
+      certificateStartDate: toDateInput(candidate.certificateStartDate),
+      certificateEndDate: toDateInput(candidate.certificateEndDate)
+    });
+  };
+
+  const handleSaveCandidate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCandidate) return;
+    setSavingCandidate(true);
+    try {
+      await api.put(`/auth/admin/users/${editingCandidate.id}`, candidateForm);
+      alert('Candidate profile updated successfully!');
+      setEditingCandidate(null);
+      fetchUsers();
+    } catch (err: any) {
+      console.error('Failed to update candidate profile:', err);
+      alert(err.response?.data?.message || 'Failed to update candidate profile.');
+    } finally {
+      setSavingCandidate(false);
     }
   };
 
@@ -1128,6 +1177,13 @@ const AdminDashboard = () => {
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <button
+                          onClick={() => handleOpenEditCandidate(u)}
+                          className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 rounded-lg transition active:scale-90 mr-1.5"
+                          title="Edit Candidate Profile"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button
                           onClick={() => handleDeleteUser(u.id, u.name)}
                           className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition active:scale-90"
                           title="Remove Candidate"
@@ -1140,6 +1196,147 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Edit Candidate Profile Modal */}
+            {editingCandidate && (
+              <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl"
+                >
+                  <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+                    <div>
+                      <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                        <Edit3 size={18} className="text-cyan-400" /> Edit Candidate Profile
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">Candidate ID: #{editingCandidate.id}</p>
+                    </div>
+                    <button
+                      onClick={() => setEditingCandidate(null)}
+                      className="text-slate-500 hover:text-white p-1 rounded-lg text-lg"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveCandidate} className="space-y-4 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-slate-400">Full Name</label>
+                        <input
+                          type="text"
+                          required
+                          value={candidateForm.name}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, name: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-slate-400">Email Address</label>
+                        <input
+                          type="email"
+                          required
+                          value={candidateForm.email}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-slate-400">Father's Name</label>
+                        <input
+                          type="text"
+                          value={candidateForm.fatherName}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, fatherName: e.target.value })}
+                          placeholder="e.g. Ramesh Sharma"
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-slate-400">Role</label>
+                        <select
+                          value={candidateForm.role}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, role: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                        >
+                          <option value="USER">USER (Student)</option>
+                          <option value="ADMIN">ADMIN (Staff)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-slate-400">College Name</label>
+                        <input
+                          type="text"
+                          value={candidateForm.collegeName}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, collegeName: e.target.value })}
+                          placeholder="e.g. COEP Technological University"
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-slate-400">Branch Name</label>
+                        <input
+                          type="text"
+                          value={candidateForm.branchName}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, branchName: e.target.value })}
+                          placeholder="e.g. ECE / CSE / Mechanical"
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-slate-400">Certificate Start Date</label>
+                        <input
+                          type="date"
+                          value={candidateForm.certificateStartDate}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, certificateStartDate: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-slate-400">Certificate End Date</label>
+                        <input
+                          type="date"
+                          value={candidateForm.certificateEndDate}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, certificateEndDate: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-500 -mt-2">These dates are shown on the certificate. Leave empty to auto-derive from registration date.</p>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setEditingCandidate(null)}
+                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={savingCandidate}
+                        className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow disabled:opacity-50"
+                      >
+                        {savingCandidate ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              </div>
+            )}
           </div>
         )}
 

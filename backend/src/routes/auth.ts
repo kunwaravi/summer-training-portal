@@ -59,4 +59,15 @@ router.delete('/admin/users/:userId', authenticateToken, isAdmin, async (req: an
   }
 });
 
+// PUT /api/auth/admin/users/:userId - Update user details (restricted to ADMIN)
+router.put('/admin/users/:userId', authenticateToken, isAdmin, async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const targetUserId = parseInt(req.params.userId as string);
+    const updatedUser = await authService.updateUserByAdmin(targetUserId, req.body);
+    res.json({ success: true, message: 'Candidate profile updated successfully.', user: updatedUser });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

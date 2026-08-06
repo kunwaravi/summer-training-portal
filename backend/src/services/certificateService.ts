@@ -87,9 +87,10 @@ export class CertificateService {
     const displayCourseName = this.getDisplayCourseName(courseId);
     const credentialId = this.generateCredentialId(user.id, user.name, courseId);
 
-    const baseDate = new Date(user.createdAt);
-    const startDateObj = new Date(baseDate);
-    const endDateObj = new Date(baseDate.getTime() + 28 * 24 * 60 * 60 * 1000); // 28 days later
+    const startDateObj = user.certificateStartDate ? new Date(user.certificateStartDate) : new Date(user.createdAt);
+    const endDateObj = user.certificateEndDate
+      ? new Date(user.certificateEndDate)
+      : new Date(startDateObj.getTime() + 28 * 24 * 60 * 60 * 1000); // fallback: 28 days after start
 
     const startDate = startDateObj.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -195,8 +196,9 @@ export class CertificateService {
     const grade = this.calculateGrade(user.results, courseId);
     const displayCourseName = this.getDisplayCourseName(courseId);
 
-    const baseDate = new Date(user.createdAt);
-    const endDateObj = new Date(baseDate.getTime() + 28 * 24 * 60 * 60 * 1000);
+    const endDateObj = user.certificateEndDate
+      ? new Date(user.certificateEndDate)
+      : new Date(user.createdAt.getTime() + 28 * 24 * 60 * 60 * 1000);
 
     const completionDate = endDateObj.toLocaleDateString('en-US', {
       year: 'numeric',
