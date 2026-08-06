@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-Comprehensive refactoring of the summer-training-portal across frontend UI, component architecture, state management, and backend organization. Deploy new UI + frontend refactoring within 2 weeks, backend refactoring follows incrementally to maintain stability.
+Comprehensive refactoring of the edunexuspro across frontend UI, component architecture, state management, and backend organization. Deploy new UI + frontend refactoring within 2 weeks, backend refactoring follows incrementally to maintain stability.
 
 ---
 

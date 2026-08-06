@@ -6,7 +6,7 @@ We will add a "User Management" tab to the Admin Dashboard allowing administrato
 
 ### Frontend Updates
 
-#### [MODIFY] [AdminDashboard.tsx](file:///home/abhi/repo/summer-training-portal/frontend/src/pages/AdminDashboard.tsx)
+#### [MODIFY] [AdminDashboard.tsx](file:///home/abhi/repo/edunexuspro/frontend/src/pages/AdminDashboard.tsx)
 - Update tabs to support `transactions | cms | users`.
 - Add a new tab option: "User Management" (using the `Users` icon).
 - Render a responsive user list table showing:
@@ -22,11 +22,11 @@ We will add a "User Management" tab to the Admin Dashboard allowing administrato
 
 ### Backend Updates
 
-#### [MODIFY] [authService.ts](file:///home/abhi/repo/summer-training-portal/backend/src/services/authService.ts)
+#### [MODIFY] [authService.ts](file:///home/abhi/repo/edunexuspro/backend/src/services/authService.ts)
 - Update `getAllUsers` to select complete student metadata (`id`, `name`, `email`, `role`, `createdAt`, `collegeName`, `branchName`).
 - Add `deleteUser(userId: number)` database delete service.
 
-#### [MODIFY] [auth.ts](file:///home/abhi/repo/summer-training-portal/backend/src/routes/auth.ts)
+#### [MODIFY] [auth.ts](file:///home/abhi/repo/edunexuspro/backend/src/routes/auth.ts)
 - Add a route: `DELETE /api/auth/admin/users/:userId` protected by `authenticateToken` and `isAdmin`.
 - Prevent self-deletion by checking if `req.user.id === targetUserId`.
 

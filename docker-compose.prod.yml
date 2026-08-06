@@ -55,5 +55,5 @@ services:
 volumes:
   postgres_data:
     external: true
-    name: summer-training-portal_postgres_data
+    name: edunexuspro_postgres_data
   redis_data:

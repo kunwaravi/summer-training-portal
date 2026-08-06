@@ -1,4 +1,4 @@
-# 🚀 NEXUS Summer Training Portal — Deployment Runbook
+# 🚀 EduNexus Pro — Deployment Runbook
 
 **Generated:** 2026-05-30 · **Target:** `edunexus.kibm.in` · **Server:** Hostinger VPS `187.127.156.138`
 
@@ -42,8 +42,8 @@
 | **SSH user** | `root` |
 | **Domain (existing)** | `kibm.in` (active, expires 2027-04-24) |
 | **Target subdomain** | `edunexus.kibm.in` (new, to be created) |
-| **Repo** | `git@github.com:kunwaravi/summer-training-portal.git` |
-| **Deploy path on VPS** | `/docker/summertraining/` (already exists, partial) |
+| **Repo** | `git@github.com:kunwaravi/edunexuspro.git` |
+| **Deploy path on VPS** | `/docker/edunexuspro/` (already exists, partial) |
 | **Co-tenants on VPS** | KIBM (`kibm.in`, `marketplace.kibm.in`, `dashboard.kibm.in`), Nexus Marketplace (`nexus.kibm.in`), Atlas, Openclaw |
 
 ---
@@ -54,13 +54,13 @@ Yeh server **already 4 cheezein chala raha hai**. Hum pichli deployment ko fix k
 
 **Already running:**
 ```
-summertraining-frontend-1   Up (healthy)   0.0.0.0:8080->80/tcp   ← exposes port 8080 PUBLIC
-summertraining-db-1         Up (healthy)   5432/tcp               ← Postgres, internal only
-summertraining-backend-1    Exited (1)     ← CRASHED 17 min ago
+edunexuspro-frontend-1   Up (healthy)   0.0.0.0:8080->80/tcp   ← exposes port 8080 PUBLIC
+edunexuspro-db-1         Up (healthy)   5432/tcp               ← Postgres, internal only
+edunexuspro-backend-1    Exited (1)     ← CRASHED 17 min ago
 atlas_postgres              Up 3 days      127.0.0.1:5432->5432/tcp
 ```
 
-**Backend crash root cause** (from `docker logs summertraining-backend-1`):
+**Backend crash root cause** (from `docker logs edunexuspro-backend-1`):
 ```
 prisma/seed.ts(89,19): error TS2322:
   Type 'string[]' is not assignable to type 'string'.
@@ -197,7 +197,7 @@ dig edunexus.kibm.in A +short
 **On your local Mac** (in repo clone):
 
 ```bash
-cd ~/summer-training-portal
+cd ~/edunexuspro
 # find the broken line
 grep -n "options: question.options" backend/prisma/seed.ts
 ```
@@ -241,7 +241,7 @@ git push origin main
 
 ```bash
 ssh edunexus      # or: ssh -i ~/.ssh/hostinger_edunexus.pem root@187.127.156.138
-cd /docker/summertraining
+cd /docker/edunexuspro
 ```
 
 Generate strong secrets locally:
@@ -251,10 +251,10 @@ openssl rand -hex 32   # use output for PAYMENT_WEBHOOK_SECRET
 openssl rand -hex 24   # use output for POSTGRES_PASSWORD
 ```
 
-Create `/docker/summertraining/.env`:
+Create `/docker/edunexuspro/.env`:
 
 ```bash
-cat > /docker/summertraining/.env <<'EOF'
+cat > /docker/edunexuspro/.env <<'EOF'
 # ─── DB ───
 POSTGRES_USER=nexusadmin
 POSTGRES_PASSWORD=REPLACE_WITH_OPENSSL_OUTPUT_1
@@ -272,7 +272,7 @@ NODE_ENV=production
 ADMIN_EMAIL=admin@edunexus.kibm.in
 ADMIN_PASSWORD=REPLACE_WITH_STRONG_PASSWORD_MIN_16_CHARS
 EOF
-chmod 600 /docker/summertraining/.env
+chmod 600 /docker/edunexuspro/.env
 ```
 
 ⚠️ Replace the 4 `REPLACE_*` placeholders before saving.
@@ -283,7 +283,7 @@ chmod 600 /docker/summertraining/.env
 
 Port 8080 (currently public) ko **loopback-only** kar do — sirf nginx local pe call karega.
 
-Edit `/docker/summertraining/docker-compose.yml`:
+Edit `/docker/edunexuspro/docker-compose.yml`:
 
 ```yaml
 version: '3.8'
@@ -327,7 +327,7 @@ volumes:
 
 ## 9. Bring up the stack
 
-**On VPS, in `/docker/summertraining/`:**
+**On VPS, in `/docker/edunexuspro/`:**
 
 ```bash
 # 1. Stop current broken stack
@@ -354,7 +354,7 @@ docker compose logs -f backend
 
 **Verify locally on VPS:**
 ```bash
-curl http://127.0.0.1:5050/         # → "Summer Training Portal API is running"
+curl http://127.0.0.1:5050/         # → "EduNexus Pro API is running"
 curl -I http://127.0.0.1:8090/      # → HTTP/1.1 200 OK
 ```
 
@@ -451,7 +451,7 @@ dig edunexus.kibm.in A +short                          # → 187.127.156.138
 
 # HTTPS + cert
 curl -sI https://edunexus.kibm.in/ | head -5           # → HTTP/2 200, ssl OK
-curl -s https://edunexus.kibm.in/api/                  # → "Summer Training Portal API is running"
+curl -s https://edunexus.kibm.in/api/                  # → "EduNexus Pro API is running"
 
 # Auth roundtrip — register + login
 curl -s -X POST https://edunexus.kibm.in/api/auth/register \
@@ -501,7 +501,7 @@ certbot renew --force-renewal -d edunexus.kibm.in
 
 ### Full rollback (kill new deploy, keep KIBM safe)
 ```bash
-cd /docker/summertraining
+cd /docker/edunexuspro
 docker compose down
 rm -f /etc/nginx/sites-enabled/edunexus
 nginx -t && systemctl reload nginx
@@ -549,7 +549,7 @@ After successful deploy + smoke test:
 1. **Rotate Hostinger API token** (hpanel → API tokens → revoke + create new)
 2. **Rotate SSH key** (generate new keypair on VPS, append to `~/.ssh/authorized_keys`, remove old)
 3. **Delete this `DEPLOY.md`** from any shared inbox / chat after recipient confirms deploy is live
-4. **Set up off-server backups** for Postgres volume (`/var/lib/docker/volumes/summertraining_postgres_data`)
+4. **Set up off-server backups** for Postgres volume (`/var/lib/docker/volumes/edunexuspro_postgres_data`)
 
 ---
 

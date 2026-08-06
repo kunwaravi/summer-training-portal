@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
 
-# Summer Training Portal - Database Backup Utility
+# EduNexus Pro - Database Backup Utility
 # Saves PostgreSQL database backups to the backups/ directory.
 
 echo "=========================================="
-echo "    Summer Training Portal - DB Backup    "
+echo "    EduNexus Pro - DB Backup    "
 echo "=========================================="
 
 # Load environment variables from root or backend if available
@@ -19,7 +19,7 @@ fi
 
 DB_USER=${DB_USER:-nexusadmin}
 DB_NAME=${DB_NAME:-nexus}
-DB_CONTAINER_NAME="summer-training-portal-db-1"
+DB_CONTAINER_NAME="edunexuspro-db-1"
 
 # Create backup directory
 BACKUP_DIR="./backups"

@@ -9,7 +9,7 @@
 
 ## Quick Context
 
-Summer-training-portal is an educational platform with:
+Edunexus Pro is an educational platform with:
 - **Frontend:** React 19, Vite, Tailwind CSS, React Router
 - **Backend:** Express, TypeScript, Prisma ORM
 - **Database:** PostgreSQL 15
@@ -331,8 +331,8 @@ If critical issues occur:
 ## Links & References
 
 - **Design Spec:** `docs/superpowers/specs/2026-06-03-production-grade-refactoring-design.md`
-- **Current Codebase:** `/Users/vin/summer-training-portal`
-- **Git Repo:** `git@github.com:kunwaravi/summer-training-portal.git`
+- **Current Codebase:** `/Users/vin/edunexuspro`
+- **Git Repo:** `git@github.com:kunwaravi/edunexuspro.git`
 - **Current Deployment:** `edunexus.kibm.in` on Hostinger VPS
 
 ---

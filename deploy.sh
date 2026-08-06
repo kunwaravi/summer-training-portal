@@ -2,7 +2,7 @@
 set -e
 
 echo "=========================================="
-echo "    Summer Training Portal - Deployment   "
+echo "    EduNexus Pro - Deployment   "
 echo "=========================================="
 
 # Ensure script is run from project root

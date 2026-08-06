@@ -397,7 +397,7 @@ const Certificate = () => {
                     <div className="logo-area">EDUNEXUS PRO</div>
                     <div className="sub-logo">Advanced Research & Innovation Portal</div>
 
-                    <div className="cert-title">SUMMER TRAINING COMPLETION CREDENTIALS</div>
+                    <div className="cert-title">EDUNEXUS PRO COMPLETION CREDENTIALS</div>
                     <div className="conferred-text">This is proudly conferred upon the developer</div>
                 </div>
 
@@ -407,7 +407,7 @@ const Certificate = () => {
                     Son / Daughter of Sh. <span className="highlight">{displayData.fatherName || "N/A"}</span><br />
                     representing institution: <span className="highlight">{displayData.collegeName || "N/A"}</span><br />
                     pursuing branch: <span className="highlight">{displayData.branchName || "N/A"}</span><br />
-                    for successfully executing specialized summer training curriculum in
+                    for successfully executing specialized training curriculum in
                 </div>
 
                 <div>

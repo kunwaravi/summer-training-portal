@@ -4,7 +4,7 @@ set -e
 # Configuration for KIBM Production VPS
 REMOTE_HOST="srv1616850.hstgr.cloud"
 REMOTE_USER="root"
-DEPLOY_PATH="/docker/summertraining"
+DEPLOY_PATH="/docker/edunexuspro"
 SSH_KEY="/home/abhi/.ssh/hostinger_edunexus.pem"
 
 echo "=========================================================="

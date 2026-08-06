@@ -45,7 +45,7 @@ const About = () => {
               Our Mission
             </h2>
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              <strong>EduNexus Pro</strong> is a premier online learning platform dedicated to offering highly affordable, industry-oriented <strong>4-Week Summer Industrial Training</strong> programs specifically designed for Engineering students. 
+              <strong>EduNexus Pro</strong> is a premier online learning platform dedicated to offering highly affordable, industry-oriented <strong>4-Week Industrial Training</strong> programs specifically designed for Engineering students.
             </p>
             <p className="text-slate-350 text-xs sm:text-sm leading-relaxed">
               We understand the challenges faced by engineering graduates in today's competitive job market. Our curriculum is tailored to bypass traditional theoretical paths, focusing instead on practical skill-building, real-world technologies, and hands-on projects.

@@ -2,7 +2,7 @@
 set -e
 
 echo "=========================================="
-echo "    Summer Training Portal - Server Setup "
+echo "    EduNexus Pro - Server Setup "
 echo "=========================================="
 
 echo "[1/4] Updating package lists..."

@@ -456,7 +456,7 @@ const Dashboard = () => {
                   label: "1. Referred Registrations", 
                   current: user?.referralCount || 0, 
                   target: 15, 
-                  desc: "Referred users must complete registration on the summer training portal using your referral code or link.", 
+                  desc: "Referred users must complete registration on the EduNexus Pro portal using your referral code or link.",
                   color: "from-blue-500 to-indigo-600" 
                 },
                 { 
