@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../api';
+import { useUI } from '../context/UIContext';
 import { Trophy, Timer, ChevronLeft, ChevronRight, CheckCircle2, XCircle, ArrowLeft, RefreshCw, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -49,6 +50,7 @@ const PracticeArena = () => {
   const [selectedLang, setSelectedLang] = useState<'C' | 'C++' | 'IoT'>('C');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { confirmDialog } = useUI();
   const category = searchParams.get('category') || 'Programming';
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -77,13 +79,20 @@ const PracticeArena = () => {
     if (!force) {
       const answeredCount = Object.keys(answers).length;
       if (answeredCount < questions.length) {
-        const confirmSubmit = window.confirm(
-          `You have only answered ${answeredCount} of ${questions.length} questions. Are you sure you want to submit?`
-        );
-        if (!confirmSubmit) return;
+        const ok = await confirmDialog({
+          title: 'Submit partial set?',
+          message: `You have only answered ${answeredCount} of ${questions.length} questions. Unanswered questions will be marked incorrect.`,
+          confirmLabel: 'Submit Anyway',
+          danger: true,
+        });
+        if (!ok) return;
       } else {
-        const confirmSubmit = window.confirm("Are you ready to submit your practice test?");
-        if (!confirmSubmit) return;
+        const ok = await confirmDialog({
+          title: 'Submit practice set?',
+          message: 'Are you ready to submit your practice test?',
+          confirmLabel: 'Submit',
+        });
+        if (!ok) return;
       }
     }
 
@@ -110,7 +119,7 @@ const PracticeArena = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [answers, questions.length, category]);
+  }, [answers, questions.length, category, confirmDialog]);
 
   const handleAutoSubmit = useCallback(() => {
     alert("Time is up! Your practice test is being submitted automatically.");

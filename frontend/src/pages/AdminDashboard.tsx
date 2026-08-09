@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import api from '../api';
+import { useUI } from '../context/UIContext';
 import {
   Shield, Users, Award, BookOpen, Edit3, Trash2, Plus,
   ArrowUp, ArrowDown, Eye, DollarSign,
@@ -49,6 +50,7 @@ const initialsOf = (name?: string) =>
   (name || '?').split(' ').map((n) => n[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?';
 
 const AdminDashboard = () => {
+  const { confirmDialog } = useUI();
   const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'analytics' | 'referrals' | 'messages' | 'settings' | 'review'>('transactions');
 
   // Transaction logs states
@@ -172,7 +174,8 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteMessage = async (id: number) => {
-    if (!window.confirm('Are you sure you want to permanently delete this message?')) return;
+    const ok = await confirmDialog({ title: 'Delete message?', message: 'Are you sure you want to permanently delete this message?', confirmLabel: 'Delete', danger: true });
+    if (!ok) return;
     try {
       await api.delete(`/contact/messages/${id}`);
       alert('Message deleted successfully.');
@@ -243,9 +246,13 @@ const AdminDashboard = () => {
 
   // Approve / reject a submission; awards XP server-side on approve
   const handleEvaluate = async (submission: any, isProject: boolean, status: 'APPROVED' | 'REJECTED') => {
-    if (!window.confirm(`Mark ${isProject ? 'project' : 'assignment'} by "${submission.user?.name}" as ${status.toLowerCase()}?`)) {
-      return;
-    }
+    const ok = await confirmDialog({
+      title: `${status === 'APPROVED' ? 'Approve' : 'Reject'} ${isProject ? 'project' : 'assignment'}`,
+      message: `Mark the ${isProject ? 'project' : 'assignment'} by "${submission.user?.name}" as ${status.toLowerCase()}?${status === 'APPROVED' ? ` This awards ${isProject ? '100' : '20'} XP instantly.` : ''}`,
+      confirmLabel: status === 'APPROVED' ? 'Approve' : 'Reject',
+      danger: status === 'REJECTED',
+    });
+    if (!ok) return;
     setEvaluatingId(submission.id);
     try {
       const endpoint = isProject ? `/projects/admin/evaluate/${submission.id}` : `/assignments/admin/evaluate/${submission.id}`;
@@ -274,9 +281,13 @@ const AdminDashboard = () => {
 
   // Delete candidate account and all dependencies
   const handleDeleteUser = async (userId: number, userName: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete user "${userName}"? All their progress, results, certificates, and submissions will be permanently wiped out.`)) {
-      return;
-    }
+    const ok = await confirmDialog({
+      title: 'Delete user account?',
+      message: `Are you sure you want to permanently delete "${userName}"? All their progress, results, certificates, and submissions will be permanently wiped out. This cannot be undone.`,
+      confirmLabel: 'Delete User',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`/auth/admin/users/${userId}`);
       alert(`User "${userName}" was successfully deleted.`);
@@ -381,9 +392,13 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteCourse = async (courseId: string, courseTitle: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete course "${courseTitle}" (${courseId})? All modules, topics, and quiz questions associated with this course will be permanently wiped out.`)) {
-      return;
-    }
+    const ok = await confirmDialog({
+      title: 'Delete course?',
+      message: `Are you sure you want to permanently delete "${courseTitle}" (${courseId})? All modules, topics, and quiz questions associated with this course will be permanently wiped out.`,
+      confirmLabel: 'Delete Course',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`/courses/${courseId}`);
       alert(`Course "${courseTitle}" was successfully deleted.`);
@@ -437,9 +452,13 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteModule = async (moduleId: number, weekNum: number) => {
-    if (!window.confirm(`Are you sure you want to permanently delete Week ${weekNum} Module? This will wipe out all topics and quiz questions in this module.`)) {
-      return;
-    }
+    const ok = await confirmDialog({
+      title: 'Delete module?',
+      message: `Are you sure you want to permanently delete Week ${weekNum} Module? This will wipe out all topics and quiz questions in this module.`,
+      confirmLabel: 'Delete Module',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`/courses/module/${moduleId}`);
       alert(`Week ${weekNum} Module deleted successfully.`);
@@ -539,7 +558,8 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteTopic = async (topicId: number, moduleId: number) => {
-    if (!window.confirm('Are you sure you want to permanently delete this topic?')) return;
+    const ok = await confirmDialog({ title: 'Delete topic?', message: 'Are you sure you want to permanently delete this topic?', confirmLabel: 'Delete', danger: true });
+    if (!ok) return;
     try {
       await api.delete(`/courses/topic/${topicId}`);
       if (selectedCourse) {
@@ -626,7 +646,8 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteQuiz = async (quizId: number, moduleId: number) => {
-    if (!window.confirm('Are you sure you want to permanently delete this quiz question?')) return;
+    const ok = await confirmDialog({ title: 'Delete question?', message: 'Are you sure you want to permanently delete this quiz question?', confirmLabel: 'Delete', danger: true });
+    if (!ok) return;
     try {
       await api.delete(`/quiz/question/${quizId}`);
       if (selectedCourse) {

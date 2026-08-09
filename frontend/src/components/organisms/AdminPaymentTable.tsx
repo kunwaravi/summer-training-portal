@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Users, CheckCircle, Clock, XCircle, ShieldCheck, Trash2 } from 'lucide-react';
 import api from '../../api';
+import { useUI } from '../../context/UIContext';
 
 interface Transaction {
   id: string;
@@ -51,11 +52,17 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 };
 
 const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loading, onVerified }) => {
+  const { confirmDialog } = useUI();
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleVerify = async (paymentId: string, studentName: string) => {
-    if (!window.confirm(`Verify payment for "${studentName}"? This will unlock their certificate.`)) return;
+    const ok = await confirmDialog({
+      title: 'Verify payment?',
+      message: `Verify payment for "${studentName}"? This will unlock their certificate.`,
+      confirmLabel: 'Verify',
+    });
+    if (!ok) return;
 
     setVerifyingId(paymentId);
     try {
@@ -71,7 +78,13 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
   };
 
   const handleDelete = async (paymentId: string, studentName: string) => {
-    if (!window.confirm(`Are you sure you want to PERMANENTLY DELETE the payment record for "${studentName}"? This cannot be undone.`)) return;
+    const ok = await confirmDialog({
+      title: 'Delete payment record?',
+      message: `Are you sure you want to permanently delete the payment record for "${studentName}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
 
     setDeletingId(paymentId);
     try {
