@@ -77,7 +77,7 @@ function AppRoutes() {
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-medium">
           <div className="flex flex-col gap-1 text-center sm:text-left">
             <p className="text-slate-400">© 2026 Edunexus Automation Labs. All rights reserved.</p>
-            <p className="text-[10px] text-slate-600">Technical Support: Available via WhatsApp & Telegram Support Groups</p>
+            <p className="text-[11px] text-slate-600">Technical Support: Available via WhatsApp & Telegram Support Groups</p>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center sm:justify-end">
             <Link to="/about" className="hover:text-slate-350 transition-colors">About Us</Link>

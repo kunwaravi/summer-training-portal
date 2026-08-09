@@ -727,7 +727,7 @@ const AdminDashboard = () => {
               </div>
               <div className="flex flex-col sm:flex-row gap-4 items-end">
                 <div className="flex-1 space-y-1.5">
-                  <label className="text-[10px] uppercase font-black tracking-wider text-slate-400">Select Student</label>
+                  <label className="text-[11px] uppercase font-black tracking-wider text-slate-400">Select Student</label>
                   <select
                     value={selectedStudentId}
                     onChange={(e) => setSelectedStudentId(e.target.value)}
@@ -741,7 +741,7 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div className="w-full sm:w-1/3 space-y-1.5">
-                  <label className="text-[10px] uppercase font-black tracking-wider text-slate-400">Select Track</label>
+                  <label className="text-[11px] uppercase font-black tracking-wider text-slate-400">Select Track</label>
                   <select
                     value={selectedCourseId}
                     onChange={(e) => setSelectedCourseId(e.target.value)}
@@ -788,7 +788,7 @@ const AdminDashboard = () => {
                 </h3>
                 <button
                   onClick={() => setShowAddCourseModal(true)}
-                  className="px-2 py-1 bg-cyan-500 hover:bg-cyan-600 text-slate-950 rounded text-[10px] font-black uppercase transition flex items-center gap-1 focus:outline-none"
+                  className="px-2 py-1 bg-cyan-500 hover:bg-cyan-600 text-slate-950 rounded text-[11px] font-black uppercase transition flex items-center gap-1 focus:outline-none"
                   title="Create New Course Track"
                 >
                   <Plus size={11} /> Add
@@ -836,7 +836,7 @@ const AdminDashboard = () => {
                   {/* Course Title Header */}
                   <div className="pb-4 border-b border-slate-800/80 flex justify-between items-center">
                     <div>
-                      <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                      <span className="text-[11px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
                         {selectedCourse.id} Curriculum Console
                       </span>
                       <h2 className="text-lg font-black text-white mt-1.5">Syllabus Weeks & Modules</h2>
@@ -878,26 +878,26 @@ const AdminDashboard = () => {
                                 </div>
                                 <div>
                                   <h4 className="text-sm font-bold text-slate-200">{m.title}</h4>
-                                  <p className="text-[10px] text-slate-500 truncate max-w-[320px]">{m.description}</p>
+                                  <p className="text-[11px] text-slate-500 truncate max-w-[320px]">{m.description}</p>
                                 </div>
                               </div>
                               
                               <div className="flex items-center gap-2.5" onClick={e => e.stopPropagation()}>
                                 <button 
                                   onClick={() => handleOpenAddTopic(m.id)}
-                                  className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1"
+                                  className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-white rounded-lg text-[11px] font-bold uppercase transition flex items-center gap-1"
                                 >
                                   <Plus size={12} /> Add Topic
                                 </button>
                                 <button 
                                   onClick={() => handleOpenAddQuiz(m.id)}
-                                  className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-yellow-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1"
+                                  className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-yellow-400 hover:text-white rounded-lg text-[11px] font-bold uppercase transition flex items-center gap-1"
                                 >
                                   <Plus size={12} /> Add Quiz Q
                                 </button>
                                 <button 
                                   onClick={() => handleDeleteModule(m.id, m.week)}
-                                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 hover:text-white rounded-lg text-[10px] font-bold transition flex items-center justify-center"
+                                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 hover:text-white rounded-lg text-[11px] font-bold transition flex items-center justify-center"
                                   title="Delete Module"
                                 >
                                   <Trash2 size={12} />
@@ -918,21 +918,21 @@ const AdminDashboard = () => {
                                 
                                 {/* Topics Section */}
                                 <div className="space-y-3">
-                                  <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                                  <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
                                     <FileText size={12} /> Topic Curriculum Blocks
                                   </h5>
 
                                   {(!m.topics || m.topics.length === 0) ? (
-                                    <div className="text-[10px] text-slate-600 pl-4 py-2 font-semibold">No topics defined for this week. Click 'Add Topic' above.</div>
+                                    <div className="text-[11px] text-slate-600 pl-4 py-2 font-semibold">No topics defined for this week. Click 'Add Topic' above.</div>
                                   ) : (
                                     <div className="space-y-2">
                                       {m.topics.map((t, idx) => (
                                         <div key={t.id} className="p-3 bg-slate-900/60 border border-slate-850 rounded-xl flex items-center justify-between group/row">
                                           <div className="flex items-center gap-3">
-                                            <span className="text-[10px] font-bold text-slate-600">#{idx + 1}</span>
+                                            <span className="text-[11px] font-bold text-slate-600">#{idx + 1}</span>
                                             <div>
                                               <span className="text-xs font-bold text-slate-200">{t.title}</span>
-                                              {t.code && <span className="ml-2 text-[8px] bg-cyan-500/10 border border-cyan-500/25 px-1.5 py-0.5 rounded text-cyan-400 font-mono">Code</span>}
+                                              {t.code && <span className="ml-2 text-[11px] bg-cyan-500/10 border border-cyan-500/25 px-1.5 py-0.5 rounded text-cyan-400 font-mono">Code</span>}
                                             </div>
                                           </div>
                                           
@@ -973,12 +973,12 @@ const AdminDashboard = () => {
 
                                 {/* Quiz Questions Section */}
                                 <div className="space-y-3 pt-2">
-                                  <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                                  <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
                                     <Award size={12} className="text-yellow-500" /> Assessment Questions
                                   </h5>
 
                                   {(!m.quizQuestions || m.quizQuestions.length === 0) ? (
-                                    <div className="text-[10px] text-slate-600 pl-4 py-2 font-semibold">No quiz questions defined for this week assessment.</div>
+                                    <div className="text-[11px] text-slate-600 pl-4 py-2 font-semibold">No quiz questions defined for this week assessment.</div>
                                   ) : (
                                     <div className="space-y-2">
                                       {m.quizQuestions.map((q, idx) => (
@@ -987,7 +987,7 @@ const AdminDashboard = () => {
                                             <div className="text-xs font-bold text-slate-200">
                                               <span className="text-yellow-500 font-black mr-1">Q{idx + 1}.</span> {q.text}
                                             </div>
-                                            <div className="text-[9px] text-slate-500 font-mono">
+                                            <div className="text-[11px] text-slate-500 font-mono">
                                               Correct Ans: <span className="text-emerald-400 font-bold">{q.correctAnswer}</span>
                                             </div>
                                           </div>
@@ -1035,7 +1035,7 @@ const AdminDashboard = () => {
               <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                 <Users size={18} className="text-cyan-400" /> Registered Candidate Directory
               </h3>
-              <span className="text-[10px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold">
+              <span className="text-[11px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold">
                 {users.length} Candidates Registered
               </span>
             </div>
@@ -1065,16 +1065,16 @@ const AdminDashboard = () => {
                 <tbody className="divide-y divide-slate-850">
                   {sortedUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-slate-900/40 text-slate-300 transition">
-                      <td className="py-3.5 px-4 font-mono text-[10px] text-cyan-400">#{u.id}</td>
+                      <td className="py-3.5 px-4 font-mono text-[11px] text-cyan-400">#{u.id}</td>
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-white">{u.name}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{u.email}</div>
+                        <div className="text-[11px] text-slate-500 font-mono">{u.email}</div>
                       </td>
                       <td className="py-3.5 px-4">
                         {u.collegeName ? (
                           <>
                             <div className="font-semibold text-slate-350">{u.collegeName}</div>
-                            <div className="text-[10px] text-slate-500 uppercase font-bold">{u.branchName || 'N/A'} Branch</div>
+                            <div className="text-[11px] text-slate-500 uppercase font-bold">{u.branchName || 'N/A'} Branch</div>
                           </>
                         ) : (
                           <span className="text-slate-600 italic">No academic profiles updated</span>
@@ -1105,7 +1105,7 @@ const AdminDashboard = () => {
                             }
                             
                             if (courseMap.size === 0) {
-                              return <span className="text-slate-600 italic text-[10px]">Not Enrolled</span>;
+                              return <span className="text-slate-600 italic text-[11px]">Not Enrolled</span>;
                             }
                             
                             return Array.from(courseMap.entries()).map(([courseId, info]) => {
@@ -1129,7 +1129,7 @@ const AdminDashboard = () => {
                               return (
                                 <span
                                   key={courseId}
-                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${badgeStyle}`}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px] font-black uppercase tracking-wider ${badgeStyle}`}
                                   title={`Course: ${courseId}`}
                                 >
                                   {badgeText}
@@ -1142,25 +1142,25 @@ const AdminDashboard = () => {
                       <td className="py-3.5 px-4 text-left">
                         <div className="space-y-0.5">
                           <div className="font-semibold text-slate-200">
-                            Code: <span className="font-mono text-[10px] text-cyan-400">{u.referralCode || 'N/A'}</span>
+                            Code: <span className="font-mono text-[11px] text-cyan-400">{u.referralCode || 'N/A'}</span>
                           </div>
                           {u.referredBy && (
-                            <div className="text-[9px] text-slate-500">
+                            <div className="text-[11px] text-slate-500">
                               Referred By: <span className="font-mono">{u.referredBy}</span>
                             </div>
                           )}
-                          <div className="text-[10px] text-emerald-450 font-bold">
+                          <div className="text-[11px] text-emerald-450 font-bold">
                             Refers: {u.referralCount || 0} (Paid: {u.referralPaidCount || 0})
                           </div>
                           {u.referralSuccess && (
-                            <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-green-500/10 text-green-400 border border-green-500/20">
+                            <span className="inline-flex px-1.5 py-0.5 rounded text-[11px] font-black uppercase bg-green-500/10 text-green-400 border border-green-500/20">
                               100% OFF Unlocked
                             </span>
                           )}
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                        <span className={`px-2 py-0.5 rounded text-[11px] font-black uppercase ${
                           u.role === 'ADMIN'
                             ? 'bg-red-500/10 text-red-400 border border-red-500/25'
                             : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/25'
@@ -1223,7 +1223,7 @@ const AdminDashboard = () => {
                   <form onSubmit={handleSaveCandidate} className="space-y-4 text-xs">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400">Full Name</label>
+                        <label className="text-[11px] font-black uppercase text-slate-400">Full Name</label>
                         <input
                           type="text"
                           required
@@ -1234,7 +1234,7 @@ const AdminDashboard = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400">Email Address</label>
+                        <label className="text-[11px] font-black uppercase text-slate-400">Email Address</label>
                         <input
                           type="email"
                           required
@@ -1247,7 +1247,7 @@ const AdminDashboard = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400">Father's Name</label>
+                        <label className="text-[11px] font-black uppercase text-slate-400">Father's Name</label>
                         <input
                           type="text"
                           value={candidateForm.fatherName}
@@ -1258,7 +1258,7 @@ const AdminDashboard = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400">Role</label>
+                        <label className="text-[11px] font-black uppercase text-slate-400">Role</label>
                         <select
                           value={candidateForm.role}
                           onChange={(e) => setCandidateForm({ ...candidateForm, role: e.target.value })}
@@ -1272,7 +1272,7 @@ const AdminDashboard = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400">College Name</label>
+                        <label className="text-[11px] font-black uppercase text-slate-400">College Name</label>
                         <input
                           type="text"
                           value={candidateForm.collegeName}
@@ -1283,7 +1283,7 @@ const AdminDashboard = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400">Branch Name</label>
+                        <label className="text-[11px] font-black uppercase text-slate-400">Branch Name</label>
                         <input
                           type="text"
                           value={candidateForm.branchName}
@@ -1296,7 +1296,7 @@ const AdminDashboard = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400">Certificate Start Date</label>
+                        <label className="text-[11px] font-black uppercase text-slate-400">Certificate Start Date</label>
                         <input
                           type="date"
                           value={candidateForm.certificateStartDate}
@@ -1306,7 +1306,7 @@ const AdminDashboard = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400">Certificate End Date</label>
+                        <label className="text-[11px] font-black uppercase text-slate-400">Certificate End Date</label>
                         <input
                           type="date"
                           value={candidateForm.certificateEndDate}
@@ -1315,7 +1315,7 @@ const AdminDashboard = () => {
                         />
                       </div>
                     </div>
-                    <p className="text-[10px] text-slate-500 -mt-2">These dates are shown on the certificate. Leave empty to auto-derive from registration date.</p>
+                    <p className="text-[11px] text-slate-500 -mt-2">These dates are shown on the certificate. Leave empty to auto-derive from registration date.</p>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                       <button
@@ -1346,7 +1346,7 @@ const AdminDashboard = () => {
               <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                 <Mail size={18} className="text-cyan-400" /> Contact Messages Registry
               </h3>
-              <span className="text-[10px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold">
+              <span className="text-[11px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold">
                 {messages.length} Messages
               </span>
             </div>
@@ -1382,7 +1382,7 @@ const AdminDashboard = () => {
                         </td>
                         <td className="py-3.5 px-4">
                           <div className="font-bold text-white">{m.name}</div>
-                          <div className="text-[10px] text-slate-550 font-mono">{m.email}</div>
+                          <div className="text-[11px] text-slate-550 font-mono">{m.email}</div>
                         </td>
                         <td className="py-3.5 px-4 font-semibold text-slate-350">{m.subject || 'N/A'}</td>
                         <td className="py-3.5 px-4 max-w-sm whitespace-pre-wrap leading-relaxed text-slate-405">{m.message}</td>
@@ -1415,7 +1415,7 @@ const AdminDashboard = () => {
 
             <form onSubmit={handleSaveContactSettings} className="space-y-4 max-w-xl">
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Company Name</label>
+                <label className="text-[11px] font-black uppercase tracking-wider text-slate-450">Company Name</label>
                 <input 
                   type="text"
                   required
@@ -1427,7 +1427,7 @@ const AdminDashboard = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Website URL</label>
+                <label className="text-[11px] font-black uppercase tracking-wider text-slate-450">Website URL</label>
                 <input 
                   type="url"
                   required
@@ -1439,7 +1439,7 @@ const AdminDashboard = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Support Email</label>
+                <label className="text-[11px] font-black uppercase tracking-wider text-slate-450">Support Email</label>
                 <input 
                   type="email"
                   required
@@ -1451,7 +1451,7 @@ const AdminDashboard = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Contact Mobile Number</label>
+                <label className="text-[11px] font-black uppercase tracking-wider text-slate-450">Contact Mobile Number</label>
                 <input 
                   type="text"
                   required
@@ -1463,7 +1463,7 @@ const AdminDashboard = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wider text-slate-450">Business Hours</label>
+                <label className="text-[11px] font-black uppercase tracking-wider text-slate-450">Business Hours</label>
                 <input 
                   type="text"
                   required
@@ -1496,10 +1496,10 @@ const AdminDashboard = () => {
                 { label: 'Active Certificates', value: '412', change: '+24 issued today', isUp: true },
               ].map((card, idx) => (
                 <div key={idx} className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">{card.label}</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">{card.label}</span>
                   <div className="flex items-baseline justify-between">
                     <h3 className="text-2xl font-black text-white">{card.value}</h3>
-                    <span className={`text-[10px] font-bold ${card.isUp ? 'text-emerald-400' : 'text-rose-450'}`}>
+                    <span className={`text-[11px] font-bold ${card.isUp ? 'text-emerald-400' : 'text-rose-450'}`}>
                       {card.change}
                     </span>
                   </div>
@@ -1513,7 +1513,7 @@ const AdminDashboard = () => {
               <div className="bg-slate-900/30 border border-slate-800 p-6 rounded-2xl space-y-6">
                 <div>
                   <h4 className="text-sm font-bold text-white uppercase tracking-wider">Weekly Learner Funnel (Drop-off)</h4>
-                  <p className="text-[10px] text-slate-500 mt-1">Percentage of registered students reaching each learning milestone.</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Percentage of registered students reaching each learning milestone.</p>
                 </div>
                 <div className="space-y-4">
                   {[
@@ -1544,7 +1544,7 @@ const AdminDashboard = () => {
               <div className="bg-slate-900/30 border border-slate-800 p-6 rounded-2xl space-y-6">
                 <div>
                   <h4 className="text-sm font-bold text-white uppercase tracking-wider">Track Distribution & Popularity</h4>
-                  <p className="text-[10px] text-slate-500 mt-1">Enrollment split and certificates generated by training track.</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Enrollment split and certificates generated by training track.</p>
                 </div>
                 <div className="space-y-5 pt-2">
                   {[
@@ -1562,10 +1562,10 @@ const AdminDashboard = () => {
                             className="h-full bg-cyan-500/10 border-r-2 border-cyan-400 flex items-center justify-end pr-2 transition-all duration-1000"
                             style={{ width: `${t.pct}%` }}
                           >
-                            <span className="text-[9px] font-black text-cyan-400 font-mono">{t.pct}% active</span>
+                            <span className="text-[11px] font-black text-cyan-400 font-mono">{t.pct}% active</span>
                           </div>
                         </div>
-                        <div className="text-[10px] font-bold text-slate-500 shrink-0 text-right w-24">
+                        <div className="text-[11px] font-bold text-slate-500 shrink-0 text-right w-24">
                           {t.enrollments} enr / {t.certs} cert
                         </div>
                       </div>
@@ -1573,7 +1573,7 @@ const AdminDashboard = () => {
                   ))}
                 </div>
 
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-[10px] leading-relaxed text-blue-300">
+                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-[11px] leading-relaxed text-blue-300">
                   <strong>Founder Insight:</strong> C Programming remains the absolute gateway track with 36% of all traffic. 
                   Week 1 and 2 quiz results show high retention, with a 14% drop-off at Week 3 when register-masking and pointers concepts are introduced.
                 </div>
@@ -1588,12 +1588,12 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {/* Card 1: Total Referred */}
               <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Total Referred Students</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Total Referred Students</span>
                 <div className="flex items-baseline justify-between">
                   <h3 className="text-2xl font-black text-white">
                     {users.filter(u => u.referredBy).length}
                   </h3>
-                  <span className="text-[10px] font-bold text-emerald-400">
+                  <span className="text-[11px] font-bold text-emerald-400">
                     Signups via Code
                   </span>
                 </div>
@@ -1606,7 +1606,7 @@ const AdminDashboard = () => {
                 }, { name: 'N/A', referralCount: 0 });
                 return (
                   <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Top Referrer</span>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Top Referrer</span>
                     <div className="flex items-baseline justify-between">
                       <h3 className="text-sm font-black text-white truncate max-w-[150px]" title={top.name}>
                         {top.name}
@@ -1626,12 +1626,12 @@ const AdminDashboard = () => {
                 const conversionRate = totalReferred > 0 ? ((paidReferred / totalReferred) * 100).toFixed(1) : '0';
                 return (
                   <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Paid Conversion Rate</span>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Paid Conversion Rate</span>
                     <div className="flex items-baseline justify-between">
                       <h3 className="text-2xl font-black text-emerald-400">
                         {conversionRate}%
                       </h3>
-                      <span className="text-[10px] font-bold text-slate-400">
+                      <span className="text-[11px] font-bold text-slate-400">
                         {paidReferred} of {totalReferred} paid
                       </span>
                     </div>
@@ -1713,25 +1713,25 @@ const AdminDashboard = () => {
                             <tr className="hover:bg-slate-900/40 text-slate-300 transition">
                               <td className="py-3.5 px-4">
                                 <div className="font-bold text-white">{referrer.name}</div>
-                                <div className="text-[10px] text-slate-500 font-mono">{referrer.email}</div>
+                                <div className="text-[11px] text-slate-500 font-mono">{referrer.email}</div>
                               </td>
                               <td className="py-3.5 px-4 font-mono text-[11px] text-cyan-400">
                                 {referrer.referralCode || 'N/A'}
                               </td>
                               <td className="py-3.5 px-4">
                                 {referrer.referralSuccess ? (
-                                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-green-500/10 text-green-400 border border-green-500/20">
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase bg-green-500/10 text-green-400 border border-green-500/20">
                                     ✓ SUCCESSFUL
                                   </span>
                                 ) : (
-                                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-slate-900 text-slate-500 border border-slate-800">
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase bg-slate-900 text-slate-500 border border-slate-800">
                                     IN PROGRESS
                                   </span>
                                 )}
                               </td>
                               <td className="py-3.5 px-4">
                                 {referrer.referredBy ? (
-                                  <span className="font-mono text-[10px] text-slate-450 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                  <span className="font-mono text-[11px] text-slate-450 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
                                     {referrer.referredBy}
                                   </span>
                                 ) : (
@@ -1742,7 +1742,7 @@ const AdminDashboard = () => {
                                 {referredStudents.length} / 15
                               </td>
                               <td className="py-3.5 px-4 text-center">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                                   paidCount >= 5 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : paidCount > 0 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-slate-800 text-slate-500'
                                 }`}>
                                   {paidCount} / 5 paid
@@ -1751,7 +1751,7 @@ const AdminDashboard = () => {
                               <td className="py-3.5 px-4 text-right">
                                 <button
                                   onClick={() => setExpandedReferrerId(isExpanded ? null : referrer.id)}
-                                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[10px] font-bold uppercase transition"
+                                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[11px] font-bold uppercase transition"
                                 >
                                   {isExpanded ? 'Hide Details' : 'View Details'}
                                 </button>
@@ -1763,17 +1763,17 @@ const AdminDashboard = () => {
                               <tr>
                                 <td colSpan={6} className="bg-slate-950/40 p-4 border-l-2 border-cyan-500">
                                   <div className="space-y-3 pl-4">
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-cyan-400 flex items-center gap-1.5">
+                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-cyan-400 flex items-center gap-1.5">
                                       Students Referred by {referrer.name} ({referredStudents.length})
                                     </h4>
                                     
                                     {referredStudents.length === 0 ? (
-                                      <p className="text-[10px] text-slate-500 italic">This user has not referred any students yet.</p>
+                                      <p className="text-[11px] text-slate-500 italic">This user has not referred any students yet.</p>
                                     ) : (
                                       <div className="overflow-x-auto border border-slate-800 rounded-xl bg-slate-950/60">
                                         <table className="w-full text-left text-[11px] text-slate-350">
                                           <thead>
-                                            <tr className="border-b border-slate-800 text-slate-500 uppercase font-bold text-[9px] tracking-wider bg-slate-900/30">
+                                            <tr className="border-b border-slate-800 text-slate-500 uppercase font-bold text-[11px] tracking-wider bg-slate-900/30">
                                               <th className="py-2 px-3">Student Name</th>
                                               <th className="py-2 px-3">Email Address</th>
                                               <th className="py-2 px-3">Registration Date</th>
@@ -1813,7 +1813,7 @@ const AdminDashboard = () => {
                                                       }
                                                       
                                                       if (courseMap.size === 0) {
-                                                        return <span className="text-slate-650 italic text-[9px]">Not Enrolled</span>;
+                                                        return <span className="text-slate-650 italic text-[11px]">Not Enrolled</span>;
                                                       }
                                                       
                                                       return Array.from(courseMap.entries()).map(([courseId, info]) => {
@@ -1834,7 +1834,7 @@ const AdminDashboard = () => {
                                                         return (
                                                           <span
                                                             key={courseId}
-                                                            className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[8px] font-bold uppercase tracking-wider ${badgeStyle}`}
+                                                            className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[11px] font-bold uppercase tracking-wider ${badgeStyle}`}
                                                           >
                                                             {badgeText}
                                                           </span>
@@ -1887,7 +1887,7 @@ const AdminDashboard = () => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowLivePreview(!showLivePreview)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase transition flex items-center gap-1.5 ${
                       showLivePreview 
                         ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' 
                         : 'bg-slate-800 border border-slate-700 text-slate-400'
@@ -1912,7 +1912,7 @@ const AdminDashboard = () => {
                   
                   {/* Topic Title */}
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Topic Title</label>
+                    <label className="text-[11px] uppercase font-bold text-slate-400">Topic Title</label>
                     <input 
                       type="text"
                       required
@@ -1925,7 +1925,7 @@ const AdminDashboard = () => {
 
                   {/* Topic Main Content text */}
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Topic Content Body (Rich Markdown Support)</label>
+                    <label className="text-[11px] uppercase font-bold text-slate-400">Topic Content Body (Rich Markdown Support)</label>
                     <textarea 
                       rows={8}
                       required
@@ -1938,7 +1938,7 @@ const AdminDashboard = () => {
 
                   {/* Inline Code Snippet */}
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Compiler Code Snippet (Optional)</label>
+                    <label className="text-[11px] uppercase font-bold text-slate-400">Compiler Code Snippet (Optional)</label>
                     <textarea 
                       rows={4}
                       placeholder="#include <stdio.h>\n..."
@@ -1950,7 +1950,7 @@ const AdminDashboard = () => {
 
                   {/* Takeaway / note */}
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Highlight Takeaway / Core Note (Optional)</label>
+                    <label className="text-[11px] uppercase font-bold text-slate-400">Highlight Takeaway / Core Note (Optional)</label>
                     <input 
                       type="text"
                       placeholder="Highlight standard errors, caveats, or dynamic memory leaks..."
@@ -1962,7 +1962,7 @@ const AdminDashboard = () => {
 
                   {/* Asset Diagram Mock Upload Helper (Issue #8) */}
                   <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3.5 mt-2">
-                    <div className="flex items-center gap-1.5 text-slate-300 text-[10px] font-black uppercase">
+                    <div className="flex items-center gap-1.5 text-slate-300 text-[11px] font-black uppercase">
                       <Image size={14} className="text-cyan-400" /> Embedded Infographic Upload Sandbox
                     </div>
                     <div className="flex gap-2">
@@ -1977,7 +1977,7 @@ const AdminDashboard = () => {
                         type="button"
                         disabled={uploadingAsset || !mockAssetUrl}
                         onClick={handleMockAssetUpload}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-40 text-cyan-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition"
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-40 text-cyan-400 hover:text-white rounded-lg text-[11px] font-bold uppercase transition"
                       >
                         {uploadingAsset ? 'Mounting...' : 'Mount Asset'}
                       </button>
@@ -1991,7 +1991,7 @@ const AdminDashboard = () => {
                   <div className="hidden md:block w-1/2 p-6 bg-slate-950/40 overflow-y-auto space-y-4 text-left">
                     <div className="flex items-center gap-2 pb-2 border-b border-slate-900">
                       <Eye size={14} className="text-cyan-400" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-450">
+                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-450">
                         Student Learning Pane Real-Time Preview
                       </span>
                     </div>
@@ -2063,7 +2063,7 @@ const AdminDashboard = () => {
                 
                 {/* Question Text */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Question Statement</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400">Question Statement</label>
                   <input 
                     type="text"
                     required
@@ -2076,10 +2076,10 @@ const AdminDashboard = () => {
 
                 {/* Multiple choice Options */}
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Answer Options</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400 block mb-1">Answer Options</label>
                   {editingQuiz.options.map((opt, oIdx) => (
                     <div key={oIdx} className="flex gap-2 items-center">
-                      <span className="text-[10px] font-black text-slate-600 w-4 font-mono">[{String.fromCharCode(65 + oIdx)}]</span>
+                      <span className="text-[11px] font-black text-slate-600 w-4 font-mono">[{String.fromCharCode(65 + oIdx)}]</span>
                       <input 
                         type="text"
                         required
@@ -2098,7 +2098,7 @@ const AdminDashboard = () => {
 
                 {/* Correct Answer */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Correct Answer (Must match correct Option string exactly)</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400">Correct Answer (Must match correct Option string exactly)</label>
                   <input 
                     type="text"
                     required
@@ -2152,7 +2152,7 @@ const AdminDashboard = () => {
                 
                 {/* Course ID */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Course Identifier (ID)</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400">Course Identifier (ID)</label>
                   <input 
                     type="text"
                     required
@@ -2161,12 +2161,12 @@ const AdminDashboard = () => {
                     onChange={(e) => setNewCourseId(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-cyan-500 transition font-bold"
                   />
-                  <p className="text-[9px] text-slate-500 leading-normal">This should be unique, alphanumeric and without spaces (e.g. `IoT`, `WebDesign`).</p>
+                  <p className="text-[11px] text-slate-500 leading-normal">This should be unique, alphanumeric and without spaces (e.g. `IoT`, `WebDesign`).</p>
                 </div>
 
                 {/* Course Title */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Course Title</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400">Course Title</label>
                   <input 
                     type="text"
                     required
@@ -2179,7 +2179,7 @@ const AdminDashboard = () => {
 
                 {/* Course Description */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Course Description</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400">Course Description</label>
                   <textarea 
                     required
                     placeholder="Provide a comprehensive description of the curriculum learning outcomes..."
@@ -2192,7 +2192,7 @@ const AdminDashboard = () => {
 
                 {/* Course Price */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Course Registration Price (INR)</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400">Course Registration Price (INR)</label>
                   <input 
                     type="number"
                     required
@@ -2252,7 +2252,7 @@ const AdminDashboard = () => {
                 
                 {/* Module Week Number */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Week Number</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400">Week Number</label>
                   <input 
                     type="number"
                     required
@@ -2265,7 +2265,7 @@ const AdminDashboard = () => {
 
                 {/* Module Title */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Module Title</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400">Module Title</label>
                   <input 
                     type="text"
                     required
@@ -2278,7 +2278,7 @@ const AdminDashboard = () => {
 
                 {/* Module Description */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Module Description</label>
+                  <label className="text-[11px] uppercase font-bold text-slate-400">Module Description</label>
                   <textarea 
                     required
                     placeholder="Brief description of the topics covered in this week..."

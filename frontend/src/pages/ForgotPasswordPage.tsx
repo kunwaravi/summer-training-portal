@@ -75,7 +75,7 @@ const ForgotPasswordPage = () => {
                 </p>
                 {resetUrl && (
                   <div className="mt-4 p-3 rounded-xl bg-slate-950/60 border border-emerald-500/20">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-emerald-400 mb-1">
                       Dev Mode — Reset Link
                     </p>
                     <a
@@ -84,14 +84,14 @@ const ForgotPasswordPage = () => {
                     >
                       {resetUrl}
                     </a>
-                    <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
+                    <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
                       Production sends this link by email instead.
                     </p>
                   </div>
                 )}
               </div>
               <Link to="/login" className="block pt-4">
-                <Button variant="outline" className="w-full uppercase tracking-widest text-[10px]">
+                <Button variant="outline" className="w-full uppercase tracking-widest text-[11px]">
                   Return to Login
                 </Button>
               </Link>
@@ -124,7 +124,7 @@ const ForgotPasswordPage = () => {
           <div className="mt-10 pt-8 border-t border-slate-800/50 text-center relative z-10">
             <Link
               to="/login"
-              className="text-slate-400 hover:text-white font-black uppercase tracking-widest text-[10px] transition inline-flex items-center gap-2"
+              className="text-slate-400 hover:text-white font-black uppercase tracking-widest text-[11px] transition inline-flex items-center gap-2"
             >
               <ArrowLeft size={14} /> Back to Sign In
             </Link>

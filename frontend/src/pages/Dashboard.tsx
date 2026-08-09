@@ -168,7 +168,7 @@ const Dashboard = () => {
           </p>
           {user?.badges && user.badges.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-2 items-center">
-              <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Achievements:</span>
+              <span className="text-[11px] text-slate-500 font-black uppercase tracking-wider">Achievements:</span>
               {user.badges.map((b: string) => {
                 const meta: Record<string, string> = {
                   perfect_score: '💯 Perfect Score',
@@ -176,7 +176,7 @@ const Dashboard = () => {
                   bug_hunter: '🐛 Bug Hunter'
                 };
                 return (
-                  <span key={b} className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[9px] font-black uppercase tracking-wider text-slate-300">
+                  <span key={b} className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-300">
                     {meta[b] || b}
                   </span>
                 );
@@ -205,7 +205,7 @@ const Dashboard = () => {
       <div className="flex border-b border-slate-900 gap-6 text-sm">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`pb-4 font-black uppercase tracking-widest text-[10px] sm:text-xs transition-colors relative ${
+          className={`pb-4 font-black uppercase tracking-widest text-[11px] sm:text-xs transition-colors relative ${
             activeTab === 'overview' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-350'
           }`}
         >
@@ -216,7 +216,7 @@ const Dashboard = () => {
         </button>
         <button
           onClick={() => setActiveTab('leaderboard')}
-          className={`pb-4 font-black uppercase tracking-widest text-[10px] sm:text-xs transition-colors relative ${
+          className={`pb-4 font-black uppercase tracking-widest text-[11px] sm:text-xs transition-colors relative ${
             activeTab === 'leaderboard' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-350'
           }`}
         >
@@ -227,7 +227,7 @@ const Dashboard = () => {
         </button>
         <button
           onClick={() => setActiveTab('referrals')}
-          className={`pb-4 font-black uppercase tracking-widest text-[10px] sm:text-xs transition-colors relative ${
+          className={`pb-4 font-black uppercase tracking-widest text-[11px] sm:text-xs transition-colors relative ${
             activeTab === 'referrals' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-350'
           }`}
         >
@@ -253,7 +253,7 @@ const Dashboard = () => {
               <stat.icon size={24} />
             </div>
             <div>
-              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
+              <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest">{stat.label}</p>
               <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
             </div>
           </div>
@@ -264,19 +264,19 @@ const Dashboard = () => {
       {daily && (
         <div className="p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/25 rounded-2xl">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-amber-400 text-[10px] font-black uppercase tracking-widest">
+            <div className="flex items-center gap-2 text-amber-400 text-[11px] font-black uppercase tracking-widest">
               <span className="text-base">🔥</span> Daily Coding Challenge
               <span className="px-2 py-0.5 bg-amber-500/15 border border-amber-500/30 rounded-md text-amber-300">
                 Streak {daily.streak} day{daily.streak !== 1 ? 's' : ''}
               </span>
             </div>
-            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+            <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">
               {daily.bonusOnNextMilestone === 0 ? 'Milestone ready!' : `${daily.bonusOnNextMilestone} days to bonus XP`}
             </span>
           </div>
 
           <p className="text-sm text-slate-300 font-medium mb-1">{daily.question.text}</p>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-3">
+          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-3">
             {daily.question.topic} · {daily.question.difficulty}
           </p>
 
@@ -320,7 +320,7 @@ const Dashboard = () => {
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
           
           <div className="space-y-6">
-            <div className="flex items-center gap-2 text-blue-400 text-[10px] font-black uppercase tracking-widest">
+            <div className="flex items-center gap-2 text-blue-400 text-[11px] font-black uppercase tracking-widest">
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -335,7 +335,7 @@ const Dashboard = () => {
                   You are currently on Chapter {latestActiveCourse.weekCompleted + 1}. Resume your studies and clear the chapter assessment to proceed!
                 </p>
                 <div className="space-y-3 pt-2">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  <div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest text-slate-500">
                     <span>Course Progress</span>
                     <span className="text-blue-400 font-mono">{latestActiveCourse.progress}%</span>
                   </div>
@@ -372,7 +372,7 @@ const Dashboard = () => {
         <div className="p-6 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-3xl space-y-4 shadow-sm">
           <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
             <Zap size={16} className="text-amber-400" />
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-300">Industrial Skill Matrix</h3>
+            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-300">Industrial Skill Matrix</h3>
           </div>
           
           <SkillRadar skills={skills} />
@@ -460,7 +460,7 @@ const Dashboard = () => {
           <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
             <div className="max-w-2xl space-y-3">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-wider text-emerald-400">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-black uppercase tracking-wider text-emerald-400">
                 Referral Program
               </span>
               <h3 className="text-2xl font-black text-white uppercase italic">Invite Friends, Learn For Free</h3>
@@ -473,7 +473,7 @@ const Dashboard = () => {
           {/* Referral Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Your Referral Code</span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Your Referral Code</span>
               <div className="flex items-center justify-between gap-3 bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-850">
                 <span className="font-mono text-xs font-bold text-white">{user?.referralCode || 'Generating...'}</span>
                 <button
@@ -483,7 +483,7 @@ const Dashboard = () => {
                       alert('Referral Code copied to clipboard!');
                     }
                   }}
-                  className="text-[10px] text-blue-400 hover:text-blue-300 font-extrabold uppercase transition"
+                  className="text-[11px] text-blue-400 hover:text-blue-300 font-extrabold uppercase transition"
                 >
                   Copy
                 </button>
@@ -491,7 +491,7 @@ const Dashboard = () => {
             </div>
 
             <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Your Invite Link</span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Your Invite Link</span>
               <div className="flex items-center justify-between gap-3 bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-850">
                 <span className="font-mono text-xs font-bold text-white truncate max-w-[150px]">
                   {window.location.origin}/register?ref={user?.referralCode}
@@ -503,7 +503,7 @@ const Dashboard = () => {
                       alert('Invite Link copied to clipboard!');
                     }
                   }}
-                  className="text-[10px] text-blue-400 hover:text-blue-300 font-extrabold uppercase transition"
+                  className="text-[11px] text-blue-400 hover:text-blue-300 font-extrabold uppercase transition"
                 >
                   Copy Link
                 </button>
@@ -513,17 +513,17 @@ const Dashboard = () => {
             <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex flex-wrap items-center gap-6 w-full md:w-auto text-left">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">Referred Registrations</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 block">Referred Registrations</span>
                   <h3 className="text-2xl font-black text-emerald-400 mt-1">{user?.referralCount || 0} <span className="text-xs text-slate-500 font-normal">/ 15</span></h3>
                 </div>
                 <div className="border-l border-slate-800 h-10 hidden md:block"></div>
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">Referred Payments</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 block">Referred Payments</span>
                   <h3 className="text-2xl font-black text-cyan-400 mt-1">{user?.referralPaidCount || 0} <span className="text-xs text-slate-500 font-normal">/ 5</span></h3>
                 </div>
               </div>
               <div className="text-right w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 border-slate-850">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">Referral Status</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 block">Referral Status</span>
                 <h3 className={`text-lg font-black mt-1 ${user?.referralSuccess ? 'text-green-400' : 'text-amber-400'}`}>
                   {user?.referralSuccess ? "SUCCESSFUL (100% OFF)" : "IN PROGRESS (0% OFF)"}
                 </h3>
@@ -558,16 +558,16 @@ const Dashboard = () => {
                   <div key={idx} className="p-4 bg-slate-950/40 border border-slate-850 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${isCompleted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-500'}`}>
+                        <span className={`px-2 py-0.5 rounded text-[11px] font-black uppercase ${isCompleted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-500'}`}>
                           {isCompleted ? "✓ Completed" : `Needs ${tier.target - tier.current} more`}
                         </span>
                         <h5 className="text-xs font-bold text-white">{tier.label}</h5>
                       </div>
-                      <p className="text-[10px] text-slate-500">{tier.desc}</p>
+                      <p className="text-[11px] text-slate-500">{tier.desc}</p>
                     </div>
 
                     <div className="w-full md:w-1/3 space-y-1 shrink-0">
-                      <div className="flex justify-between items-center text-[8px] font-black uppercase text-slate-500">
+                      <div className="flex justify-between items-center text-[11px] font-black uppercase text-slate-500">
                         <span>Target: {tier.target} Users</span>
                         <span className="font-mono">{tier.current} / {tier.target}</span>
                       </div>

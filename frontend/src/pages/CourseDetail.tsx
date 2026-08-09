@@ -385,7 +385,7 @@ const CourseDetail = () => {
             <rect x="10" y="65" width="80" height="30" rx="6" fill="#1e293b" stroke={accentColor} strokeWidth="1.5" />
             <text x="50" y="83" textAnchor="middle" className={textTheme}>Compiler</text>
             <path d="M 90 80 L 140 80" stroke={strokeColor} strokeWidth="1.5" />
-            <text x="115" y="73" textAnchor="middle" className="fill-cyan-400 text-[9px] font-extrabold">Assembly</text>
+            <text x="115" y="73" textAnchor="middle" className="fill-cyan-400 text-[11px] font-extrabold">Assembly</text>
             <rect x="140" y="65" width="80" height="30" rx="6" fill="#1e293b" stroke={accentColor} strokeWidth="1.5" />
             <text x="180" y="83" textAnchor="middle" className={textTheme}>Linker</text>
             <path d="M 180 95 L 180 120" stroke={strokeColor} strokeWidth="1.5" />
@@ -405,13 +405,13 @@ const CourseDetail = () => {
             <polygon points="160,20 240,60 160,100 80,60" fill="#1e293b" stroke={accentColor} strokeWidth="1.5" />
             <text x="160" y="64" textAnchor="middle" className={textTheme}>if (Score &gt;= 60)</text>
             <path d="M 240 60 L 270 60 L 270 120" stroke="#10b981" strokeWidth="1.5" />
-            <text x="285" y="85" textAnchor="middle" className="fill-emerald-400 text-[10px] font-black">TRUE</text>
+            <text x="285" y="85" textAnchor="middle" className="fill-emerald-400 text-[11px] font-black">TRUE</text>
             <rect x="230" y="120" width="80" height="30" rx="6" fill="#065f46" stroke="#10b981" strokeWidth="1" />
-            <text x="270" y="138" textAnchor="middle" className="fill-white text-[9px] font-black">PASS EXAM</text>
+            <text x="270" y="138" textAnchor="middle" className="fill-white text-[11px] font-black">PASS EXAM</text>
             <path d="M 80 60 L 50 60 L 50 120" stroke="#ef4444" strokeWidth="1.5" />
-            <text x="35" y="85" textAnchor="middle" className="fill-red-400 text-[10px] font-black">FALSE</text>
+            <text x="35" y="85" textAnchor="middle" className="fill-red-400 text-[11px] font-black">FALSE</text>
             <rect x="10" y="120" width="80" height="30" rx="6" fill="#991b1b" stroke="#ef4444" strokeWidth="1" />
-            <text x="50" y="138" textAnchor="middle" className="fill-white text-[9px] font-black">FAIL RETRY</text>
+            <text x="50" y="138" textAnchor="middle" className="fill-white text-[11px] font-black">FAIL RETRY</text>
           </svg>
         );
       }
@@ -421,16 +421,16 @@ const CourseDetail = () => {
             <g transform="translate(10, 50)">
               <rect x="0" y="20" width="50" height="40" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
               <text x="25" y="45" textAnchor="middle" className="fill-white font-mono text-sm font-bold">10</text>
-              <text x="25" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[9px]">Idx 0</text>
+              <text x="25" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[11px]">Idx 0</text>
               <rect x="50" y="20" width="50" height="40" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
               <text x="75" y="45" textAnchor="middle" className="fill-white font-mono text-sm font-bold">20</text>
-              <text x="75" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[9px]">Idx 1</text>
+              <text x="75" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[11px]">Idx 1</text>
               <rect x="100" y="20" width="50" height="40" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
               <text x="125" y="45" textAnchor="middle" className="fill-white font-mono text-sm font-bold">30</text>
-              <text x="125" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[9px]">Idx 2</text>
+              <text x="125" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[11px]">Idx 2</text>
               <rect x="150" y="20" width="50" height="40" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
               <text x="175" y="45" textAnchor="middle" className="fill-white font-mono text-sm font-bold">40</text>
-              <text x="175" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[9px]">Idx 3</text>
+              <text x="175" y="80" textAnchor="middle" className="fill-slate-500 font-mono text-[11px]">Idx 3</text>
             </g>
             <text x="110" y="30" textAnchor="middle" className="fill-cyan-400 text-xs font-black">Contiguous Array Layout</text>
           </svg>
@@ -441,12 +441,12 @@ const CourseDetail = () => {
           <svg viewBox="0 0 320 200" className="w-full h-auto max-h-[160px]">
             <rect x="20" y="50" width="80" height="40" rx="6" fill="#1e293b" stroke={strokeColor} strokeWidth="1.5" />
             <text x="60" y="70" textAnchor="middle" className="fill-cyan-400 font-mono text-xs font-extrabold">int *ptr</text>
-            <text x="60" y="82" textAnchor="middle" className="fill-slate-500 font-mono text-[8px]">Holds: 0x7FFA</text>
+            <text x="60" y="82" textAnchor="middle" className="fill-slate-500 font-mono text-[11px]">Holds: 0x7FFA</text>
             <path d="M 100 70 L 180 70" stroke="#f59e0b" strokeWidth="2" strokeDasharray="3 3" markerEnd="url(#goldArrow)" />
-            <text x="140" y="60" textAnchor="middle" className="fill-amber-400 text-[8px] font-bold">Points To</text>
+            <text x="140" y="60" textAnchor="middle" className="fill-amber-400 text-[11px] font-bold">Points To</text>
             <rect x="190" y="50" width="100" height="45" rx="6" fill="#0f172a" stroke="#10b981" strokeWidth="2" />
             <text x="240" y="72" textAnchor="middle" className="fill-emerald-400 font-mono text-sm font-black">100</text>
-            <text x="240" y="86" textAnchor="middle" className="fill-slate-400 font-mono text-[8px]">Address: 0x7FFA</text>
+            <text x="240" y="86" textAnchor="middle" className="fill-slate-400 font-mono text-[11px]">Address: 0x7FFA</text>
             <defs>
               <marker id="goldArrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
@@ -460,13 +460,13 @@ const CourseDetail = () => {
     return (
       <svg viewBox="0 0 320 200" className="w-full h-auto max-h-[160px]">
         <circle cx="60" cy="100" r="30" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
-        <text x="60" y="104" textAnchor="middle" className="fill-white text-[9px] font-black">{courseKey} Micro</text>
+        <text x="60" y="104" textAnchor="middle" className="fill-white text-[11px] font-black">{courseKey} Micro</text>
         <path d="M 90 100 L 150 100" stroke={strokeColor} strokeWidth="2" />
         <rect x="150" y="75" width="80" height="50" rx="8" fill="#1e293b" stroke={accentColor} strokeWidth="2" />
-        <text x="190" y="104" textAnchor="middle" className="fill-cyan-400 text-[10px] font-bold">Registers</text>
+        <text x="190" y="104" textAnchor="middle" className="fill-cyan-400 text-[11px] font-bold">Registers</text>
         <path d="M 230 100 L 280 100" stroke={strokeColor} strokeWidth="2" />
         <circle cx="290" cy="100" r="10" fill="#10b981" />
-        <text x="190" y="50" textAnchor="middle" className="fill-amber-400 text-[9px] font-black">Chapter {weekNum} Concept</text>
+        <text x="190" y="50" textAnchor="middle" className="fill-amber-400 text-[11px] font-black">Chapter {weekNum} Concept</text>
       </svg>
     );
   };
@@ -526,7 +526,7 @@ const CourseDetail = () => {
           {viewState === 'course-home' ? (
             <div className="space-y-6 text-left animate-fade-in">
               <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded">
+                <span className="text-[11px] font-black uppercase tracking-wider text-blue-400 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded">
                   Course Overview
                 </span>
                 <h2 className="text-2xl font-black text-white">{courseTitle}</h2>
@@ -538,15 +538,15 @@ const CourseDetail = () => {
               {/* Course Meta Info Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-xl">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Duration</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Duration</span>
                   <p className="text-xs font-bold text-slate-200 mt-0.5">4-Week Immersion</p>
                 </div>
                 <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-xl">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Chapters</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Chapters</span>
                   <p className="text-xs font-bold text-slate-200 mt-0.5">{weeks.length} Interactive Modules</p>
                 </div>
                 <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-xl col-span-2 sm:col-span-1">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Prerequisites</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Prerequisites</span>
                   <p className="text-xs font-bold text-slate-200 mt-0.5">Basic Logic Foundations</p>
                 </div>
               </div>
@@ -574,7 +574,7 @@ const CourseDetail = () => {
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black uppercase ${
+                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black uppercase ${
                             isCompleted 
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                               : isUnlocked 
@@ -585,11 +585,11 @@ const CourseDetail = () => {
                           </span>
                           <div>
                             <h4 className="text-xs font-bold text-slate-200 group-hover:text-white transition">{week.title}</h4>
-                            <p className="text-[9px] text-slate-550">Chapter {week.week} Curriculum module.</p>
+                            <p className="text-[11px] text-slate-550">Chapter {week.week} Curriculum module.</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                          <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
                             {isCompleted ? 'Completed' : isUnlocked ? 'Start Chapter' : 'Locked'}
                           </span>
                           <ChevronRight size={12} className="text-slate-600 group-hover:text-white transition" />
@@ -675,7 +675,7 @@ const CourseDetail = () => {
                                 <span className="inline-block text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
                                   Chapter {selectedWeek?.week} Module Outline
                                 </span>
-                                <span className="text-[9px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2.5 py-0.5 rounded uppercase tracking-wider">
+                                <span className="text-[11px] font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2.5 py-0.5 rounded uppercase tracking-wider">
                                   ⏱ {readingTime} Min Read
                                 </span>
                               </div>
@@ -712,7 +712,7 @@ const CourseDetail = () => {
                                   >
                                     <div className="space-y-1.5">
                                       <div className="flex justify-between items-center">
-                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+                                        <span className={`text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
                                           isLocked 
                                             ? 'text-slate-500 bg-slate-900 border border-slate-800' 
                                             : isPassed 
@@ -731,12 +731,12 @@ const CourseDetail = () => {
                                           : 'text-white group-hover:text-cyan-400'
                                       }`}>{topic.title}</h4>
                                       
-                                      <p className="text-[10px] text-slate-500 line-clamp-2">
+                                      <p className="text-[11px] text-slate-500 line-clamp-2">
                                         {topic.text ? topic.text.replace(/[#*`_]/g, '').slice(0, 100) : 'Learn about this core concepts in detail.'}
                                       </p>
                                     </div>
                                     
-                                    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
+                                    <div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest">
                                       {isLocked ? (
                                         <span className="text-slate-650 flex items-center gap-1">
                                           Locked <Lock size={8} />
@@ -773,7 +773,7 @@ const CourseDetail = () => {
                                     href="https://wokwi.com/projects/arduino-esp32-blink" 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[11px] transition-colors"
                                   >
                                     <ExternalLink size={12} /> Launch Wokwi ESP32 board Setup
                                   </a>
@@ -783,7 +783,7 @@ const CourseDetail = () => {
                                     href="https://www.tinkercad.com/circuits" 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[11px] transition-colors"
                                   >
                                     <ExternalLink size={12} /> Launch Tinkercad Circuits Online
                                   </a>
@@ -793,7 +793,7 @@ const CourseDetail = () => {
                                     href="https://wokwi.com/projects/new/c" 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[9px] transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded text-[11px] transition-colors"
                                   >
                                     <ExternalLink size={12} /> Launch Wokwi C sandbox
                                   </a>
@@ -813,12 +813,12 @@ const CourseDetail = () => {
                                 <p className="text-slate-200 text-xs font-extrabold">{currentAntiPattern.title}</p>
                                 <p className="text-slate-400 text-[11px] leading-relaxed">{currentAntiPattern.explanation}</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                                  <div className="p-3 bg-red-950/10 border border-red-900/30 rounded-xl font-mono text-[10px] text-red-300">
-                                    <p className="text-red-400 font-extrabold uppercase text-[8px] tracking-wider mb-1">❌ Bad Anti-Pattern Code</p>
+                                  <div className="p-3 bg-red-950/10 border border-red-900/30 rounded-xl font-mono text-[11px] text-red-300">
+                                    <p className="text-red-400 font-extrabold uppercase text-[11px] tracking-wider mb-1">❌ Bad Anti-Pattern Code</p>
                                     <pre className="overflow-x-auto whitespace-pre">{currentAntiPattern.badCode}</pre>
                                   </div>
-                                  <div className="p-3 bg-emerald-950/10 border border-emerald-900/30 rounded-xl font-mono text-[10px] text-emerald-300">
-                                    <p className="text-emerald-400 font-extrabold uppercase text-[8px] tracking-wider mb-1">✔️ Correct Fix Pattern</p>
+                                  <div className="p-3 bg-emerald-950/10 border border-emerald-900/30 rounded-xl font-mono text-[11px] text-emerald-300">
+                                    <p className="text-emerald-400 font-extrabold uppercase text-[11px] tracking-wider mb-1">✔️ Correct Fix Pattern</p>
                                     <pre className="overflow-x-auto whitespace-pre">{currentAntiPattern.fix}</pre>
                                   </div>
                                 </div>
@@ -838,7 +838,7 @@ const CourseDetail = () => {
                                 <p>Study this visual schematic representation of the concepts introduced this week.</p>
                                 <button 
                                   onClick={() => setLightboxImage(renderWeeklyDiagram(id as string, selectedWeek?.week))}
-                                  className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-white font-extrabold uppercase rounded text-[9px] border border-slate-700/60 transition cursor-pointer"
+                                  className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-white font-extrabold uppercase rounded text-[11px] border border-slate-700/60 transition cursor-pointer"
                                 >
                                   <Eye size={12} /> Click Diagram to Expand
                                 </button>
@@ -923,12 +923,12 @@ const CourseDetail = () => {
                               className="space-y-6 text-left"
                             >
                               <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
+                                <span className="text-[11px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded">
                                   Topic {topicIndex + 1} of {topics.length}
                                 </span>
                                 <button 
                                   onClick={() => handleAskDoubt(topic.title)}
-                                  className="px-2.5 py-1 text-[9px] font-black uppercase text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                  className="px-2.5 py-1 text-[11px] font-black uppercase text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                                 >
                                   <MessageSquare size={11} /> Ask Doubt
                                 </button>
@@ -951,7 +951,7 @@ const CourseDetail = () => {
                                         <div className="space-y-4">
                                           {/* Code Steps Tabs */}
                                           <div className="flex flex-wrap gap-2 border-b border-slate-850 pb-2">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest self-center mr-2">Code-Along Steps:</span>
+                                            <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest self-center mr-2">Code-Along Steps:</span>
                                             {steps.map((step, sIdx) => {
                                               const isSelected = activeCodeStep === `${topicIndex}-${sIdx}` || (!activeCodeStep && sIdx === 0);
                                               return (
@@ -960,7 +960,7 @@ const CourseDetail = () => {
                                                   onClick={() => {
                                                     setActiveCodeStep(`${topicIndex}-${sIdx}`);
                                                   }}
-                                                  className={`px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border transition-all cursor-pointer ${
+                                                  className={`px-2.5 py-1 text-[11px] font-black uppercase rounded-lg border transition-all cursor-pointer ${
                                                     isSelected
                                                       ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
                                                       : 'bg-slate-900 border-slate-800 text-slate-450 hover:text-slate-200'
@@ -986,13 +986,13 @@ const CourseDetail = () => {
                                                   <div className="absolute right-0 top-0 flex gap-2">
                                                     <button
                                                       onClick={() => setActivePlayground(topicIndex)}
-                                                      className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                                                      className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
                                                     >
                                                       <Code2 size={12} /> Sandbox Tryout
                                                     </button>
                                                     <button
                                                       onClick={() => handleCopyCode(topic.code, topicIndex)}
-                                                      className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-455 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                                                      className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-455 hover:text-white transition-all text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
                                                     >
                                                       <Clipboard size={12} />
                                                       {copiedText === `${topicIndex}` ? 'Copied!' : 'Copy'}
@@ -1010,7 +1010,7 @@ const CourseDetail = () => {
 
                                                 {/* Step specific Explanation / Why annotation */}
                                                 <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl text-slate-300 text-[11px] leading-relaxed">
-                                                  <strong className="text-blue-300 uppercase tracking-widest text-[9px] block mb-1">🔍 Why this step?</strong>
+                                                  <strong className="text-blue-300 uppercase tracking-widest text-[11px] block mb-1">🔍 Why this step?</strong>
                                                   {step.explanation}
                                                 </div>
                                               </div>
@@ -1089,7 +1089,7 @@ const CourseDetail = () => {
                                       setViewState('module-home');
                                     }
                                   }}
-                                  className="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition cursor-pointer"
+                                  className="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-extrabold uppercase rounded-lg text-[11px] tracking-wider transition cursor-pointer"
                                 >
                                   ← {hasPrev ? 'Prev Topic' : 'Back to Outline'}
                                 </button>
@@ -1118,7 +1118,7 @@ const CourseDetail = () => {
                                       }, 100);
                                     }
                                   }}
-                                  className={`px-5 py-2 font-extrabold uppercase rounded-lg text-[10px] tracking-widest transition cursor-pointer shadow-lg ${
+                                  className={`px-5 py-2 font-extrabold uppercase rounded-lg text-[11px] tracking-widest transition cursor-pointer shadow-lg ${
                                     (id?.startsWith('CADDED_') || topic.quizPassed)
                                       ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-600/10'
                                       : 'bg-slate-850 text-slate-550 border border-slate-800 cursor-not-allowed opacity-60'
@@ -1160,7 +1160,7 @@ const CourseDetail = () => {
                     </div>
                     {projectStatus?.status === 'APPROVED' && (
                       <button onClick={openProjectPeerSolutions}
-                        className="mt-4 flex items-center gap-1.5 px-4 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 hover:border-purple-500/60 text-purple-300 font-extrabold text-[10px] uppercase tracking-widest rounded-lg transition-colors cursor-pointer">
+                        className="mt-4 flex items-center gap-1.5 px-4 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 hover:border-purple-500/60 text-purple-300 font-extrabold text-[11px] uppercase tracking-widest rounded-lg transition-colors cursor-pointer">
                         <Users size={13} /> View Peer Project Solutions
                       </button>
                     )}
@@ -1183,23 +1183,23 @@ const CourseDetail = () => {
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-black text-purple-400 uppercase tracking-wide">Week {weekNum} Deliverable</span>
                                 {submission ? (
-                                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${submission.status === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'}`}>{submission.status}</span>
+                                  <span className={`text-[11px] font-black uppercase px-2 py-0.5 rounded border ${submission.status === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'}`}>{submission.status}</span>
                                 ) : isUnlocked ? (
-                                  <span className="text-[8px] font-black uppercase bg-blue-500/10 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded">Eligible</span>
+                                  <span className="text-[11px] font-black uppercase bg-blue-500/10 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded">Eligible</span>
                                 ) : (
-                                  <span className="text-[8px] font-black uppercase bg-slate-800 border border-slate-700 text-slate-500 px-2 py-0.5 rounded">Locked</span>
+                                  <span className="text-[11px] font-black uppercase bg-slate-800 border border-slate-700 text-slate-500 px-2 py-0.5 rounded">Locked</span>
                                 )}
                               </div>
                               <p className="text-xs font-bold text-white">Week {weekNum} Practical Task Submission</p>
-                              {submission?.feedback && <div className="p-2.5 bg-slate-950/60 border border-slate-850 rounded-xl text-[10px] text-slate-400 mt-2">{submission.feedback}</div>}
+                              {submission?.feedback && <div className="p-2.5 bg-slate-950/60 border border-slate-850 rounded-xl text-[11px] text-slate-400 mt-2">{submission.feedback}</div>}
                             </div>
                             <div className="shrink-0 flex items-center">
                               {submission ? (
-                                <div className="text-[10px] text-slate-500 font-mono flex flex-col items-end gap-2">
+                                <div className="text-[11px] text-slate-500 font-mono flex flex-col items-end gap-2">
                                   <span>Submitted: {new Date(submission.submittedAt).toLocaleDateString()}</span>
                                   {submission.status === 'APPROVED' && (
                                     <button onClick={() => openPeerSolutions(weekNum)}
-                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 hover:border-purple-500/60 text-purple-300 font-extrabold text-[9px] uppercase tracking-widest rounded-lg transition-colors cursor-pointer">
+                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 hover:border-purple-500/60 text-purple-300 font-extrabold text-[11px] uppercase tracking-widest rounded-lg transition-colors cursor-pointer">
                                       <Users size={11} /> View Peer Solutions
                                     </button>
                                   )}
@@ -1209,13 +1209,13 @@ const CourseDetail = () => {
                                   <div className="flex flex-col gap-2 w-full md:w-56 text-left">
                                     <input type="text" placeholder="Enter file name (e.g. main.c)" value={submittingFileName} onChange={(e) => setSubmittingFileName(e.target.value)} className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500" />
                                     <div className="flex gap-2">
-                                      <button disabled={isSubmitting} onClick={() => handleUploadAssignment(weekNum)} className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-extrabold uppercase rounded text-[9px] tracking-wider transition-colors">Confirm</button>
+                                      <button disabled={isSubmitting} onClick={() => handleUploadAssignment(weekNum)} className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-extrabold uppercase rounded text-[11px] tracking-wider transition-colors">Confirm</button>
                                     </div>
                                   </div>
                                 ) : (
-                                  <button onClick={() => { setSubmittingWeek(weekNum); setSubmittingFileName(''); }} className="w-full md:w-36 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 hover:border-purple-500/50 text-purple-400 font-extrabold text-[9px] uppercase tracking-widest rounded-lg">Upload</button>
+                                  <button onClick={() => { setSubmittingWeek(weekNum); setSubmittingFileName(''); }} className="w-full md:w-36 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 hover:border-purple-500/50 text-purple-400 font-extrabold text-[11px] uppercase tracking-widest rounded-lg">Upload</button>
                                 )
-                              ) : <div className="text-[10px] text-slate-500 font-semibold uppercase"><Lock size={12} /> Locked</div>}
+                              ) : <div className="text-[11px] text-slate-500 font-semibold uppercase"><Lock size={12} /> Locked</div>}
                             </div>
                           </div>
                         );
@@ -1272,7 +1272,7 @@ const CourseDetail = () => {
               <div className="flex justify-between items-center pb-4 border-b border-slate-900">
                 <div>
                   <h3 className="text-base font-black text-white uppercase tracking-wider">Ask a Doubt</h3>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase truncate max-w-[280px]">
+                  <p className="text-[11px] text-slate-500 font-bold uppercase truncate max-w-[280px]">
                     Topic: {doubtTopicTitle}
                   </p>
                 </div>
@@ -1288,7 +1288,7 @@ const CourseDetail = () => {
               <div className="flex-1 overflow-y-auto py-4 space-y-6 pr-1">
                 {/* 1. Community Discussion Forum */}
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-900/60 pb-1 flex items-center gap-1.5">
+                  <h4 className="text-[11px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-900/60 pb-1 flex items-center gap-1.5">
                     <MessageSquare size={12} className="text-blue-400" />
                     Community Doubts for this Track
                   </h4>
@@ -1313,17 +1313,17 @@ const CourseDetail = () => {
                           >
                             <div className="flex justify-between items-start gap-2">
                               <div>
-                                <span className="text-[9px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider block mb-1 w-max">
+                                <span className="text-[11px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider block mb-1 w-max">
                                   {doubt.user?.name ? doubt.user.name.split(' ')[0] : 'Student'}
                                 </span>
                                 <p className="text-xs font-extrabold text-white leading-relaxed">{doubt.content}</p>
-                                <span className="text-[8px] text-slate-600 font-mono block mt-1">
+                                <span className="text-[11px] text-slate-600 font-mono block mt-1">
                                   {new Date(doubt.createdAt).toLocaleString()}
                                 </span>
                               </div>
                               <button
                                 onClick={() => setExpandedDoubtId(isExpanded ? null : doubt.id)}
-                                className="text-[9px] font-black text-slate-450 hover:text-white uppercase tracking-wider border border-slate-900 px-2 py-0.5 rounded bg-slate-900/40 cursor-pointer"
+                                className="text-[11px] font-black text-slate-450 hover:text-white uppercase tracking-wider border border-slate-900 px-2 py-0.5 rounded bg-slate-900/40 cursor-pointer"
                               >
                                 {isExpanded ? 'Collapse' : `Replies (${doubt.comments?.length || 0})`}
                               </button>
@@ -1340,7 +1340,7 @@ const CourseDetail = () => {
                                 >
                                   <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
                                     {(doubt.comments || []).length === 0 ? (
-                                      <p className="text-[10px] text-slate-500 italic">No replies yet.</p>
+                                      <p className="text-[11px] text-slate-500 italic">No replies yet.</p>
                                     ) : (
                                       doubt.comments.map((comment: any) => (
                                         <div key={comment.id} className="p-2 bg-slate-950 rounded-lg border border-slate-900/60 text-left">
@@ -1348,7 +1348,7 @@ const CourseDetail = () => {
                                             <span className={`text-[8.5px] font-black uppercase tracking-wider ${comment.user?.role === 'ADMIN' ? 'text-amber-400 bg-amber-500/10' : 'text-slate-400 bg-slate-900'} px-1.5 py-0.5 rounded`}>
                                               {comment.user?.name || 'User'} {comment.user?.role === 'ADMIN' && '★ Staff'}
                                             </span>
-                                            <span className="text-[8px] text-slate-650 font-mono">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                                            <span className="text-[11px] text-slate-650 font-mono">{new Date(comment.createdAt).toLocaleDateString()}</span>
                                           </div>
                                           <p className="text-[10.5px] text-slate-350 leading-relaxed font-medium">{comment.content}</p>
                                         </div>
@@ -1370,7 +1370,7 @@ const CourseDetail = () => {
                                     />
                                     <button
                                       onClick={() => handlePostComment(doubt.id)}
-                                      className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded-lg text-[9px] tracking-wider transition cursor-pointer"
+                                      className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold uppercase rounded-lg text-[11px] tracking-wider transition cursor-pointer"
                                     >
                                       Reply
                                     </button>
@@ -1387,7 +1387,7 @@ const CourseDetail = () => {
 
                 {/* 2. Direct Instant Support Options */}
                 <div className="p-4 bg-slate-900/20 border border-slate-900 rounded-xl space-y-3">
-                  <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-1.5">
+                  <h4 className="text-[11px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-1.5">
                     <Zap size={12} className="text-amber-400" />
                     Instant Staff Support
                   </h4>
@@ -1399,7 +1399,7 @@ const CourseDetail = () => {
                       href={`https://chat.whatsapp.com/Ba4J77LOmzVBrlHjQtm6Ar?text=${encodeURIComponent(`Doubt in Course: ${courseTitle}, Topic: ${doubtTopicTitle}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-450 hover:text-emerald-300 font-extrabold text-[9px] uppercase tracking-wider transition"
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-450 hover:text-emerald-300 font-extrabold text-[11px] uppercase tracking-wider transition"
                     >
                       WhatsApp Help
                     </a>
@@ -1407,7 +1407,7 @@ const CourseDetail = () => {
                       href={`https://t.me/+tCapxtLwxNNlZjY1?text=${encodeURIComponent(`Doubt in Course: ${courseTitle}, Topic: ${doubtTopicTitle}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-450 hover:text-blue-300 font-extrabold text-[9px] uppercase tracking-wider transition"
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-450 hover:text-blue-300 font-extrabold text-[11px] uppercase tracking-wider transition"
                     >
                       Telegram Help
                     </a>
@@ -1427,7 +1427,7 @@ const CourseDetail = () => {
                 <button
                   type="submit"
                   disabled={!newDoubtText.trim()}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-extrabold uppercase rounded-xl text-[10px] tracking-wider transition cursor-pointer"
+                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-extrabold uppercase rounded-xl text-[11px] tracking-wider transition cursor-pointer"
                 >
                   Post Doubt to Forum
                 </button>
@@ -1461,7 +1461,7 @@ const CourseDetail = () => {
                 Close ✕
               </button>
               <div className="w-full flex justify-center">{lightboxImage}</div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-4">
+              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-4">
                 Interactive Technical Blueprint - Concept Visualized
               </p>
             </motion.div>

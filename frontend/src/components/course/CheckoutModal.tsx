@@ -78,7 +78,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <span className="text-slate-400 font-bold uppercase">Accreditation Fee</span>
                 <div className="flex flex-col items-end">
                   {discount > 0 && (
-                    <span className="text-slate-500 line-through text-[10px]">₹699.00</span>
+                    <span className="text-slate-500 line-through text-[11px]">₹699.00</span>
                   )}
                   <span className="text-cyan-400 font-black text-sm">₹{currentPrice.toFixed(2)}</span>
                 </div>
@@ -86,7 +86,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               {/* Coupon Code Section */}
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] uppercase font-bold text-slate-400">Discount Coupon</label>
+                <label className="text-[11px] uppercase font-bold text-slate-400">Discount Coupon</label>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
@@ -99,13 +99,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <button
                     type="button"
                     onClick={onApplyCoupon}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-[10px] font-bold uppercase rounded-xl border border-slate-700 transition"
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-[11px] font-bold uppercase rounded-xl border border-slate-700 transition"
                   >
                     Apply
                   </button>
                 </div>
-                {couponError && <p className="text-[9px] text-red-500 font-bold ml-1">{couponError}</p>}
-                {isCouponApplied && <p className="text-[9px] text-green-500 font-bold ml-1">Coupon Applied: {Math.round(discount * 100)}% OFF!</p>}
+                {couponError && <p className="text-[11px] text-red-500 font-bold ml-1">{couponError}</p>}
+                {isCouponApplied && <p className="text-[11px] text-green-500 font-bold ml-1">Coupon Applied: {Math.round(discount * 100)}% OFF!</p>}
               </div>
 
               {currentPrice > 0 ? (
@@ -117,18 +117,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       level="H"
                       includeMargin={true}
                     />
-                    <p className="text-slate-900 text-[10px] font-black uppercase tracking-tighter mt-2">Scan to pay ₹{currentPrice} with UPI</p>
+                    <p className="text-slate-900 text-[11px] font-black uppercase tracking-tighter mt-2">Scan to pay ₹{currentPrice} with UPI</p>
                   </div>
 
                   <div className="space-y-1 text-left">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Payee Name</label>
+                    <label className="text-[11px] uppercase font-bold text-slate-400">Payee Name</label>
                     <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-bold">
                       Anjali Singh
                     </div>
                   </div>
 
                   <div className="space-y-1 text-left">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">UPI ID</label>
+                    <label className="text-[11px] uppercase font-bold text-slate-400">UPI ID</label>
                     <div className="relative">
                       <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono">
                         edunexuss@ptyes
@@ -145,7 +145,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                   {/* UTR Input Field */}
                   <div className="space-y-1 text-left">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">12-Digit UTR / Transaction Reference Number</label>
+                    <label className="text-[11px] uppercase font-bold text-slate-400">12-Digit UTR / Transaction Reference Number</label>
                     <input
                       type="text"
                       required
@@ -156,7 +156,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       onChange={(e) => onChangeUpiUtr(e.target.value.replace(/\D/g, ''))}
                       className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-cyan-500 transition font-mono"
                     />
-                    <p className="text-[9px] text-slate-500">Please enter the 12-digit number from your UPI payment receipt to speed up verification.</p>
+                    <p className="text-[11px] text-slate-500">Please enter the 12-digit number from your UPI payment receipt to speed up verification.</p>
                   </div>
                 </div>
               ) : (
@@ -164,7 +164,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <Sparkles className="text-cyan-400 animate-pulse" size={32} />
                   <div className="text-center">
                     <p className="text-white font-black uppercase text-sm">Full Discount Applied!</p>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase mt-1">Your certificate is now completely free.</p>
+                    <p className="text-slate-400 text-[11px] font-bold uppercase mt-1">Your certificate is now completely free.</p>
                   </div>
                 </div>
               )}
@@ -187,7 +187,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </button>
             </form>
 
-            <div className="text-center text-[9px] text-slate-500 font-bold uppercase tracking-wider pt-2 border-t border-slate-900">
+            <div className="text-center text-[11px] text-slate-500 font-bold uppercase tracking-wider pt-2 border-t border-slate-900">
               🔒 Secured with 256-bit TLS Webhook Verification
             </div>
           </motion.div>

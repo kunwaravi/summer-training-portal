@@ -140,7 +140,7 @@ const ResetPassword = () => {
 
                 {newPassword.length > 0 && (
                   <div className="p-5 bg-slate-950/50 border border-slate-800/50 rounded-2xl space-y-3">
-                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
+                    <p className="text-[11px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
                       <Target size={12} className="text-blue-500" /> Complexity Audit
                     </p>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-2">
@@ -153,7 +153,7 @@ const ResetPassword = () => {
                       }).map(([label, met]) => (
                         <div key={label} className="flex items-center gap-2">
                           <div className={`w-1.5 h-1.5 rounded-full transition-colors ${met ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-slate-800'}`} />
-                          <span className={`text-[10px] font-bold uppercase tracking-tight ${met ? 'text-slate-300' : 'text-slate-600'}`}>{label}</span>
+                          <span className={`text-[11px] font-bold uppercase tracking-tight ${met ? 'text-slate-300' : 'text-slate-600'}`}>{label}</span>
                         </div>
                       ))}
                     </div>
@@ -176,7 +176,7 @@ const ResetPassword = () => {
           <div className="mt-10 pt-8 border-t border-slate-800/50 text-center relative z-10">
             <Link
               to="/login"
-              className="text-slate-400 hover:text-white font-black uppercase tracking-widest text-[10px] transition inline-flex items-center gap-2"
+              className="text-slate-400 hover:text-white font-black uppercase tracking-widest text-[11px] transition inline-flex items-center gap-2"
             >
               <ArrowLeft size={14} /> Cancel & Return
             </Link>

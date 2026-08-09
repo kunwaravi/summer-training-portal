@@ -15,7 +15,7 @@ const Terms = () => {
           >
             <ArrowLeft size={16} /> Back to Home
           </Link>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/30 border border-emerald-900/40 px-2.5 py-0.5 rounded-full">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/30 border border-emerald-900/40 px-2.5 py-0.5 rounded-full">
             Terms of Service
           </span>
         </div>

@@ -133,20 +133,20 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
           <div className="relative group/cert select-none">
             <div className="absolute -inset-1.5 bg-gradient-to-r from-yellow-500/30 to-amber-500/30 rounded-xl blur-lg opacity-60 group-hover/cert:opacity-90 transition duration-500"></div>
             <div className="relative border-4 border-yellow-500/40 p-4 rounded-xl bg-slate-900 aspect-[1.41/1] overflow-hidden flex flex-col justify-between items-center text-center filter blur-[4px] contrast-75 brightness-75 select-none pointer-events-none">
-              <div className="text-[7px] tracking-widest text-slate-500 font-extrabold uppercase">Nexus Academic Credentials</div>
+              <div className="text-[11px] tracking-widest text-slate-500 font-extrabold uppercase">Nexus Academic Credentials</div>
               <div className="my-auto space-y-1">
                 <h3 className="text-yellow-500/60 font-serif font-black text-sm uppercase tracking-wide">Certificate of Accomplishment</h3>
-                <p className="text-[8px] text-slate-400">Awarded to the candidate</p>
+                <p className="text-[11px] text-slate-400">Awarded to the candidate</p>
                 <p className="text-xs font-bold text-white tracking-tight underline underline-offset-4">{user?.name || "STUDENT NAME"}</p>
-                <p className="text-[6px] text-slate-500 max-w-[200px] leading-tight mx-auto">for completing the intensive training curriculum in C & Embedded Systems Hardware tracks.</p>
+                <p className="text-[11px] text-slate-500 max-w-[200px] leading-tight mx-auto">for completing the intensive training curriculum in C & Embedded Systems Hardware tracks.</p>
               </div>
-              <div className="w-full flex justify-between items-center text-[5px] text-slate-650 px-2 font-mono">
+              <div className="w-full flex justify-between items-center text-[11px] text-slate-650 px-2 font-mono">
                 <div>DATE: 2026-05-29</div>
                 <div>GRADE: A+</div>
               </div>
             </div>
             <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-              <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 rounded text-[9px] font-black tracking-widest uppercase rotate-[-12deg] shadow-lg shadow-black/80">
+              <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 rounded text-[11px] font-black tracking-widest uppercase rotate-[-12deg] shadow-lg shadow-black/80">
                 Provisional Preview - Locked 🔒
               </span>
             </div>
@@ -180,7 +180,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
               >
                 Unlock Official Credentials (₹{currentPrice})
               </button>
-              <div className="flex items-center gap-1.5 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+              <div className="flex items-center gap-1.5 text-slate-500 text-[11px] uppercase font-bold tracking-wider">
                 <ShieldAlert size={14} /> UPI Payment
               </div>
             </div>
@@ -236,7 +236,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                   </p>
                   <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
                     <AlertCircle size={16} className="text-amber-400 shrink-0" />
-                    <p className="text-amber-300 text-[10px] font-bold text-left">
+                    <p className="text-amber-300 text-[11px] font-bold text-left">
                       Please keep your UPI transaction screenshot handy. Verification usually takes less than 24 hours.
                     </p>
                   </div>
@@ -264,14 +264,14 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                       <span className="text-slate-400 font-bold uppercase">Accreditation Fee</span>
                       <div className="flex flex-col items-end">
                         {(discount > 0 || referralDiscount > 0) && (
-                          <span className="text-slate-500 line-through text-[10px]">₹{BASE_PRICE}.00</span>
+                          <span className="text-slate-500 line-through text-[11px]">₹{BASE_PRICE}.00</span>
                         )}
                         <span className="text-cyan-400 font-black text-sm">₹{currentPrice.toFixed(2)}</span>
                       </div>
                     </div>
                     {/* Coupon */}
                     <div className="space-y-1.5">
-                      <label className="text-[10px] uppercase font-bold text-slate-400">Discount Coupon</label>
+                      <label className="text-[11px] uppercase font-bold text-slate-400">Discount Coupon</label>
                       <div className="flex gap-2">
                         <input
                           type="text"
@@ -283,23 +283,23 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                         <button
                           type="button"
                           onClick={handleApplyCoupon}
-                          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-[10px] font-bold uppercase rounded-xl border border-slate-700 transition"
+                          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-[11px] font-bold uppercase rounded-xl border border-slate-700 transition"
                         >
                           Apply
                         </button>
                       </div>
-                      {couponError && <p className="text-[9px] text-red-500 font-bold ml-1">{couponError}</p>}
+                      {couponError && <p className="text-[11px] text-red-500 font-bold ml-1">{couponError}</p>}
                       {isCouponApplied && (
-                        <p className="text-[9px] text-green-500 font-bold ml-1">
+                        <p className="text-[11px] text-green-500 font-bold ml-1">
                           {['NEXUS499', 'EDU499', 'SPECIAL499'].includes(couponCode.toUpperCase().trim())
                             ? 'Coupon Applied: Course price reduced to ₹499!'
                             : `Coupon Applied: ${Math.round(discount * 100)}% OFF!`}
                         </p>
                       )}
                       {referralSuccess ? (
-                        <p className="text-[9px] text-emerald-500 font-bold ml-1">Referral Reward: 50% OFF unlocked! ({referralCount}/15 registered, {referralPaidCount}/5 paid)</p>
+                        <p className="text-[11px] text-emerald-500 font-bold ml-1">Referral Reward: 50% OFF unlocked! ({referralCount}/15 registered, {referralPaidCount}/5 paid)</p>
                       ) : (
-                        <p className="text-[9px] text-slate-500 font-medium ml-1">Referral Progress: {referralCount}/15 registered, {referralPaidCount}/5 paid (Need 15 registrations & 5 payments for 50% OFF)</p>
+                        <p className="text-[11px] text-slate-500 font-medium ml-1">Referral Progress: {referralCount}/15 registered, {referralPaidCount}/5 paid (Need 15 registrations & 5 payments for 50% OFF)</p>
                       )}
                     </div>
 
@@ -314,14 +314,14 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                             level="H"
                             includeMargin={true}
                           />
-                          <p className="text-slate-900 text-[10px] font-black uppercase tracking-tighter mt-2">
+                          <p className="text-slate-900 text-[11px] font-black uppercase tracking-tighter mt-2">
                             Scan to pay ₹{currentPrice} via UPI
                           </p>
                         </div>
 
                         {/* UPI ID copy row */}
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">UPI ID</label>
+                          <label className="text-[11px] uppercase font-bold text-slate-400">UPI ID</label>
                           <div className="relative">
                             <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono">
                               {UPI_ID}
@@ -345,8 +345,8 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
 
                         {/* Instructions */}
                         <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 space-y-1.5">
-                          <p className="text-blue-300 text-[10px] font-black uppercase tracking-wide">How to pay:</p>
-                          <ol className="text-slate-400 text-[10px] space-y-1 list-decimal list-inside">
+                          <p className="text-blue-300 text-[11px] font-black uppercase tracking-wide">How to pay:</p>
+                          <ol className="text-slate-400 text-[11px] space-y-1 list-decimal list-inside">
                             <li>Open any UPI app (PhonePe, GPay, Paytm, etc.)</li>
                             <li>Scan the QR code above or enter the UPI ID</li>
                             <li>Pay ₹{currentPrice} and note your transaction ID</li>
@@ -358,7 +358,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                       <div className="p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex flex-col items-center justify-center space-y-3">
                         <Sparkles className="text-cyan-400 animate-pulse" size={32} />
                         <p className="text-white font-black uppercase text-sm">Full Discount Applied!</p>
-                        <p className="text-slate-400 text-[10px]">No payment required — click below to claim your free certificate.</p>
+                        <p className="text-slate-400 text-[11px]">No payment required — click below to claim your free certificate.</p>
                       </div>
                     )}
 

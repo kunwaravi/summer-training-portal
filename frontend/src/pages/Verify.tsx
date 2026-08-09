@@ -239,27 +239,27 @@ const Verify = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-xs">
                   <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Candidate Name</span>
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Candidate Name</span>
                     <span className="font-bold text-white text-sm mt-0.5 block">{result.candidateName}</span>
                   </div>
                   <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Institution</span>
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Institution</span>
                     <span className="font-bold text-white text-sm mt-0.5 block">{result.collegeName}</span>
                   </div>
                   <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Branch</span>
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Branch</span>
                     <span className="font-bold text-white text-sm mt-0.5 block">{result.branchName}</span>
                   </div>
                   <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Course</span>
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Course</span>
                     <span className="font-bold text-amber-400 text-sm mt-0.5 block">{result.courseName}</span>
                   </div>
                   <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Grade</span>
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Grade</span>
                     <span className="font-bold text-emerald-400 text-sm mt-0.5 block">GRADE {result.grade}</span>
                   </div>
                   <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">Certification Date</span>
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Certification Date</span>
                     <span className="font-bold text-white text-sm mt-0.5 block">{result.completionDate}</span>
                   </div>
                 </div>
@@ -280,7 +280,7 @@ const Verify = () => {
                             <p className="font-semibold text-white">Week {module.week}: {module.title}</p>
                             <p className="text-slate-500 text-[11px] mt-0.5">{module.description}</p>
                           </div>
-                          <span className="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded border border-emerald-500/30 whitespace-nowrap">
+                          <span className="text-[11px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded border border-emerald-500/30 whitespace-nowrap">
                             {module.topicCount} topics
                           </span>
                         </div>

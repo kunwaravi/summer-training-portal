@@ -63,11 +63,11 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
               fill="transparent"
             />
           </svg>
-          <span className="absolute text-[9px] font-black text-white">{completedPercentage}%</span>
+          <span className="absolute text-[11px] font-black text-white">{completedPercentage}%</span>
         </div>
         <div>
           <h3 className="text-xs font-black text-slate-100 uppercase tracking-wider">Track Progress</h3>
-          <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{currentWeek} of {weeks.length} Chapters Completed</p>
+          <p className="text-[11px] font-bold text-slate-400 uppercase mt-0.5">{currentWeek} of {weeks.length} Chapters Completed</p>
         </div>
       </div>
       
@@ -75,7 +75,7 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
       <div className="flex rounded-lg border border-slate-800 overflow-hidden">
         <button
           onClick={() => setShowMap(false)}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-black uppercase tracking-widest transition-colors ${
             !showMap ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-900/40 text-slate-500 hover:text-slate-300'
           }`}
         >
@@ -83,7 +83,7 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
         </button>
         <button
           onClick={() => setShowMap(true)}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-black uppercase tracking-widest transition-colors ${
             showMap ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-900/40 text-slate-500 hover:text-slate-300'
           }`}
         >

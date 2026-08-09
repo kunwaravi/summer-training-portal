@@ -90,7 +90,7 @@ const CodePlayground: React.FC<CodePlaygroundProps> = ({
       <div className="bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Terminal size={14} className="text-blue-400" />
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
             {language} Interactive Sandbox
           </span>
         </div>
@@ -105,7 +105,7 @@ const CodePlayground: React.FC<CodePlaygroundProps> = ({
           <button
             onClick={handleRun}
             disabled={isRunning}
-            className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white rounded-lg text-[11px] font-black uppercase tracking-widest transition-all active:scale-95"
           >
             {isRunning ? (
               <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -129,7 +129,7 @@ const CodePlayground: React.FC<CodePlaygroundProps> = ({
         </div>
 
         {/* Output Area */}
-        <div className="p-4 bg-slate-950/50 min-h-[150px] font-mono text-[10px] space-y-1">
+        <div className="p-4 bg-slate-950/50 min-h-[150px] font-mono text-[11px] space-y-1">
           <div className="flex items-center gap-2 mb-2 pb-1 border-b border-slate-900">
             <span className="text-slate-600 uppercase font-black tracking-tighter">Console Output</span>
             {isSuccess && (
@@ -170,7 +170,7 @@ const CodePlayground: React.FC<CodePlaygroundProps> = ({
         </div>
       </div>
 
-      <div className="bg-slate-900/40 px-4 py-2 text-[9px] text-slate-500 border-t border-slate-900 flex justify-between">
+      <div className="bg-slate-900/40 px-4 py-2 text-[11px] text-slate-500 border-t border-slate-900 flex justify-between">
         <span>Real execution sandbox · 3s timeout · 256 MB heap · rate-limited</span>
         <span>Environment: Isolated Process</span>
       </div>

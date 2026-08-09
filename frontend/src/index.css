@@ -1,6 +1,32 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* #77 — Design system foundation tokens (Tailwind v4 @theme).
+   Shared brand tokens used by the light (overview) and dark (content) surfaces.
+   Screens consume these in Phase 3/4; the light-mode overrides below remain
+   until components are migrated to the tokens. */
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Light mode */
+  --color-light-bg: #F6F8FB;
+  --color-light-surface: #FFFFFF;
+  --color-light-border: #E6EAF2;
+  --color-primary: #6366F1;        /* indigo — light mode primary */
+  --color-primary-hover: #4F46E5;
+  --color-success: #10B981;
+  --color-streak: #F59E0B;
+
+  /* Dark mode */
+  --color-dark-bg: #0A0F1E;
+  --color-dark-surface: #0F1629;
+  --color-dark-border: #1E293B;
+  --color-cyan-accent: #22D3EE;    /* dark mode primary */
+  --color-success-dark: #34D399;
+  --color-streak-dark: #FBBF24;
+}
+
 :root {
   color-scheme: dark;
 }

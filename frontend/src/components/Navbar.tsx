@@ -63,7 +63,7 @@ const Navbar = () => {
               )}
 
               {hasCompletedAny && (
-                <span className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full text-[10px] text-emerald-400 font-black uppercase tracking-widest shadow-lg shadow-emerald-500/5">
+                <span className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full text-[11px] text-emerald-400 font-black uppercase tracking-widest shadow-lg shadow-emerald-500/5">
                   ★ Certified
                 </span>
               )}
@@ -82,14 +82,14 @@ const Navbar = () => {
             {user ? (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3 px-3 py-1.5 bg-slate-900/50 border border-slate-800 rounded-xl hover:bg-slate-900 transition-colors cursor-pointer group">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-500 to-blue-700 text-white font-black text-[10px] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-500 to-blue-700 text-white font-black text-[11px] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
                     {user.name ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'EN'}
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-slate-200 text-[10px] font-black uppercase tracking-wider leading-none">
+                    <span className="text-slate-200 text-[11px] font-black uppercase tracking-wider leading-none">
                       {user.name.split(' ')[0]}
                     </span>
-                    <span className="text-slate-500 text-[8px] font-bold uppercase mt-0.5">
+                    <span className="text-slate-500 text-[11px] font-bold uppercase mt-0.5">
                       {user.role === 'ADMIN' ? 'Staff' : 'Student'}
                     </span>
                   </div>

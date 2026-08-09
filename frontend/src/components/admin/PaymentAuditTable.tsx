@@ -42,7 +42,7 @@ export const PaymentAuditTable: React.FC<PaymentAuditTableProps> = ({
         <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
           <Users size={18} className="text-cyan-400" /> Student Verification & Checkout Registry
         </h3>
-        <span className="text-[10px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold self-start sm:self-auto">
+        <span className="text-[11px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold self-start sm:self-auto">
           {totalCount} Total Captured Events
         </span>
       </div>
@@ -70,15 +70,15 @@ export const PaymentAuditTable: React.FC<PaymentAuditTableProps> = ({
               <tbody className="divide-y divide-slate-850">
                 {payments.map((t, idx) => (
                   <tr key={idx} className="hover:bg-slate-900/40 text-slate-300 transition">
-                    <td className="py-3.5 px-4 font-mono text-[10px] text-cyan-400">{t.id}</td>
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-cyan-400">{t.id}</td>
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-white">{t.user?.name}</div>
-                      <div className="text-[10px] text-slate-500 font-mono">{t.user?.email}</div>
+                      <div className="text-[11px] text-slate-500 font-mono">{t.user?.email}</div>
                     </td>
                     <td className="py-3.5 px-4 font-bold uppercase">{t.courseId}</td>
                     <td className="py-3.5 px-4 text-emerald-400 font-black">₹{t.amount}</td>
                     <td className="py-3.5 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-black uppercase ${
                         t.status === 'SUCCESS'
                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25'
                           : t.status === 'VERIFICATION_PENDING'
@@ -88,13 +88,13 @@ export const PaymentAuditTable: React.FC<PaymentAuditTableProps> = ({
                         {t.status === 'VERIFICATION_PENDING' ? 'PENDING' : t.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-450 text-[10px]">{t.reference || 'N/A'}</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-450 text-[11px]">{t.reference || 'N/A'}</td>
                     <td className="py-3.5 px-4 text-slate-500 font-mono">{new Date(t.createdAt).toLocaleDateString()}</td>
                     <td className="py-3.5 px-4 text-right">
                       {t.status === 'VERIFICATION_PENDING' && (
                         <button
                           onClick={() => onVerifyPayment && onVerifyPayment(t.id)}
-                          className="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-600 active:scale-[0.98] text-slate-950 text-[10px] font-black uppercase rounded-lg transition-all"
+                          className="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-600 active:scale-[0.98] text-slate-950 text-[11px] font-black uppercase rounded-lg transition-all"
                         >
                           Verify
                         </button>
@@ -108,7 +108,7 @@ export const PaymentAuditTable: React.FC<PaymentAuditTableProps> = ({
 
           {/* Premium Pagination Controls */}
           <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-            <span className="text-[10px] text-slate-500 font-bold uppercase">
+            <span className="text-[11px] text-slate-500 font-bold uppercase">
               Showing page {currentPage} of {totalPages}
             </span>
             <div className="flex gap-2">

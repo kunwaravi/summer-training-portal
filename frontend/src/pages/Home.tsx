@@ -650,7 +650,7 @@ const Home = () => {
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }}
       >
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Explore Catalog</span>
+        <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">Explore Catalog</span>
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-amber-500">
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 13l-7 7-7-7" />
         </svg>
@@ -725,7 +725,7 @@ const Home = () => {
                       <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-xl text-amber-400">
                         <IconComp size={22} />
                       </div>
-                      <span className="text-[9px] font-black text-slate-500 bg-slate-950/80 border border-slate-900 px-2 py-0.5 rounded uppercase tracking-wider">
+                      <span className="text-[11px] font-black text-slate-500 bg-slate-950/80 border border-slate-900 px-2 py-0.5 rounded uppercase tracking-wider">
                         {course.difficulty}
                       </span>
                     </div>
@@ -737,7 +737,7 @@ const Home = () => {
 
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {course.tags.map((tag: string) => (
-                        <span key={tag} className="text-[9px] font-bold text-slate-450 bg-slate-900/50 px-2 py-0.5 rounded border border-slate-850/60 uppercase">
+                        <span key={tag} className="text-[11px] font-bold text-slate-450 bg-slate-900/50 px-2 py-0.5 rounded border border-slate-850/60 uppercase">
                           {tag}
                         </span>
                       ))}
@@ -747,13 +747,13 @@ const Home = () => {
                   <div className="pt-6 mt-6 border-t border-slate-850/60 flex items-center justify-between gap-4">
                     <button 
                       onClick={() => { setPreviewCourse(course); setActiveWeekPreview(1); }}
-                      className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-wider flex items-center gap-1 transition-colors animate-pulse hover:animate-none"
+                      className="text-[11px] font-black text-slate-400 hover:text-white uppercase tracking-wider flex items-center gap-1 transition-colors animate-pulse hover:animate-none"
                     >
                       <BookOpen size={12} /> Preview Syllabus
                     </button>
                     <button 
                       onClick={scrollToEnroll}
-                      className="text-[10px] font-black text-amber-450 hover:text-amber-300 uppercase tracking-wider flex items-center gap-1 transition-colors"
+                      className="text-[11px] font-black text-amber-450 hover:text-amber-300 uppercase tracking-wider flex items-center gap-1 transition-colors"
                     >
                       Enroll Now <ArrowRight size={12} />
                     </button>
@@ -798,7 +798,7 @@ const Home = () => {
                 >
                   <Card className={`w-full p-6 flex flex-col items-center text-center justify-between relative overflow-hidden border ${student.border} bg-gradient-to-b ${student.color} ${student.height}`} variant="glass">
                     <div className="absolute top-4 right-4">
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-slate-900 border border-slate-800 rounded text-slate-350">
+                      <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 bg-slate-900 border border-slate-800 rounded text-slate-350">
                         {student.badge}
                       </span>
                     </div>
@@ -810,24 +810,24 @@ const Home = () => {
                       </div>
 
                       <h3 className="text-sm font-extrabold text-white">{student.name}</h3>
-                      <p className="text-[10px] text-slate-500 font-semibold truncate max-w-full uppercase mt-0.5">{student.collegeName || 'Technology Institute'}</p>
+                      <p className="text-[11px] text-slate-500 font-semibold truncate max-w-full uppercase mt-0.5">{student.collegeName || 'Technology Institute'}</p>
                     </div>
 
                     <div className="flex flex-col items-center w-full mt-4 gap-3">
                       <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-950/80 border border-slate-900 rounded-full">
                         <Zap className="text-amber-400 fill-amber-400" size={13} />
-                        <span className="text-xs font-black text-white font-mono">{student.points} <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">XP</span></span>
+                        <span className="text-xs font-black text-white font-mono">{student.points} <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">XP</span></span>
                       </div>
 
                       <div className="flex flex-wrap gap-1 justify-center max-h-[48px] overflow-hidden">
                         {student.badges && student.badges.length > 0 ? (
                           student.badges.slice(0, 2).map((b: string) => (
-                            <span key={b} className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-850 text-[8px] font-black uppercase text-slate-450 tracking-wider">
+                            <span key={b} className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-850 text-[11px] font-black uppercase text-slate-450 tracking-wider">
                               🏆 {b.replace(/_/g, ' ').replace('week 1 master', 'W1 Master').replace('bug hunter', 'Bug Hunter').replace('perfect score', 'Perfect')}
                             </span>
                           ))
                         ) : (
-                          <span className="text-[9px] text-slate-650 italic">Consistent Learner</span>
+                          <span className="text-[11px] text-slate-650 italic">Consistent Learner</span>
                         )}
                       </div>
                     </div>
@@ -843,7 +843,7 @@ const Home = () => {
           <div className="flex flex-col items-center pt-4">
             <button
               onClick={() => setShowAllLeaderboard(!showAllLeaderboard)}
-              className="px-5 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 text-[10px] font-black uppercase tracking-widest text-slate-450 hover:text-white transition flex items-center gap-2 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 text-[11px] font-black uppercase tracking-widest text-slate-450 hover:text-white transition flex items-center gap-2 cursor-pointer"
             >
               {showAllLeaderboard ? (
                 <>Hide Ranks <ChevronUp size={12} /></>
@@ -865,7 +865,7 @@ const Home = () => {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs text-slate-400">
                         <thead>
-                          <tr className="border-b border-slate-900 text-slate-500 font-black uppercase tracking-wider text-[9px]">
+                          <tr className="border-b border-slate-900 text-slate-500 font-black uppercase tracking-wider text-[11px]">
                             <th className="py-2.5 px-3">Rank</th>
                             <th className="py-2.5 px-3">Student Name</th>
                             <th className="py-2.5 px-3">College Name</th>
@@ -877,7 +877,7 @@ const Home = () => {
                             <tr key={student.name} className="hover:bg-slate-900/30 transition-colors">
                               <td className="py-3 px-3 font-mono font-bold text-slate-350">#{idx + 4}</td>
                               <td className="py-3 px-3 font-extrabold text-white">{student.name}</td>
-                              <td className="py-3 px-3 text-slate-500 truncate max-w-[200px] uppercase text-[10px] font-semibold">{student.collegeName || 'Technology Institute'}</td>
+                              <td className="py-3 px-3 text-slate-500 truncate max-w-[200px] uppercase text-[11px] font-semibold">{student.collegeName || 'Technology Institute'}</td>
                               <td className="py-3 px-3 text-right font-mono font-bold text-amber-500 flex items-center justify-end gap-1">
                                 <Zap className="text-amber-500 fill-amber-500/20" size={12} />
                                 {student.points} XP
@@ -1086,7 +1086,7 @@ const Home = () => {
 
               <div className="space-y-6">
                 <div>
-                  <span className="text-[10px] font-black bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full uppercase tracking-wider">
+                  <span className="text-[11px] font-black bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full uppercase tracking-wider">
                     Syllabus Overview
                   </span>
                   <h2 className="text-2xl font-black text-white mt-3 uppercase tracking-tight">{previewCourse.title}</h2>
@@ -1094,7 +1094,7 @@ const Home = () => {
                 </div>
 
               <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-                <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2 mb-4">4-Week Training Roadmaps</h4>
+                <h4 className="text-[11px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2 mb-4">4-Week Training Roadmaps</h4>
                 
                 <div className="space-y-3">
                   {previewCourse.syllabus.map((weekData: any) => {
@@ -1113,7 +1113,7 @@ const Home = () => {
                               0{weekData.week}
                             </div>
                             <div>
-                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Week {weekData.week} Module</span>
+                              <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest block">Week {weekData.week} Module</span>
                               <h4 className="text-sm font-extrabold text-white tracking-tight">{weekData.title}</h4>
                             </div>
                           </div>
@@ -1133,7 +1133,7 @@ const Home = () => {
                             >
                               <div className="mt-3.5 pl-11 border-t border-slate-900/60 pt-3.5 space-y-3">
                                 <p className="text-slate-450 text-xs leading-relaxed font-medium">{weekData.details}</p>
-                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 rounded-xl text-[11px] font-black uppercase tracking-wider">
                                   <span>Milestone:</span>
                                   <span className="text-white font-mono">{weekData.milestone}</span>
                                 </div>

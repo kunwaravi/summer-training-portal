@@ -52,7 +52,7 @@ const Input: React.FC<InputProps> = ({
         )}
       </div>
       {error && (
-        <p className="text-red-400 text-[10px] font-semibold pl-1 uppercase tracking-tight">
+        <p className="text-red-400 text-[11px] font-semibold pl-1 uppercase tracking-tight">
           ⚠ {error}
         </p>
       )}

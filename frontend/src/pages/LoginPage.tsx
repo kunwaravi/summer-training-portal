@@ -189,7 +189,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ mode = 'login' }) => {
                 {isLogin ? 'Login' : 'Registration'}
               </span>
             </h2>
-            <p className="mt-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            <p className="mt-2 text-[11px] font-black text-slate-500 uppercase tracking-widest">
               {isLogin ? 'Access your training dashboard' : 'Start your professional certification journey'}
             </p>
           </div>
@@ -287,7 +287,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ mode = 'login' }) => {
                   <div className="flex justify-end">
                     <Link
                       to="/forgot-password"
-                      className="text-[9px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition"
+                      className="text-[11px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition"
                     >
                       Forgot Password?
                     </Link>
@@ -301,7 +301,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ mode = 'login' }) => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="p-3.5 bg-slate-950/40 rounded-xl border border-slate-850/60 text-[10px] text-slate-400 space-y-2 font-mono"
+                  className="p-3.5 bg-slate-950/40 rounded-xl border border-slate-850/60 text-[11px] text-slate-400 space-y-2 font-mono"
                 >
                   <p className="text-slate-500 uppercase font-black tracking-wider">Security Constraints:</p>
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1">
@@ -376,7 +376,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ mode = 'login' }) => {
           </div>
         </Card>
 
-        <p className="mt-6 text-center text-[9px] text-slate-600 font-bold uppercase tracking-[0.3em] select-none">
+        <p className="mt-6 text-center text-[11px] text-slate-600 font-bold uppercase tracking-[0.3em] select-none">
           Secure Infrastructure &bull; Verified Credentials
         </p>
       </motion.div>

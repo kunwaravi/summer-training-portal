@@ -112,7 +112,7 @@ const SkillRadar: React.FC<SkillRadarProps> = ({ skills }) => {
                 x={x}
                 y={y}
                 textAnchor="middle"
-                className="fill-slate-400 text-[9px] font-bold uppercase tracking-wider"
+                className="fill-slate-400 text-[11px] font-bold uppercase tracking-wider"
               >
                 {skill.label}
               </text>
@@ -125,8 +125,8 @@ const SkillRadar: React.FC<SkillRadarProps> = ({ skills }) => {
         {skills.map((skill, i) => (
           <div key={i} className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: skill.color }}></div>
-            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">{skill.label}</span>
-            <span className="text-[10px] font-mono text-slate-500 ml-auto">{skill.value}%</span>
+            <span className="text-[11px] font-bold text-slate-300 uppercase tracking-tight">{skill.label}</span>
+            <span className="text-[11px] font-mono text-slate-500 ml-auto">{skill.value}%</span>
           </div>
         ))}
       </div>

@@ -31,10 +31,10 @@ const ProgressMap: React.FC<ProgressMapProps> = ({
       {/* Progress bar (corrected math — issue #70) */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
             Learning Progress Map
           </span>
-          <span className="text-[10px] font-bold text-cyan-400">{pct}%</span>
+          <span className="text-[11px] font-bold text-cyan-400">{pct}%</span>
         </div>
         <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
           <div
@@ -88,14 +88,14 @@ const ProgressMap: React.FC<ProgressMapProps> = ({
                 {isCompleted ? (
                   <Check size={14} strokeWidth={3} />
                 ) : isUnlocked ? (
-                  <span className="text-[10px] font-black">{week.week}</span>
+                  <span className="text-[11px] font-black">{week.week}</span>
                 ) : (
                   <Lock size={12} />
                 )}
               </span>
 
               <span
-                className={`text-[7px] font-bold uppercase tracking-wider max-w-full truncate ${
+                className={`text-[11px] font-bold uppercase tracking-wider max-w-full truncate ${
                   isUnlocked ? 'text-slate-500' : 'text-slate-700'
                 }`}
               >

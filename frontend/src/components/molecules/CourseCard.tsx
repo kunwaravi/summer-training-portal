@@ -58,7 +58,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           <div className="flex justify-between items-center flex-wrap gap-2">
             <Badge variant="accent">Free to Learn</Badge>
             {difficulty && (
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
                 ⚡ {difficulty}
               </span>
             )}
@@ -94,16 +94,16 @@ const CourseCard: React.FC<CourseCardProps> = ({
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden mt-3.5 space-y-3.5 pl-1.5"
                   >
-                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-850 pb-1.5 pl-0.5">Syllabus Breakdown</h4>
+                    <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-850 pb-1.5 pl-0.5">Syllabus Breakdown</h4>
                     <div className="space-y-3">
                       {syllabus.map((syll) => (
                         <div key={syll.week} className="flex gap-3 text-left">
-                          <span className="text-[10px] font-black text-amber-400 shrink-0 bg-amber-500/10 h-5 w-9 flex items-center justify-center rounded border border-amber-500/20">
+                          <span className="text-[11px] font-black text-amber-400 shrink-0 bg-amber-500/10 h-5 w-9 flex items-center justify-center rounded border border-amber-500/20">
                             W{syll.week}
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-bold text-white leading-tight break-words">{syll.title}</p>
-                            <p className="text-[10px] text-slate-450 mt-0.5 font-medium leading-relaxed break-words">{syll.details}</p>
+                            <p className="text-[11px] text-slate-450 mt-0.5 font-medium leading-relaxed break-words">{syll.details}</p>
                           </div>
                         </div>
                       ))}
@@ -163,7 +163,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
         {/* Course Progress Section */}
         <div className="space-y-2 pt-2 border-t border-slate-700/60">
-          <div className="flex justify-between items-center text-[10px] font-bold uppercase text-slate-400">
+          <div className="flex justify-between items-center text-[11px] font-bold uppercase text-slate-400">
             <span>Progress</span>
             <span className="text-slate-200">{progress}%</span>
           </div>

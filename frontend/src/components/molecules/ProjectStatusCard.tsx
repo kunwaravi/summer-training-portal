@@ -50,21 +50,21 @@ const ProjectStatusCard: React.FC<ProjectStatusCardProps> = ({
     <div className={`p-4 rounded-2xl border ${config.bg} ${config.border} flex flex-col justify-between h-full`}>
       <div className="space-y-2">
         <div className="flex justify-between items-start">
-          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${config.bg} ${config.color} border ${config.border}`}>
+          <span className={`text-[11px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${config.bg} ${config.color} border ${config.border}`}>
             {type} {week ? `• Week ${week}` : ''}
           </span>
           <Icon size={14} className={config.color} />
         </div>
         <h4 className="text-xs font-bold text-white truncate">{title}</h4>
         {feedback && (
-          <p className="text-[10px] text-slate-400 italic line-clamp-2">"{feedback}"</p>
+          <p className="text-[11px] text-slate-400 italic line-clamp-2">"{feedback}"</p>
         )}
       </div>
       
       <div className="mt-4 flex items-center justify-between">
-        <span className={`text-[10px] font-bold ${config.color}`}>{config.text}</span>
+        <span className={`text-[11px] font-bold ${config.color}`}>{config.text}</span>
         {status === 'NOT_SUBMITTED' && (
-          <button className="text-[10px] font-black text-blue-400 uppercase tracking-widest hover:underline">
+          <button className="text-[11px] font-black text-blue-400 uppercase tracking-widest hover:underline">
             Submit Now
           </button>
         )}

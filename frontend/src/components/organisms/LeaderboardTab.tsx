@@ -123,7 +123,7 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-900 text-[10px] text-slate-500 font-black uppercase tracking-wider bg-slate-950/20">
+                <tr className="border-b border-slate-900 text-[11px] text-slate-500 font-black uppercase tracking-wider bg-slate-950/20">
                   <th className="py-4 px-6 text-center w-20">Rank</th>
                   <th className="py-4 px-4">Student Details</th>
                   <th className="py-4 px-4 hidden md:table-cell">College</th>
@@ -154,7 +154,7 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
                       {/* Name & Avatar */}
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full font-black text-[10px] flex items-center justify-center shadow-md ${
+                          <div className={`w-8 h-8 rounded-full font-black text-[11px] flex items-center justify-center shadow-md ${
                             globalRank === 1 ? 'bg-gradient-to-tr from-yellow-400 to-amber-500 text-slate-950' : 
                             isCurrentUser ? 'bg-gradient-to-tr from-blue-500 to-indigo-600 text-white' : 
                             'bg-slate-800 text-slate-300'
@@ -164,7 +164,7 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
                           <div className="flex flex-col">
                             <span className={`text-xs font-bold ${isCurrentUser ? 'text-blue-400' : 'text-white'}`}>
                               {item.name}
-                              {isCurrentUser && <span className="ml-2 px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[8px] font-black rounded uppercase tracking-wider">You</span>}
+                              {isCurrentUser && <span className="ml-2 px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[11px] font-black rounded uppercase tracking-wider">You</span>}
                             </span>
                           </div>
                         </div>
@@ -186,7 +186,7 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
                                 <span
                                   key={b}
                                   title={meta.desc}
-                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${meta.color} cursor-help transition-all hover:scale-105`}
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-black uppercase tracking-wider ${meta.color} cursor-help transition-all hover:scale-105`}
                                 >
                                   <span>{meta.icon}</span>
                                   <span>{meta.label}</span>
@@ -194,7 +194,7 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
                               );
                             })
                           ) : (
-                            <span className="text-slate-600 text-[10px] italic">No badges unlocked</span>
+                            <span className="text-slate-600 text-[11px] italic">No badges unlocked</span>
                           )}
                         </div>
                       </td>
@@ -203,7 +203,7 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <Zap size={13} className="text-amber-400 fill-amber-400 animate-pulse" />
-                          <span className="text-xs font-black text-white font-mono">{item.points} <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">XP</span></span>
+                          <span className="text-xs font-black text-white font-mono">{item.points} <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">XP</span></span>
                         </div>
                       </td>
                     </tr>

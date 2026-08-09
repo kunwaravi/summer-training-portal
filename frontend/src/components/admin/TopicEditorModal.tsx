@@ -59,7 +59,7 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={onTogglePreview}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase transition flex items-center gap-1.5 ${
                 showLivePreview 
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' 
                   : 'bg-slate-800 border border-slate-700 text-slate-400'
@@ -84,7 +84,7 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
             
             {/* Topic Title */}
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-slate-400">Topic Title</label>
+              <label className="text-[11px] uppercase font-bold text-slate-400">Topic Title</label>
               <input 
                 type="text"
                 required
@@ -97,7 +97,7 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
 
             {/* Topic Main Content text */}
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-slate-400">Topic Content Body (Rich Text Support)</label>
+              <label className="text-[11px] uppercase font-bold text-slate-400">Topic Content Body (Rich Text Support)</label>
               <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden text-white react-quill-dark-theme">
                 <ReactQuill 
                   theme="snow"
@@ -119,7 +119,7 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
 
             {/* Inline Code Snippet */}
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-slate-400">Compiler Code Snippet (Optional)</label>
+              <label className="text-[11px] uppercase font-bold text-slate-400">Compiler Code Snippet (Optional)</label>
               <textarea 
                 rows={4}
                 placeholder="#include <stdio.h>\n..."
@@ -131,7 +131,7 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
 
             {/* Takeaway / note */}
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-slate-400">Highlight Takeaway / Core Note (Optional)</label>
+              <label className="text-[11px] uppercase font-bold text-slate-400">Highlight Takeaway / Core Note (Optional)</label>
               <input 
                 type="text"
                 placeholder="Highlight standard errors, caveats, or dynamic memory leaks..."
@@ -143,7 +143,7 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
 
             {/* Asset Diagram Mock Upload Helper (Issue #8) */}
             <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3.5 mt-2">
-              <div className="flex items-center gap-1.5 text-slate-300 text-[10px] font-black uppercase">
+              <div className="flex items-center gap-1.5 text-slate-300 text-[11px] font-black uppercase">
                 <Image size={14} className="text-cyan-400" /> Embedded Infographic Upload Sandbox
               </div>
               <div className="flex gap-2">
@@ -158,7 +158,7 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
                   type="button"
                   disabled={uploadingAsset || !mockAssetUrl}
                   onClick={onMockAssetUpload}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-40 text-cyan-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-40 text-cyan-400 hover:text-white rounded-lg text-[11px] font-bold uppercase transition"
                 >
                   {uploadingAsset ? 'Mounting...' : 'Mount Asset'}
                 </button>
@@ -172,7 +172,7 @@ export const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
             <div className="hidden md:block w-1/2 p-6 bg-slate-950/40 overflow-y-auto space-y-4 text-left">
               <div className="flex items-center gap-2 pb-2 border-b border-slate-900">
                 <Eye size={14} className="text-cyan-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-450">
+                <span className="text-[11px] font-black uppercase tracking-widest text-slate-450">
                   Student Learning Pane Real-Time Preview
                 </span>
               </div>
