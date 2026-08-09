@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, X, ExternalLink, GitBranch, FileText, Eye, Share2 } from 'lucide-react';
+import { Users, X, ExternalLink, GitBranch, FileText, Eye, Share2, Check } from 'lucide-react';
 import Spinner from '../atoms/Spinner';
 
 /**
@@ -83,7 +83,7 @@ const PeerSolutionsModal: React.FC<PeerSolutionsModalProps> = ({
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print"
           >
-            <div className="w-full max-w-2xl max-h-[85vh] flex flex-col bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="w-full max-w-2xl max-h-[85vh] flex flex-col bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
               {/* Header */}
               <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
@@ -185,20 +185,23 @@ const PeerSolutionsModal: React.FC<PeerSolutionsModalProps> = ({
                 ))}
               </div>
 
-              {/* Footer: privacy opt-out */}
+              {/* Footer: privacy opt-out (#81, showcase §06 custom checkbox) */}
               <div className="px-5 py-4 border-t border-slate-800 flex items-center justify-between gap-3 shrink-0">
-                <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={shareOn}
-                    onChange={handleToggleShare}
-                    disabled={togglingShare}
-                    className="w-4 h-4 accent-purple-500"
-                  />
+                <button
+                  onClick={handleToggleShare}
+                  disabled={togglingShare}
+                  className="flex items-center gap-2.5 cursor-pointer select-none disabled:opacity-60 disabled:cursor-wait"
+                  aria-pressed={shareOn}
+                >
+                  <span className={`w-4 h-4 rounded-md flex items-center justify-center border transition-colors ${
+                    shareOn ? 'bg-purple-500 border-purple-500 text-slate-950' : 'bg-slate-800 border-slate-700'
+                  }`}>
+                    {shareOn && <Check size={12} strokeWidth={4} />}
+                  </span>
                   <span className="text-[11px] font-bold text-slate-300">
                     Share my solution with peers
                   </span>
-                </label>
+                </button>
                 <span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   <Share2 size={11} /> Privacy respected · no email/phone shown
                 </span>

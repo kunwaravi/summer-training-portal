@@ -52,7 +52,7 @@ const ExamResultsModal: React.FC<ExamResultsModalProps> = ({
     }));
   }, [breakdown]);
 
-  const radius = 54;
+  const radius = 46;
   const circumference = 2 * Math.PI * radius;
 
   return (
@@ -75,7 +75,7 @@ const ExamResultsModal: React.FC<ExamResultsModalProps> = ({
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print"
           >
-            <div className="w-full max-w-lg max-h-[88vh] flex flex-col bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="w-full max-w-lg max-h-[88vh] flex flex-col bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
               {/* Header */}
               <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between shrink-0">
                 <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">
@@ -95,11 +95,11 @@ const ExamResultsModal: React.FC<ExamResultsModalProps> = ({
                 <div className="flex flex-col items-center text-center">
                   <div className="relative w-32 h-32">
                     <svg viewBox="0 0 128 128" className="w-full h-full -rotate-90">
-                      <circle cx="64" cy="64" r={radius} fill="none" stroke="#1e293b" strokeWidth="10" />
+                      <circle cx="64" cy="64" r={radius} fill="none" stroke="#1e293b" strokeWidth="9" />
                       <motion.circle
                         cx="64" cy="64" r={radius} fill="none"
                         stroke={passed ? '#10b981' : '#ef4444'}
-                        strokeWidth="10" strokeLinecap="round"
+                        strokeWidth="9" strokeLinecap="round"
                         initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
                         animate={{ strokeDashoffset: circumference - (Math.min(score, 100) / 100) * circumference }}
                         transition={{ duration: 1.2, ease: 'easeOut', delay: 0.15 }}
