@@ -6,7 +6,7 @@ import {
   ArrowUp, ArrowDown, Eye, DollarSign,
   Save, FileText, Image, RefreshCw, ChevronDown, ChevronRight,
   TrendingUp, Share2, Mail, Settings, ClipboardCheck,
-  Clock, CheckCircle2, XCircle, Check, X, ExternalLink, FileCode2
+  Clock, CheckCircle2, XCircle, Check, X, FileCode2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminPaymentTable from '../components/organisms/AdminPaymentTable';
