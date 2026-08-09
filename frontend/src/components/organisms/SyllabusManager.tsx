@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Lock, CheckCircle, ChevronRight, Home, Map as MapIcon, List } from 'lucide-react';
+import { ChevronRight, Home, Map as MapIcon, List } from 'lucide-react';
 import ProgressMap from './ProgressMap';
 
 interface Week {
@@ -161,17 +161,18 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
               }`}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className={`p-2 rounded-lg transition-colors shrink-0 ${
-                  isActive
-                    ? 'bg-cyan-500/20 text-cyan-400'
+                {/* Circular state badge (#79, showcase §03) */}
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 transition-colors ${
+                  isCompleted
+                    ? 'bg-emerald-500/15 border border-emerald-500 text-emerald-400'
                     : isUnlocked
-                      ? 'bg-slate-700/50 text-slate-400'
-                      : 'bg-slate-800 text-slate-600'
-                 }`}>
-                  {isCompleted ? <CheckCircle size={18} className="text-emerald-400" /> : isUnlocked ? <BookOpen size={18} /> : <Lock size={18} />}
-                </div>
+                      ? 'bg-slate-800 border border-slate-700 text-cyan-400'
+                      : 'bg-slate-800 border border-slate-800/70 text-slate-500'
+                }`}>
+                  {isCompleted ? '✓' : isUnlocked ? week.week : '🔒'}
+                </span>
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Chapter {week.week}</p>
+                  <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Chapter {week.week}</p>
                   <h4 className="text-sm font-bold truncate">{week.title}</h4>
                 </div>
               </div>

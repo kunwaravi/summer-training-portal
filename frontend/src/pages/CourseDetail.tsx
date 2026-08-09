@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCourseDetail } from '../hooks/useCourseDetail';
@@ -101,6 +101,49 @@ const antiPatternsData: Record<string, Record<number, { title: string; badCode: 
       fix: 'Use dynamically allocated heap buffers or declare arrays as static if thread-safety permits.'
     }
   }
+};
+
+// Lightweight syntax highlighter for C/C++/MicroPython blocks (#79, showcase §03).
+// Zero-dependency tokenizer — returns per-line React nodes so output is XSS-safe.
+const CODE_KEYWORDS = new Set([
+  'auto','break','case','char','const','continue','default','do','double','else','enum','extern',
+  'float','for','goto','if','int','long','register','return','short','signed','sizeof','static',
+  'struct','switch','typedef','union','unsigned','void','volatile','while','class','namespace',
+  'using','template','public','private','protected','virtual','new','delete','this','friend',
+  'inline','constexpr','static_cast','reinterpret_cast','dynamic_cast','const_cast','bool','true',
+  'false','nullptr','and','or','not','def','import','from','return','lambda','None','print'
+]);
+const CODE_TYPES = new Set([
+  'uint8_t','uint16_t','uint32_t','uint64_t','int8_t','int16_t','int32_t','int64_t','size_t',
+  'ssize_t','ptrdiff_t','intptr_t','uintptr_t','RCC_TypeDef','GPIO_TypeDef','UART_TypeDef',
+  'USART_TypeDef','TIM_TypeDef','SPI_TypeDef','I2C_TypeDef','float32_t'
+]);
+const CODE_TOKEN_RE = /(\/\/[^\n]*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\b(0[xX][0-9a-fA-F]+|\d+(?:\.\d+)?[uUlLfF]*)\b|([A-Za-z_][A-Za-z0-9_]*)/g;
+
+const highlightCodeLine = (line: string, lineKey: string): ReactNode => {
+  const parts: ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  CODE_TOKEN_RE.lastIndex = 0;
+  while ((m = CODE_TOKEN_RE.exec(line)) !== null) {
+    if (m.index > last) {
+      parts.push(<span key={`${lineKey}-${last}`} className="text-slate-300">{line.slice(last, m.index)}</span>);
+    }
+    const tok = m[0];
+    let cls = 'text-slate-300';
+    if (m[1]) cls = 'text-slate-500 italic';            // comment
+    else if (m[2]) cls = 'text-amber-300';              // string literal
+    else if (m[3]) cls = 'text-purple-300';             // number / hex literal
+    else if (CODE_KEYWORDS.has(tok)) cls = 'text-cyan-400';
+    else if (CODE_TYPES.has(tok)) cls = 'text-violet-400';
+    else if (/^[A-Z][A-Z0-9_]*$/.test(tok)) cls = 'text-amber-300'; // macro / const
+    parts.push(<span key={`${lineKey}-${m.index}`} className={cls}>{tok}</span>);
+    last = m.index + tok.length;
+  }
+  if (last < line.length) {
+    parts.push(<span key={`${lineKey}-end`} className="text-slate-300">{line.slice(last)}</span>);
+  }
+  return parts.length > 0 ? <>{parts}</> : <>{line}</>;
 };
 
 // Parser for step-by-step code annotations
@@ -487,8 +530,8 @@ const CourseDetail = () => {
   return (
     <div className="py-6 max-w-6xl mx-auto px-4 space-y-6">
       
-      <CourseHero 
-        courseId={id} 
+      <CourseHero
+        courseId={id}
         courseTitle={courseTitle}
         weekTitle={selectedWeek ? `Chapter ${selectedWeek.week}: ${selectedWeek.title}` : undefined}
         topicTitle={activeTopicIndex !== null && activeModuleDetail?.topics?.[activeTopicIndex] ? activeModuleDetail.topics[activeTopicIndex].title : undefined}
@@ -497,6 +540,39 @@ const CourseDetail = () => {
         mobileView={mobileView}
         onBackClick={() => setMobileView('chapters')}
       />
+
+      {/* Course hero gradient card (#79, showcase §03) */}
+      {viewState === 'course-home' && (
+        <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-[#0F1629] to-[#101D33] p-6 flex flex-col md:flex-row justify-between gap-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative">
+            <span className="text-[11px] font-black uppercase tracking-widest text-cyan-400">{id} · Training Track</span>
+            <h2 className="text-2xl font-black text-white mt-1">{courseTitle}</h2>
+            <p className="text-slate-400 text-sm mt-1 max-w-md leading-relaxed">{courseDescription}</p>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">
+                {currentWeek} module{currentWeek === 1 ? '' : 's'} passed
+              </span>
+              <span className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[11px] font-bold">
+                {completedPercentage}% complete
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-col items-center justify-center gap-1 shrink-0">
+            <svg className="w-20 h-20" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#1E293B" strokeWidth="6" />
+              <circle
+                cx="40" cy="40" r="34" fill="none" stroke="#22D3EE" strokeWidth="6"
+                strokeDasharray="214"
+                strokeDashoffset={214 * (1 - completedPercentage / 100)}
+                strokeLinecap="round"
+                transform="rotate(-90 40 40)"
+              />
+            </svg>
+            <span className="text-[11px] font-black text-cyan-400 uppercase tracking-widest">{completedPercentage}%</span>
+          </div>
+        </div>
+      )}
 
       {/* Main Split-Screen Layout */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -1000,9 +1076,13 @@ const CourseDetail = () => {
                                                   </div>
 
                                                   <div className="overflow-x-auto w-full pt-8 sm:pt-4">
-                                                    <pre className="text-xs font-mono text-cyan-400 leading-relaxed min-w-[300px]">
+                                                    <pre className="text-xs font-mono leading-relaxed min-w-[300px]">
                                                       <code>
-                                                        {step.lines.join('\n')}
+                                                        {step.lines.map((l, li) => (
+                                                          <span key={li} className="block">
+                                                            {highlightCodeLine(l, `${topicIndex}-${li}`)}
+                                                          </span>
+                                                        ))}
                                                       </code>
                                                     </pre>
                                                   </div>
