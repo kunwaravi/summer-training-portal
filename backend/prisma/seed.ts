@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import { allChallengeSeedBlocks } from './challengeSeedData';
 
 dotenv.config();
 
@@ -744,6 +745,58 @@ function getDynamicTopicsForModule(courseId: string, week: number, moduleTitle: 
   return topics;
 }
 
+// Seed fCC-style interactive challenges (idempotent upsert on courseId+dashedName)
+async function seedChallengeBlocks() {
+  console.log('Seeding fCC-style interactive challenges...');
+
+  // Build courseId+week -> moduleId lookup
+  const moduleByWeek = new Map<string, Map<number, number>>();
+  const modules = await prisma.module.findMany({ select: { id: true, courseId: true, week: true } });
+  for (const m of modules) {
+    if (!moduleByWeek.has(m.courseId)) moduleByWeek.set(m.courseId, new Map());
+    moduleByWeek.get(m.courseId)!.set(m.week, m.id);
+  }
+
+  for (const c of allChallengeSeedBlocks) {
+    const moduleId = moduleByWeek.get(c.courseId)?.get(c.moduleWeek);
+    if (!moduleId) {
+      console.log(`  Skipping ${c.dashedName}: module W${c.moduleWeek} not found for ${c.courseId}`);
+      continue;
+    }
+
+    await prisma.challenge.upsert({
+      where: { courseId_dashedName: { courseId: c.courseId, dashedName: c.dashedName } },
+      update: {
+        moduleId,
+        title: c.title,
+        challengeType: c.challengeType,
+        description: c.description,
+        instructions: c.instructions,
+        seedCode: c.seedCode,
+        solutionCode: c.solutionCode ?? null,
+        testCode: c.testCode,
+        order: c.order,
+        isPublished: true
+      },
+      create: {
+        courseId: c.courseId,
+        moduleId,
+        title: c.title,
+        dashedName: c.dashedName,
+        challengeType: c.challengeType,
+        description: c.description,
+        instructions: c.instructions,
+        seedCode: c.seedCode,
+        solutionCode: c.solutionCode ?? null,
+        testCode: c.testCode,
+        order: c.order,
+        isPublished: true
+      }
+    });
+  }
+  console.log(`  Challenge blocks seeded: ${allChallengeSeedBlocks.length} definitions processed.`);
+}
+
 async function main() {
   console.log('Seeding relational curriculum database for LMS Upgrade...');
 
@@ -888,6 +941,9 @@ async function main() {
       console.log(`Seeded 50 Final Exam Questions for ${course.id}`);
     }
   }
+
+  // Seed fCC-style interactive challenges (idempotent)
+  await seedChallengeBlocks();
 
   // Seed default admin account
   const adminEmail = process.env.ADMIN_EMAIL || "admin@nexus.com";

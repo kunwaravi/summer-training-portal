@@ -76,16 +76,20 @@ const Certificate = () => {
     credentialId: "NEX-CPP_EMBEDDED-AVINASH1001-VERIFIED",
     startDate: "June 1, 2026",
     endDate: "June 28, 2026",
-    grade: "Outstanding"
+    grade: "A+"
   };
 
   const getPerformanceReviewText = (grade: string) => {
-    const upperGrade = (grade || '').toUpperCase();
-    if (upperGrade === 'OUTSTANDING') return 'OUTSTANDING (GRADE A)';
-    if (upperGrade === 'EXCELLENT') return 'EXCELLENT (GRADE B)';
-    if (upperGrade === 'VERY GOOD') return 'VERY GOOD (GRADE C)';
-    if (upperGrade === 'GOOD') return 'GOOD (GRADE D)';
-    return `${upperGrade} (GRADE A)`;
+    const upperGrade = (grade || '').toUpperCase().replace('GRADE ', '').trim();
+    const map: Record<string, string> = {
+      'A+': 'OUTSTANDING (GRADE A+)',
+      'A': 'EXCELLENT (GRADE A)',
+      'B+': 'VERY GOOD (GRADE B+)',
+      'B': 'GOOD (GRADE B)',
+      'C': 'SATISFACTORY (GRADE C)',
+      'D': 'ATTEMPTED (GRADE D)'
+    };
+    return map[upperGrade] || 'EXCELLENT (GRADE A)';
   };
 
   return (

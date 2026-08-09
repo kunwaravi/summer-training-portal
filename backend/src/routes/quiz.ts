@@ -40,11 +40,12 @@ router.get('/questions/topic/:topicId', async (req: any, res: any, next: any) =>
 });
 
 // POST /api/quiz/submit - Grade quiz submissions and update course progress
-router.post('/submit', validate(quizSubmissionSchema), async (req: any, res: any, next: any) => {
+// SECURITY (#64): authenticated only — userId is taken from the verified JWT, never from the request body.
+router.post('/submit', authenticateToken, validate(quizSubmissionSchema), async (req: any, res: any, next: any) => {
   try {
-    const { userId, courseId, week, topicId, answers } = req.body;
+    const { courseId, week, topicId, answers } = req.body;
     const weekNum = parseInt(week);
-    const userIdNum = parseInt(userId);
+    const userIdNum = req.user.id; // from JWT, body userId is ignored
     const topicIdNum = topicId ? parseInt(topicId) : undefined;
 
     const submissionResult = await quizService.submitQuiz(userIdNum, courseId, weekNum, answers, topicIdNum);

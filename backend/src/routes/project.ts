@@ -161,4 +161,84 @@ router.put(
   }
 );
 
+// GET /api/projects/:courseId/solutions - Peer project solutions browser (issue #75)
+// Only learners with an APPROVED project can view peers; only APPROVED + shareSolution
+// submissions are shown; no PII (email, phone) is ever exposed.
+router.get('/:courseId/solutions', authenticateToken, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { courseId } = req.params as any;
+    const userId = req.user.id;
+
+    // Gate: viewer must have their project approved first
+    const mySubmission = await prisma.projectSubmission.findUnique({
+      where: { userId_courseId: { userId, courseId } }
+    });
+    if (!mySubmission || mySubmission.status !== 'APPROVED') {
+      return res.status(403).json({
+        message: 'Get your project approved to view peer solutions.'
+      });
+    }
+
+    const solutions = await prisma.projectSubmission.findMany({
+      where: {
+        courseId,
+        status: 'APPROVED',
+        shareSolution: true,
+        userId: { not: userId }
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        sourceCodeUrl: true,
+        reportUrl: true,
+        githubUrl: true,
+        submittedAt: true,
+        user: {
+          select: { id: true, name: true, avatarUrl: true }
+        }
+      },
+      orderBy: { submittedAt: 'desc' }
+    });
+
+    res.json({ solutions });
+  } catch (err: any) {
+    logger.error('Fetch project peer solutions error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// PATCH /api/projects/:id/privacy - toggle own solution sharing (issue #75)
+router.patch(
+  '/:id/privacy',
+  authenticateToken,
+  validateBody(['shareSolution']),
+  async (req: Request, res: Response): Promise<any> => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const { shareSolution } = req.body as any;
+
+      const submission = await prisma.projectSubmission.findUnique({ where: { id } });
+      if (!submission) return res.status(404).json({ message: 'Submission not found.' });
+
+      const isOwner = (req as any).user.id === submission.userId;
+      const isAdminUser = (req as any).user.role === 'ADMIN';
+      if (!isOwner && !isAdminUser) {
+        return res.status(403).json({ message: 'You can only update your own submission.' });
+      }
+
+      const updated = await prisma.projectSubmission.update({
+        where: { id },
+        data: { shareSolution: !!shareSolution }
+      });
+
+      logger.info(`User ${(req as any).user.id} set project ${id} shareSolution=${updated.shareSolution}`);
+      res.json({ success: true, shareSolution: updated.shareSolution });
+    } catch (err: any) {
+      logger.error('Update project privacy error:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+);
+
 export default router;

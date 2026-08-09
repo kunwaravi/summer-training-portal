@@ -171,4 +171,87 @@ router.put(
   }
 );
 
+// GET /api/assignments/:courseId/solutions?weekNumber=N - Peer solutions browser (issue #75)
+// Only learners with an APPROVED submission for that week can view peers; only APPROVED + shareSolution
+// submissions are shown; no PII (email, phone) is ever exposed.
+router.get('/:courseId/solutions', authenticateToken, async (req: any, res: Response): Promise<any> => {
+  try {
+    const { courseId } = req.params as any;
+    const weekNumber = parseInt(req.query.weekNumber as string);
+    const userId = req.user.id;
+
+    if (isNaN(weekNumber)) {
+      return res.status(400).json({ message: 'Valid weekNumber query param is required.' });
+    }
+
+    // Gate: viewer must have this week approved before browsing peers (freeCodeCamp-style)
+    const mySubmission = await prisma.assignmentSubmission.findUnique({
+      where: { userId_courseId_weekNumber: { userId, courseId, weekNumber } }
+    });
+    if (!mySubmission || mySubmission.status !== 'APPROVED') {
+      return res.status(403).json({
+        message: 'Complete this week and get it approved to view peer solutions.'
+      });
+    }
+
+    const solutions = await prisma.assignmentSubmission.findMany({
+      where: {
+        courseId,
+        weekNumber,
+        status: 'APPROVED',
+        shareSolution: true,
+        userId: { not: userId }
+      },
+      select: {
+        id: true,
+        fileName: true,
+        fileUrl: true,
+        submittedAt: true,
+        user: {
+          select: { id: true, name: true, avatarUrl: true }
+        }
+      },
+      orderBy: { submittedAt: 'desc' }
+    });
+
+    res.json({ solutions });
+  } catch (err: any) {
+    logger.error('Fetch peer solutions error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// PATCH /api/assignments/:id/privacy - toggle own solution sharing (issue #75)
+router.patch(
+  '/:id/privacy',
+  authenticateToken,
+  validateBody(['shareSolution']),
+  async (req: Request, res: Response): Promise<any> => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const { shareSolution } = req.body as any;
+
+      const submission = await prisma.assignmentSubmission.findUnique({ where: { id } });
+      if (!submission) return res.status(404).json({ message: 'Submission not found.' });
+
+      const isOwner = (req as any).user.id === submission.userId;
+      const isAdminUser = (req as any).user.role === 'ADMIN';
+      if (!isOwner && !isAdminUser) {
+        return res.status(403).json({ message: 'You can only update your own submission.' });
+      }
+
+      const updated = await prisma.assignmentSubmission.update({
+        where: { id },
+        data: { shareSolution: !!shareSolution }
+      });
+
+      logger.info(`User ${(req as any).user.id} set assignment ${id} shareSolution=${updated.shareSolution}`);
+      res.json({ success: true, shareSolution: updated.shareSolution });
+    } catch (err: any) {
+      logger.error('Update assignment privacy error:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+);
+
 export default router;

@@ -1,8 +1,10 @@
 import prisma from '../lib/prisma';
 import crypto from 'crypto';
 import { getReferralStats } from './authService';
+import { getRequiredEnv } from '../lib/env';
 
-const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || 'nexus_webhook_signature_secret_key_2026';
+// SECURITY (#65): fail-fast — no hardcoded fallback secret.
+const WEBHOOK_SECRET = getRequiredEnv('PAYMENT_WEBHOOK_SECRET');
 
 export const getAllPayments = async () => {
   return await prisma.payment.findMany({
@@ -62,7 +64,9 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
     const stats = await getReferralStats(user.referralCode);
     referralCount = stats.referralCount;
     if (stats.referralSuccess) {
-      referralDiscount = 1.0;
+      // BUSINESS (#68): cap referral discount at 50% — 100% free was a
+      // money-loss exploit via fake-referral signups.
+      referralDiscount = 0.5;
     }
   }
 

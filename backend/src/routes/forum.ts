@@ -140,6 +140,18 @@ router.post(
       const { title, content, courseId } = req.body;
       const userId = req.user.id;
 
+      // P2 (#69): only enrolled users (or admins) may post in a course forum.
+      // A course-scoped post requires a VERIFIED payment for that course.
+      if (courseId) {
+        const isAdmin = req.user.role === 'ADMIN';
+        const enrolled = await prisma.payment.findFirst({
+          where: { userId, courseId, status: 'VERIFIED' }
+        });
+        if (!isAdmin && !enrolled) {
+          return res.status(403).json({ message: 'You must be enrolled in this course to post in its forum.' });
+        }
+      }
+
       const newPost = await prisma.discussion.create({
         data: {
           title,

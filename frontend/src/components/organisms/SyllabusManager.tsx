@@ -1,5 +1,6 @@
-import React from 'react';
-import { BookOpen, Lock, CheckCircle, ChevronRight, Home } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Lock, CheckCircle, ChevronRight, Home, Map as MapIcon, List } from 'lucide-react';
+import ProgressMap from './ProgressMap';
 
 interface Week {
   week: number;
@@ -27,6 +28,7 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
   viewState = 'course-home',
   setViewState
 }) => {
+  const [showMap, setShowMap] = useState(false);
   const radius = 20;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (completedPercentage / 100) * circumference;
@@ -69,6 +71,40 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
         </div>
       </div>
       
+      {/* List ↔ Map toggle (issue #73) */}
+      <div className="flex rounded-lg border border-slate-800 overflow-hidden">
+        <button
+          onClick={() => setShowMap(false)}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
+            !showMap ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-900/40 text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <List size={12} /> List
+        </button>
+        <button
+          onClick={() => setShowMap(true)}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
+            showMap ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-900/40 text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <MapIcon size={12} /> Map
+        </button>
+      </div>
+
+      {showMap ? (
+        <ProgressMap
+          weeks={weeks}
+          currentWeek={currentWeek}
+          activeWeekIndex={activeWeekIndex}
+          setActiveWeekIndex={setActiveWeekIndex}
+          onNodeClick={() => {
+            if (setViewState) {
+              setViewState('module-home');
+              onWeekChange?.();
+            }
+          }}
+        />
+      ) : (
       <div className="space-y-2.5">
         {/* Course Home Overview Button */}
         <button
@@ -144,6 +180,7 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
           );
         })}
       </div>
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../api';
 import { useCourses } from '../hooks/useCourses';
 import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database, Wrench, Building2 } from 'lucide-react';
 import CourseCard from '../components/molecules/CourseCard';
@@ -62,6 +63,36 @@ const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: coursesData, loading } = useCourses();
+  // Daily coding challenge + real streak (issue #74)
+  const [daily, setDaily] = useState<any>(null);
+  const [dailySolved, setDailySolved] = useState<boolean | null>(null);
+  const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
+  const [dailyAnswer, setDailyAnswer] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.get('/practice/daily').then((r) => setDaily(r.data)).catch(() => {});
+  }, []);
+
+  const submitDailyAnswer = async (answer: string) => {
+    try {
+      setDailyAnswer(answer);
+      const res = await api.post('/practice/daily/submit', { answer });
+      if (res.data.alreadySolved) {
+        setDailySolved(false);
+        setDailyFeedback('Already solved today — come back tomorrow for more XP!');
+        return;
+      }
+      setDailySolved(res.data.correct);
+      setDailyFeedback(
+        res.data.correct
+          ? `Correct! +${res.data.pointsEarned} XP (streak ${res.data.streak}🔥${res.data.milestone ? ' · milestone bonus!' : ''})`
+          : `Not quite — correct answer: ${res.data.correctAnswer}`
+      );
+      setDaily((prev: any) => ({ ...prev, streak: res.data.streak, solvedToday: true }));
+    } catch {
+      setDailyFeedback('Failed to submit. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
@@ -111,7 +142,8 @@ const Dashboard = () => {
     return "Good Evening";
   };
 
-  const streakDays = totalQuizzesPassed > 0 ? (totalQuizzesPassed * 2 + 1) : activeTracksCount > 0 ? 1 : 0;
+  // Real streak from /practice/daily (issue #74) — replaces the old fake totalQuizzes*2+1.
+  const streakDays = daily?.streak ?? (totalQuizzesPassed > 0 ? 1 : 0);
 
   const activeTracks = user?.progresses?.filter((p: any) => p.progress > 0 && p.progress < 100) || [];
   const latestProgressInfo = activeTracks.length > 0 ? activeTracks[0] : null;
@@ -227,6 +259,58 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Daily Coding Challenge Widget (issue #74) */}
+      {daily && (
+        <div className="p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/25 rounded-2xl">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-amber-400 text-[10px] font-black uppercase tracking-widest">
+              <span className="text-base">🔥</span> Daily Coding Challenge
+              <span className="px-2 py-0.5 bg-amber-500/15 border border-amber-500/30 rounded-md text-amber-300">
+                Streak {daily.streak} day{daily.streak !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+              {daily.bonusOnNextMilestone === 0 ? 'Milestone ready!' : `${daily.bonusOnNextMilestone} days to bonus XP`}
+            </span>
+          </div>
+
+          <p className="text-sm text-slate-300 font-medium mb-1">{daily.question.text}</p>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-3">
+            {daily.question.topic} · {daily.question.difficulty}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+            {(daily.question.options || []).map((opt: string, i: number) => (
+              <button
+                key={i}
+                disabled={daily.solvedToday || dailySolved !== null}
+                onClick={() => submitDailyAnswer(opt)}
+                className={`text-left px-3 py-2 rounded-lg border text-xs font-semibold transition-all ${
+                  dailySolved === true && dailyAnswer === opt
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                    : dailySolved === false && dailyAnswer === opt
+                      ? 'bg-red-500/15 border-red-500/40 text-red-300'
+                      : dailySolved === false && opt === daily.question.correctAnswer
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                        : dailySolved !== null
+                          ? 'bg-slate-900/40 border-slate-800 text-slate-600'
+                          : 'bg-slate-900/50 border-slate-700 text-slate-300 hover:border-amber-500/50 hover:text-amber-300'
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+
+          {dailySolved !== null && dailyFeedback && (
+            <p className={`text-xs font-bold ${dailySolved ? 'text-emerald-400' : 'text-red-400'}`}>{dailyFeedback}</p>
+          )}
+          {daily.solvedToday && dailySolved === null && (
+            <p className="text-xs font-bold text-emerald-400">✓ Solved today — come back tomorrow to keep your streak!</p>
+          )}
+        </div>
+      )}
 
       {/* Dynamic Mid-Section: Quick Resume & Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

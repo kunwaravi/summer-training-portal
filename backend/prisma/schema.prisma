@@ -36,6 +36,7 @@ model User {
   referredBy        String?
   assignments       AssignmentSubmission[]
   certificates      CertificateRecord[]
+  challengeProgresses ChallengeProgress[]
   progresses        CourseProgress[]
   discussions       Discussion[]
   comments          ForumComment[]
@@ -88,6 +89,7 @@ model Course {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   progresses         CourseProgress[]
+  challenges         Challenge[]
   finalExamQuestions FinalExamQuestion[]
   modules            Module[]
   payments           Payment[]
@@ -105,6 +107,7 @@ model Module {
   topics        Topic[]
   quizQuestions QuizQuestion[]
   progresses    ModuleProgress[]
+  challenges    Challenge[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -238,17 +241,18 @@ model CertificateRecord {
 }
 
 model AssignmentSubmission {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  courseId    String
-  weekNumber  Int
-  fileUrl     String
-  fileName    String
-  status      String   @default("PENDING")
-  feedback    String?
-  submittedAt DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  courseId      String
+  weekNumber    Int
+  fileUrl       String
+  fileName      String
+  status        String   @default("PENDING")
+  feedback      String?
+  shareSolution Boolean  @default(true) // privacy opt-out (issue #75)
+  submittedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId, weekNumber])
   @@index([userId, courseId])
@@ -265,6 +269,7 @@ model ProjectSubmission {
   githubUrl     String?
   status        String   @default("PENDING")
   feedback      String?
+  shareSolution Boolean  @default(true) // privacy opt-out (issue #75)
   submittedAt   DateTime @default(now())
   updatedAt     DateTime @updatedAt
   course        Course   @relation(fields: [courseId], references: [id])
@@ -332,4 +337,45 @@ model TopicProgress {
 
   @@unique([userId, topicId])
   @@index([userId, courseId])
+}
+
+model Challenge {
+  id            Int                @id @default(autoincrement())
+  courseId      String
+  moduleId      Int
+  title         String
+  dashedName    String
+  challengeType String             // "HTML" | "CSS" | "JavaScript" | "Python" | "SQL"
+  description   String             // markdown (--description--)
+  instructions  String             // markdown (--instructions--)
+  seedCode      String             // starter code; for SQL = DB bootstrap SQL
+  solutionCode  String?
+  testCode      String             // JS assertion source evaluated in runner context
+  order         Int                @default(0)
+  isPublished   Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  course        Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  module        Module             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progresses    ChallengeProgress[]
+
+  @@unique([courseId, dashedName])
+  @@unique([moduleId, order])
+  @@index([courseId])
+  @@index([moduleId])
+}
+
+model ChallengeProgress {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  courseId    String
+  moduleId    Int
+  challengeId Int
+  completedAt DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@index([userId, courseId])
+  @@index([userId, moduleId])
 }

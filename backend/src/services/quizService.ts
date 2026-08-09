@@ -28,9 +28,17 @@ export const submitQuiz = async (userId: number, courseId: string, week: number,
   const questionIds = Object.keys(answers).map(id => parseInt(id));
   if (questionIds.length === 0) return null;
 
+  // Use the course's real module count instead of a hardcoded 20 (issue #70).
+  // CADDED courses have 5 weeks — a fixed /20 made them stuck at 25%.
+  const totalModules = await prisma.module.count({ where: { courseId } });
+  const requiredWeeks = totalModules > 0 ? totalModules : 20;
+
   const questions = await prisma.quizQuestion.findMany({
     where: {
       id: { in: questionIds }
+    },
+    include: {
+      topic: { select: { id: true, title: true } }
     }
   });
 
@@ -47,7 +55,10 @@ export const submitQuiz = async (userId: number, courseId: string, week: number,
       text: q.text,
       userAnswer,
       correctAnswer: q.correctAnswer,
-      isCorrect
+      isCorrect,
+      // Per-section grouping for the results modal (issue #76)
+      topicId: q.topicId ?? undefined,
+      topicTitle: q.topic?.title ?? null
     };
   });
 
@@ -179,15 +190,15 @@ export const submitQuiz = async (userId: number, courseId: string, week: number,
               },
               update: {
                 weekCompleted: week,
-                progress: Math.min(Math.round((week / 20) * 100), 100),
-                completed: week >= 20
+                progress: Math.min(Math.round((week / requiredWeeks) * 100), 100),
+                completed: week >= requiredWeeks
               },
               create: {
                 userId,
                 courseId,
                 weekCompleted: week,
-                progress: Math.min(Math.round((week / 20) * 100), 100),
-                completed: week >= 20
+                progress: Math.min(Math.round((week / requiredWeeks) * 100), 100),
+                completed: week >= requiredWeeks
               }
             });
           }
@@ -247,15 +258,15 @@ export const submitQuiz = async (userId: number, courseId: string, week: number,
           },
           update: {
             weekCompleted: week,
-            progress: Math.min(Math.round((week / 20) * 100), 100),
-            completed: week >= 20
+            progress: Math.min(Math.round((week / requiredWeeks) * 100), 100),
+            completed: week >= requiredWeeks
           },
           create: {
             userId,
             courseId,
             weekCompleted: week,
-            progress: Math.min(Math.round((week / 20) * 100), 100),
-            completed: week >= 20
+            progress: Math.min(Math.round((week / requiredWeeks) * 100), 100),
+            completed: week >= requiredWeeks
           }
         });
       }

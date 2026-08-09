@@ -4,10 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import { useCourseDetail } from '../hooks/useCourseDetail';
 import { useUI } from '../context/UIContext';
 import api from '../api';
-import { 
-  Lock, Play, Clipboard, 
+import {
+  Lock, Play, Clipboard,
   CheckCircle2, Zap, Eye, Code2, Briefcase, FileText,
-  MessageSquare, Cpu, ExternalLink, ChevronRight
+  MessageSquare, Cpu, ExternalLink, ChevronRight, Users
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -19,6 +19,7 @@ import SyllabusManager from '../components/organisms/SyllabusManager';
 import EnrollmentPanel from '../components/organisms/EnrollmentPanel';
 import Spinner from '../components/atoms/Spinner';
 import CodePlayground from '../components/molecules/CodePlayground';
+import PeerSolutionsModal from '../components/molecules/PeerSolutionsModal';
 
 // Custom static database of Anti-Patterns
 const antiPatternsData: Record<string, Record<number, { title: string; badCode: string; explanation: string; fix: string }>> = {
@@ -193,6 +194,11 @@ const CourseDetail = () => {
   const [expandedDoubtId, setExpandedDoubtId] = useState<number | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
 
+  // Peer Solutions (issue #75)
+  const [peerModal, setPeerModal] = useState<{ type: 'assignment' | 'project'; week?: number } | null>(null);
+  const [peerShareEnabled, setPeerShareEnabled] = useState(true);
+  const [projectStatus, setProjectStatus] = useState<any>(null);
+
   const fetchSubmissions = useCallback(async () => {
     if (!id) return;
     setLoadingSubmissions(true);
@@ -211,6 +217,20 @@ const CourseDetail = () => {
       fetchSubmissions();
     }
   }, [id, fetchSubmissions]);
+
+  const fetchProjectStatus = useCallback(async () => {
+    if (!id) return;
+    try {
+      const res = await api.get(`/projects/status/${id}`);
+      setProjectStatus(res.data.submission || null);
+    } catch (err) {
+      console.error('Failed to load project status:', err);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (id) fetchProjectStatus();
+  }, [id, fetchProjectStatus]);
 
   const fetchDoubts = useCallback(async () => {
     if (!id) return;
@@ -237,9 +257,9 @@ const CourseDetail = () => {
       setDoubtsList([res.data, ...doubtsList]);
       setNewDoubtText('');
       addToast('Doubt posted to community discussion forum!', 'success');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to post doubt:', err);
-      addToast('Failed to post doubt.', 'error');
+      addToast(err.response?.data?.message || 'Failed to post doubt.', 'error');
     }
   };
 
@@ -296,6 +316,42 @@ const CourseDetail = () => {
       addToast(msg, 'error');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Peer solutions (issue #75)
+  const openPeerSolutions = (week: number) => {
+    const mySub = submissions.find((s: any) => s.weekNumber === week);
+    if (mySub) setPeerShareEnabled(mySub.shareSolution);
+    setPeerModal({ type: 'assignment', week });
+  };
+
+  const openProjectPeerSolutions = () => {
+    if (projectStatus) setPeerShareEnabled(projectStatus.shareSolution);
+    setPeerModal({ type: 'project' });
+  };
+
+  const fetchPeerSolutions = async (): Promise<any[]> => {
+    if (!peerModal) return [];
+    if (peerModal.type === 'assignment') {
+      const res = await api.get(`/assignments/${id}/solutions`, { params: { weekNumber: peerModal.week } });
+      return res.data.solutions || [];
+    }
+    const res = await api.get(`/projects/${id}/solutions`);
+    return res.data.solutions || [];
+  };
+
+  const togglePeerShare = async (enabled: boolean) => {
+    if (!peerModal) return;
+    if (peerModal.type === 'assignment' && peerModal.week) {
+      const mySub = submissions.find((s: any) => s.weekNumber === peerModal.week);
+      if (!mySub) return;
+      const res = await api.patch(`/assignments/${mySub.id}/privacy`, { shareSolution: enabled });
+      setSubmissions((prev: any) => prev.map((s: any) => (s.id === mySub.id ? { ...s, shareSolution: res.data.shareSolution } : s)));
+    } else if (peerModal.type === 'project') {
+      if (!projectStatus) return;
+      const res = await api.patch(`/projects/${projectStatus.id}/privacy`, { shareSolution: enabled });
+      setProjectStatus((prev: any) => (prev ? { ...prev, shareSolution: res.data.shareSolution } : prev));
     }
   };
 
@@ -1102,6 +1158,12 @@ const CourseDetail = () => {
                         Syllabus Completed: <span className="text-purple-400 font-black">{currentWeek}/20 Chapters</span>
                       </div>
                     </div>
+                    {projectStatus?.status === 'APPROVED' && (
+                      <button onClick={openProjectPeerSolutions}
+                        className="mt-4 flex items-center gap-1.5 px-4 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 hover:border-purple-500/60 text-purple-300 font-extrabold text-[10px] uppercase tracking-widest rounded-lg transition-colors cursor-pointer">
+                        <Users size={13} /> View Peer Project Solutions
+                      </button>
+                    )}
                   </div>
 
                   {loadingSubmissions ? (
@@ -1133,8 +1195,14 @@ const CourseDetail = () => {
                             </div>
                             <div className="shrink-0 flex items-center">
                               {submission ? (
-                                <div className="text-[10px] text-slate-500 font-mono flex flex-col items-end gap-1">
+                                <div className="text-[10px] text-slate-500 font-mono flex flex-col items-end gap-2">
                                   <span>Submitted: {new Date(submission.submittedAt).toLocaleDateString()}</span>
+                                  {submission.status === 'APPROVED' && (
+                                    <button onClick={() => openPeerSolutions(weekNum)}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 hover:border-purple-500/60 text-purple-300 font-extrabold text-[9px] uppercase tracking-widest rounded-lg transition-colors cursor-pointer">
+                                      <Users size={11} /> View Peer Solutions
+                                    </button>
+                                  )}
                                 </div>
                               ) : isUnlocked ? (
                                 submittingWeek === weekNum ? (
@@ -1400,6 +1468,18 @@ const CourseDetail = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Peer Solutions Modal (issue #75) */}
+      <PeerSolutionsModal
+        open={peerModal !== null}
+        onClose={() => setPeerModal(null)}
+        title={peerModal?.type === 'assignment' ? `Week ${peerModal?.week} Peer Solutions` : 'Final Project Peer Solutions'}
+        subtitle="Community solutions · approved submissions only"
+        type={peerModal?.type || 'assignment'}
+        fetchSolutions={fetchPeerSolutions}
+        myShareEnabled={peerShareEnabled}
+        onToggleShare={togglePeerShare}
+      />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { authenticateToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
 import { validateBody } from '../middleware/validate';
 import { getLeaderboard } from '../services/leaderboardService';
+import { getDailyChallenge, submitDailyChallenge } from '../services/practiceService';
 
 const router = Router();
 
@@ -141,6 +142,36 @@ router.post(
       });
     } catch (error: any) {
       logger.error('Submit practice attempt error:', error);
+      next(error);
+    }
+  }
+);
+
+// GET /api/practice/daily - today's daily coding challenge + current streak (issue #74)
+router.get('/daily', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
+  try {
+    const data = await getDailyChallenge(req.user.id);
+    if (!data) return res.status(404).json({ message: 'No practice questions available yet.' });
+    res.json(data);
+  } catch (error: any) {
+    logger.error('Fetch daily challenge error:', error);
+    next(error);
+  }
+});
+
+// POST /api/practice/daily/submit - grade today's challenge, update streak + XP (issue #74)
+router.post(
+  '/daily/submit',
+  authenticateToken,
+  validateBody(['answer']),
+  async (req: any, res: Response, next: NextFunction): Promise<any> => {
+    try {
+      const { answer } = req.body;
+      const result = await submitDailyChallenge(req.user.id, answer);
+      if (!result) return res.status(404).json({ message: 'No practice questions available yet.' });
+      res.json(result);
+    } catch (error: any) {
+      logger.error('Submit daily challenge error:', error);
       next(error);
     }
   }

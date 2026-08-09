@@ -8,7 +8,7 @@ import { AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import QuizHeader from '../components/organisms/QuizHeader';
 import QuizQuestion from '../components/molecules/QuizQuestion';
-import QuizResults from '../components/organisms/QuizResults';
+import ExamResultsModal from '../components/molecules/ExamResultsModal';
 import Button from '../components/atoms/Button';
 import Spinner from '../components/atoms/Spinner';
 
@@ -137,25 +137,15 @@ const Quiz = () => {
     );
   }
 
-  // Quiz Results Grading Overview Screen
-  if (results) {
-    return (
-      <QuizResults 
-        passed={results.passed}
-        score={results.score}
-        courseId={courseId || ''}
-        breakdown={results.breakdown || []}
-        onReturn={() => navigate(`/course/${courseId}`)}
-        onRetry={() => window.location.reload()}
-      />
-    );
-  }
-
   // Active Quiz Form Slide Screen
   const questions = quizData?.questions || [];
   const activeQuestion = questions[currentQuestionIndex];
   const selectedOption = activeQuestion ? answers[activeQuestion.id] : undefined;
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
+
+  // Course completion state for certificate eligibility (issue #76)
+  const courseProgress = results?.updatedUser?.progresses?.find((p: any) => p.courseId === courseId);
+  const courseCompleted = courseProgress?.completed || courseProgress?.progress === 100;
 
   if (!activeQuestion) return null;
 
@@ -226,6 +216,20 @@ const Quiz = () => {
           )}
         </div>
       </div>
+
+      {/* Exam Results Modal (issue #76) */}
+      <ExamResultsModal
+        open={!!results}
+        onClose={() => navigate(`/course/${courseId}`)}
+        passed={results?.passed}
+        score={results?.score || 0}
+        courseId={courseId || ''}
+        breakdown={results?.breakdown || []}
+        courseCompleted={courseCompleted}
+        onRetry={() => window.location.reload()}
+        onViewCertificate={() => navigate(`/certificate?courseId=${courseId}`)}
+        onReturn={() => navigate(`/course/${courseId}`)}
+      />
     </div>
   );
 };

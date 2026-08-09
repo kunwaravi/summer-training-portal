@@ -186,7 +186,7 @@ const Verify = () => {
               id="credential-input"
               ref={inputRef}
               type="text"
-              placeholder="e.g. NEX-CPP_EMBEDDED-AVIN1001-VERIFIED"
+              placeholder="e.g. NEX-9F2A1C07B8D4E653-CPP_EMBEDDED"
               value={credentialId}
               onChange={(e) => setCredentialId(e.target.value)}
               className="flex-1 px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono placeholder-slate-600 focus:outline-none focus:border-amber-500 text-sm tracking-wide shadow-inner"

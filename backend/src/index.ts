@@ -1,7 +1,9 @@
+// Import env FIRST so dotenv.config() runs before any other module reads
+// process.env at import time (SECURITY #65 — required secrets must be present).
+import './lib/env';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import prisma from './lib/prisma';
 import { logger } from './lib/logger';
 import authRoutes from './routes/auth';
@@ -14,10 +16,13 @@ import forumRoutes from './routes/forum';
 import assignmentRoutes from './routes/assignment';
 import projectRoutes from './routes/project';
 import contactRoutes from './routes/contact';
+import challengeRoutes from './routes/challenge';
+import sandboxRoutes from './routes/sandbox';
 import { errorHandler } from './middleware/errorHandler';
 
-dotenv.config();
-
+// Required-secret validation now happens inside getRequiredEnv() at import time
+// (src/lib/env.ts). These explicit guards remain as a clear, logged fatal stop
+// in case a secret is removed from the environment after startup.
 if (!process.env.JWT_SECRET) {
   logger.error("FATAL ERROR: JWT_SECRET environment variable is not defined.");
   process.exit(1);
@@ -64,6 +69,8 @@ app.use('/api/forum', forumRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/challenges', challengeRoutes);
+app.use('/api/sandbox', sandboxRoutes);
 
 // Health Check Instrumentation Endpoint
 app.get('/health', async (req, res) => {

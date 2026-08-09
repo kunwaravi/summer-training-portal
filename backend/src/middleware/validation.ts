@@ -49,7 +49,9 @@ export const courseEnrollSchema = z.object({
 
 export const quizSubmissionSchema = z.object({
   body: z.object({
-    userId: z.number().or(z.string()),
+    // userId kept optional for backward-compat with old clients, but the server
+    // now derives the identity from the JWT (issue #64) and ignores this field.
+    userId: z.number().or(z.string()).optional(),
     courseId: z.string(),
     week: z.number().or(z.string()),
     topicId: z.number().or(z.string()).optional(),

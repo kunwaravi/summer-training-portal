@@ -3,8 +3,10 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import prisma from '../lib/prisma';
 import { AppError } from '../middleware/errorHandler';
+import { getRequiredEnv } from '../lib/env';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
+// SECURITY (#65): fail-fast — no hardcoded fallback secret.
+const JWT_SECRET = getRequiredEnv('JWT_SECRET');
 
 const generateReferralCode = (name: string) => {
   const cleanName = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
