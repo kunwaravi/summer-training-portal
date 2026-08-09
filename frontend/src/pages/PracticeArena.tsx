@@ -175,11 +175,11 @@ const PracticeArena = () => {
   if (questions.length === 0) {
     return (
       <div className="py-24 text-center max-w-lg mx-auto space-y-6">
-        <h2 className="text-2xl font-black text-white">No Questions Available</h2>
-        <p className="text-slate-400 text-sm">Practice questions for the {category} category are not currently seeded.</p>
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white">No Questions Available</h2>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">Practice questions for the {category} category are not currently seeded.</p>
         <button
           onClick={() => navigate('/dashboard')}
-          className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 px-6 rounded-xl transition"
+          className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold py-2.5 px-6 rounded-xl transition"
         >
           Return to Dashboard
         </button>
@@ -196,18 +196,18 @@ const PracticeArena = () => {
       className="py-6 max-w-5xl mx-auto px-4 space-y-6"
     >
       {/* Top Breadcrumb Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
         <button
           onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition text-xs font-black uppercase tracking-widest"
+          className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition text-xs font-black uppercase tracking-widest"
         >
           <ArrowLeft size={16} /> Back to Dashboard
         </button>
 
         {!results && (
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-850 px-4 py-2 rounded-2xl shadow-inner">
-            <Timer className={`w-4 h-4 ${timeLeft < 120 ? 'text-rose-500 animate-pulse' : 'text-emerald-400'}`} />
-            <span className={`font-mono text-sm font-black tracking-widest ${timeLeft < 120 ? 'text-rose-400' : 'text-emerald-400'}`}>
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 px-4 py-2 rounded-2xl shadow-inner">
+            <Timer className={`w-4 h-4 ${timeLeft < 120 ? 'text-rose-500 animate-pulse' : 'text-emerald-600 dark:text-emerald-400'}`} />
+            <span className={`font-mono text-sm font-black tracking-widest ${timeLeft < 120 ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               {formatTime(timeLeft)}
             </span>
           </div>
@@ -215,25 +215,25 @@ const PracticeArena = () => {
       </div>
 
       <div className="text-center space-y-2">
-        <div className="inline-block bg-emerald-500/10 border border-emerald-500/20 px-4 py-1 rounded-full text-emerald-400 text-[11px] font-black uppercase tracking-widest mb-1">
+        <div className="inline-block bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-4 py-1 rounded-full text-emerald-600 dark:text-emerald-400 text-[11px] font-black uppercase tracking-widest mb-1">
           {category} Practice Arena
         </div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Edunexus Adaptive Learning Workbench
         </h1>
-        <p className="text-slate-400 text-xs max-w-xl mx-auto">
+        <p className="text-slate-500 dark:text-slate-400 text-xs max-w-xl mx-auto">
           Reinforce conceptual skills. 10 XP points awarded for every correct solution. Re-attempt to beat your personal best.
         </p>
       </div>
 
       {/* Mode Switcher */}
-      <div className="flex justify-center gap-4 bg-slate-900/30 border border-slate-900 p-2.5 rounded-2xl max-w-sm mx-auto">
+      <div className="flex justify-center gap-4 bg-slate-100 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-900 p-2.5 rounded-2xl max-w-sm mx-auto">
         <button
           onClick={() => setMode('mcq')}
           className={`flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
             mode === 'mcq'
               ? 'bg-emerald-600 text-slate-950 shadow-md'
-              : 'text-slate-400 hover:text-white'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           Adaptive Quiz Mode
@@ -243,7 +243,7 @@ const PracticeArena = () => {
           className={`flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
             mode === 'coding'
               ? 'bg-emerald-600 text-slate-950 shadow-md'
-              : 'text-slate-400 hover:text-white'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           Interactive Coding Mode
@@ -259,13 +259,13 @@ const PracticeArena = () => {
             exit={{ opacity: 0 }}
             className="space-y-6"
           >
-            <div className="bg-slate-900 border border-slate-850 p-6 rounded-3xl space-y-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-850 pb-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-3xl space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 dark:border-slate-850 pb-4">
                 <div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Practice Coding Templates</h3>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Practice Coding Templates</h3>
                   <p className="text-[11px] text-slate-500 mt-1">Select a track template and solve the inline debugging exercises.</p>
                 </div>
-                <div className="flex gap-2 bg-slate-950 border border-slate-850 p-1 rounded-xl">
+                <div className="flex gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-1 rounded-xl">
                   {(['C', 'C++', 'IoT'] as const).map((lang) => (
                     <button
                       key={lang}
@@ -273,7 +273,7 @@ const PracticeArena = () => {
                       className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all ${
                         selectedLang === lang
                           ? 'bg-blue-600 text-white shadow-md'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       {lang}
@@ -282,23 +282,23 @@ const PracticeArena = () => {
                 </div>
               </div>
 
-              <div className="p-4 bg-slate-950/40 border border-slate-850 rounded-2xl text-xs space-y-2">
-                <span className="text-[11px] font-black text-amber-500 uppercase tracking-widest">Exercise Description:</span>
+              <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-850 rounded-2xl text-xs space-y-2">
+                <span className="text-[11px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">Exercise Description:</span>
                 {selectedLang === 'C' && (
-                  <p className="text-slate-350 leading-relaxed font-medium">
-                    <strong>C bitmasking control register:</strong> You need to set bit 0 and bit 3 of the control register 
+                  <p className="text-slate-600 dark:text-slate-350 leading-relaxed font-medium">
+                    <strong>C bitmasking control register:</strong> You need to set bit 0 and bit 3 of the control register
                     using a bitwise OR operator. Complete the code by making sure <code>SYS_CTRL_REG</code> is correctly modified.
                   </p>
                 )}
                 {selectedLang === 'C++' && (
-                  <p className="text-slate-350 leading-relaxed font-medium">
-                    <strong>C++ class instance allocation:</strong> Instantiate the <code>TempSensor</code> class with a starting temperature 
+                  <p className="text-slate-600 dark:text-slate-350 leading-relaxed font-medium">
+                    <strong>C++ class instance allocation:</strong> Instantiate the <code>TempSensor</code> class with a starting temperature
                     of <code>24.5</code>. Ensure the printed output matches the target specification.
                   </p>
                 )}
                 {selectedLang === 'IoT' && (
-                  <p className="text-slate-350 leading-relaxed font-medium">
-                    <strong>IoT publisher telemetry event:</strong> Trigger the ESP32 setup configuration, and then print 
+                  <p className="text-slate-600 dark:text-slate-350 leading-relaxed font-medium">
+                    <strong>IoT publisher telemetry event:</strong> Trigger the ESP32 setup configuration, and then print
                     the telemetry publish event matching the required output format.
                   </p>
                 )}
@@ -321,9 +321,9 @@ const PracticeArena = () => {
             className="grid grid-cols-1 lg:grid-cols-4 gap-8"
           >
             {/* Left Column: Navigator Panel */}
-            <div className="lg:col-span-1 bg-slate-900/60 border border-slate-850 p-6 rounded-3xl space-y-6 self-start shadow-xl">
+            <div className="lg:col-span-1 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-850 p-6 rounded-3xl space-y-6 self-start shadow-xl">
               <div>
-                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest">Question Navigator</h3>
+                <h3 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Question Navigator</h3>
                 <p className="text-[11px] text-slate-500 mt-1">Jump to any question instantly.</p>
               </div>
 
@@ -340,8 +340,8 @@ const PracticeArena = () => {
                         isActive
                           ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 border border-emerald-400'
                           : isAnswered
-                          ? 'bg-emerald-950/40 border border-emerald-800/40 text-emerald-400'
-                          : 'bg-slate-950 border border-slate-850 text-slate-450 hover:bg-slate-800'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-slate-600 dark:text-slate-450 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
                     >
                       {idx + 1}
@@ -350,39 +350,39 @@ const PracticeArena = () => {
                 })}
               </div>
 
-              <div className="border-t border-slate-850 pt-4 space-y-2">
-                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
+              <div className="border-t border-slate-200 dark:border-slate-850 pt-4 space-y-2">
+                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                   <div className="w-3 h-3 bg-emerald-500 rounded"></div> Current Question
                 </div>
-                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
-                  <div className="w-3 h-3 bg-emerald-950/40 border border-emerald-800/40 rounded"></div> Solved Question
+                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                  <div className="w-3 h-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 rounded"></div> Solved Question
                 </div>
-                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
-                  <div className="w-3 h-3 bg-slate-950 border border-slate-850 rounded"></div> Unanswered
+                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                  <div className="w-3 h-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded"></div> Unanswered
                 </div>
               </div>
             </div>
 
             {/* Right Column: Question Card Panel */}
             <div className="lg:col-span-3 space-y-6">
-              <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 md:p-8 shadow-xl space-y-6 relative overflow-hidden">
-                <div className="flex items-center justify-between border-b border-slate-850 pb-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-3xl p-6 md:p-8 shadow-xl space-y-6 relative overflow-hidden">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-850 pb-4">
                   <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider font-mono">
                     Topic: {currentQuestion.topic}
                   </span>
                   <span className={`px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
                     currentQuestion.difficulty === 'Easy'
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25'
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/25'
                       : currentQuestion.difficulty === 'Medium'
-                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25'
-                      : 'bg-rose-500/10 text-rose-400 border border-rose-500/25'
+                      ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/25'
+                      : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/25'
                   }`}>
                     {currentQuestion.difficulty}
                   </span>
                 </div>
 
                 <div className="space-y-6">
-                  <h2 className="text-lg md:text-xl font-bold text-white leading-relaxed">
+                  <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white leading-relaxed">
                     {currentIdx + 1}. {currentQuestion.text}
                   </h2>
 
@@ -395,12 +395,12 @@ const PracticeArena = () => {
                           onClick={() => handleOptionSelect(currentQuestion.id, opt)}
                           className={`text-left p-4 rounded-2xl border transition-all flex items-center gap-4 ${
                             isSelected
-                              ? 'bg-emerald-950/20 border-emerald-500/50 text-emerald-100 shadow-inner'
-                              : 'bg-slate-950/50 border-slate-850 text-slate-300 hover:bg-slate-850 hover:border-slate-800'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/50 text-emerald-700 dark:text-emerald-100 shadow-inner'
+                              : 'bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-850 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 dark:hover:border-slate-800'
                           }`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                            isSelected ? 'border-emerald-500' : 'border-slate-600'
+                            isSelected ? 'border-emerald-500' : 'border-slate-300 dark:border-slate-600'
                           }`}>
                             {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>}
                           </div>
@@ -413,14 +413,14 @@ const PracticeArena = () => {
               </div>
 
               {/* Navigator Actions bar */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <button
                   disabled={currentIdx === 0}
                   onClick={() => setCurrentIdx((p) => p - 1)}
-                  className={`px-4 py-2.5 rounded-xl border border-slate-850 text-xs font-black uppercase tracking-wider flex items-center gap-1 transition ${
+                  className={`px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-wider flex items-center gap-1 transition ${
                     currentIdx === 0
-                      ? 'bg-slate-900/40 text-slate-650 cursor-not-allowed border-slate-900'
-                      : 'bg-slate-900 hover:bg-slate-800 text-slate-300'
+                      ? 'bg-slate-100 dark:bg-slate-900/40 text-slate-400 dark:text-slate-650 cursor-not-allowed border-slate-200 dark:border-slate-900'
+                      : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-850'
                   }`}
                 >
                   <ChevronLeft size={16} /> Prev
@@ -429,7 +429,7 @@ const PracticeArena = () => {
                 <button
                   onClick={() => submitTest(false)}
                   disabled={submitting}
-                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-emerald-900/30 flex items-center gap-2 hover:-translate-y-0.5 transition-all"
+                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-emerald-600/20 dark:shadow-emerald-900/30 flex items-center gap-2 hover:-translate-y-0.5 transition-all"
                 >
                   Submit Practice Set
                 </button>
@@ -437,10 +437,10 @@ const PracticeArena = () => {
                 <button
                   disabled={currentIdx === questions.length - 1}
                   onClick={() => setCurrentIdx((p) => p + 1)}
-                  className={`px-4 py-2.5 rounded-xl border border-slate-850 text-xs font-black uppercase tracking-wider flex items-center gap-1 transition ${
+                  className={`px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-wider flex items-center gap-1 transition ${
                     currentIdx === questions.length - 1
-                      ? 'bg-slate-900/40 text-slate-650 cursor-not-allowed border-slate-900'
-                      : 'bg-slate-900 hover:bg-slate-800 text-slate-300'
+                      ? 'bg-slate-100 dark:bg-slate-900/40 text-slate-400 dark:text-slate-650 cursor-not-allowed border-slate-200 dark:border-slate-900'
+                      : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-850'
                   }`}
                 >
                   Next <ChevronRight size={16} />
@@ -458,32 +458,32 @@ const PracticeArena = () => {
             {/* Header Results Score Card */}
             <div className={`p-8 md:p-12 rounded-3xl border text-center shadow-2xl relative overflow-hidden ${
               results.accuracy >= 60
-                ? 'bg-gradient-to-b from-emerald-950/80 to-slate-900 border-emerald-500/30'
-                : 'bg-gradient-to-b from-rose-950/80 to-slate-900 border-rose-500/30'
+                ? 'bg-gradient-to-b from-emerald-50 dark:from-emerald-950/80 to-white dark:to-slate-900 border-emerald-200 dark:border-emerald-500/30'
+                : 'bg-gradient-to-b from-rose-50 dark:from-rose-950/80 to-white dark:to-slate-900 border-rose-200 dark:border-rose-500/30'
             }`}>
-              <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl"></div>
+              <div className="absolute top-0 right-0 w-72 h-72 bg-slate-900/5 dark:bg-white/5 rounded-full blur-3xl"></div>
 
               <div className="space-y-6 relative z-10">
                 <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center shadow-inner ${
-                  results.accuracy >= 60 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                  results.accuracy >= 60 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400'
                 }`}>
                   {results.accuracy >= 60 ? <Award size={40} /> : <Trophy size={40} />}
                 </div>
 
                 <div className="space-y-1">
-                  <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight font-mono">
+                  <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight font-mono">
                     {results.accuracy}% Accuracy
                   </h2>
-                  <p className="text-sm font-bold text-slate-400">
-                    Correct: <strong className="text-white">{results.score}</strong> / {results.totalQuestions} Questions
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                    Correct: <strong className="text-slate-900 dark:text-white">{results.score}</strong> / {results.totalQuestions} Questions
                   </p>
                 </div>
 
-                <div className="inline-block bg-emerald-500/10 border border-emerald-500/20 px-6 py-2 rounded-2xl text-emerald-400 text-xs font-black uppercase tracking-widest">
+                <div className="inline-block bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-6 py-2 rounded-2xl text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-widest">
                   Points Earned: +{results.pointsEarned} XP
                 </div>
 
-                <p className="text-slate-350 text-xs max-w-md mx-auto leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-350 text-xs max-w-md mx-auto leading-relaxed">
                   {results.accuracy >= 60
                     ? "Fantastic! You are mastering these core concepts. Keep hitting tests to scale up your leaderboard ranks."
                     : "There is room for improvement. Let's analyze the explanations below and give it another try!"}
@@ -492,13 +492,13 @@ const PracticeArena = () => {
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4">
                   <button
                     onClick={handleRetry}
-                    className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all hover:-translate-y-0.5"
+                    className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white dark:text-slate-950 font-black rounded-xl text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-emerald-600/20 dark:shadow-emerald-900/20 transition-all hover:-translate-y-0.5"
                   >
                     <RefreshCw size={14} /> Re-run Practice Arena
                   </button>
                   <button
                     onClick={() => navigate('/dashboard')}
-                    className="px-6 py-3.5 bg-slate-800 hover:bg-slate-750 text-white font-black rounded-xl text-xs uppercase tracking-widest transition-all"
+                    className="px-6 py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-white font-black rounded-xl text-xs uppercase tracking-widest transition-all"
                   >
                     Return to Dashboard
                   </button>
@@ -507,9 +507,9 @@ const PracticeArena = () => {
             </div>
 
             {/* Explanatory solutions breakdown */}
-            <div className="space-y-6 pt-6 border-t border-slate-800">
+            <div className="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-800">
               <div className="px-2">
-                <h3 className="text-lg font-black text-white uppercase tracking-wider">Concept Solutions Breakdown</h3>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Concept Solutions Breakdown</h3>
                 <p className="text-xs text-slate-500 mt-1">Review precise corrections and in-depth hardware/software conceptual explanations.</p>
               </div>
 
@@ -518,48 +518,48 @@ const PracticeArena = () => {
                   <div
                     key={item.questionId}
                     className={`p-6 rounded-3xl border space-y-4 shadow-xl ${
-                      item.isCorrect ? 'bg-emerald-950/10 border-emerald-900/30' : 'bg-rose-950/10 border-rose-900/30'
+                      item.isCorrect ? 'bg-emerald-50/60 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/30' : 'bg-rose-50/60 dark:bg-rose-950/10 border-rose-200 dark:border-rose-900/30'
                     }`}
                   >
                     <div className="flex gap-3">
                       <div className="pt-0.5 shrink-0">
                         {item.isCorrect ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                         ) : (
-                          <XCircle className="w-5 h-5 text-rose-400" />
+                          <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
                         )}
                       </div>
 
                       <div className="space-y-4 w-full">
                         <div className="flex items-center justify-between flex-wrap gap-2">
-                          <h4 className="text-sm font-bold text-slate-200 leading-relaxed">
+                          <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-relaxed">
                             {idx + 1}. {item.text}
                           </h4>
-                          <span className="text-[11px] uppercase font-black tracking-widest text-slate-500 font-mono bg-slate-900 border border-slate-850 px-2 py-0.5 rounded">
+                          <span className="text-[11px] uppercase font-black tracking-widest text-slate-500 font-mono bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 px-2 py-0.5 rounded">
                             Topic: {item.topic}
                           </span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="p-4 bg-slate-950/50 border border-slate-850 rounded-2xl space-y-1">
+                          <div className="p-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-850 rounded-2xl space-y-1">
                             <span className="text-[11px] font-black uppercase text-slate-500 block">Your Selected Answer</span>
-                            <span className={`text-xs font-medium ${item.isCorrect ? 'text-emerald-400 font-bold' : 'text-rose-400'}`}>
+                            <span className={`text-xs font-medium ${item.isCorrect ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400'}`}>
                               {item.userAnswer || 'No Answer Submitted'}
                             </span>
                           </div>
 
                           {!item.isCorrect && (
-                            <div className="p-4 bg-slate-950/50 border border-emerald-950/30 rounded-2xl space-y-1">
-                              <span className="text-[11px] font-black uppercase text-emerald-400 block">Correct Conceptual Answer</span>
-                              <span className="text-xs font-bold text-emerald-400">{item.correctAnswer}</span>
+                            <div className="p-4 bg-slate-50 dark:bg-slate-950/50 border border-emerald-200 dark:border-emerald-950/30 rounded-2xl space-y-1">
+                              <span className="text-[11px] font-black uppercase text-emerald-600 dark:text-emerald-400 block">Correct Conceptual Answer</span>
+                              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{item.correctAnswer}</span>
                             </div>
                           )}
                         </div>
 
                         {item.explanation && (
-                          <div className="p-4 bg-slate-950/40 border border-slate-850 rounded-2xl space-y-2">
-                            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400 block">Conceptual Explanation</span>
-                            <p className="text-xs text-slate-400 leading-relaxed font-medium">{item.explanation}</p>
+                          <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-850 rounded-2xl space-y-2">
+                            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">Conceptual Explanation</span>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{item.explanation}</p>
                           </div>
                         )}
                       </div>
