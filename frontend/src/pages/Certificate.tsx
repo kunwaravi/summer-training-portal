@@ -375,8 +375,8 @@ const Certificate = () => {
 
       {/* Action Navigation Row */}
       <div className="w-full flex justify-between items-center no-print">
-        <button 
-          onClick={() => navigate(`/course/${courseId}`)}
+        <button
+          onClick={() => navigate(user?.role === 'ADMIN' ? '/admin' : '/dashboard')}
           className="flex items-center gap-2 text-slate-400 hover:text-white transition text-xs font-bold uppercase tracking-wider"
         >
           ← Return to Console

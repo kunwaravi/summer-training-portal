@@ -11,14 +11,18 @@ import Card from '../components/atoms/Card';
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
+  const [resetUrl, setResetUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { addToast } = useUI();
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await api.post('/auth/forgot-password', { email });
+      const res = await api.post('/auth/forgot-password', { email });
+      // Dev deployment has no mailer — the backend returns the reset link in
+      // the body so the flow works end-to-end. Production emails it instead.
+      if (res.data?.resetUrl) setResetUrl(res.data.resetUrl);
       setSuccess(true);
       addToast('Reset link sent to your email.', 'success');
     } catch (err: any) {
@@ -69,6 +73,22 @@ const ForgotPasswordPage = () => {
                 <p className="text-xs text-slate-450 font-bold leading-relaxed">
                   We've sent a cryptographic reset link to your registered email.
                 </p>
+                {resetUrl && (
+                  <div className="mt-4 p-3 rounded-xl bg-slate-950/60 border border-emerald-500/20">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">
+                      Dev Mode — Reset Link
+                    </p>
+                    <a
+                      href={resetUrl}
+                      className="text-xs text-emerald-400 underline break-all hover:text-emerald-300"
+                    >
+                      {resetUrl}
+                    </a>
+                    <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
+                      Production sends this link by email instead.
+                    </p>
+                  </div>
+                )}
               </div>
               <Link to="/login" className="block pt-4">
                 <Button variant="outline" className="w-full uppercase tracking-widest text-[10px]">

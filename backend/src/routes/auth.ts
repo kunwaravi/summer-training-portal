@@ -1,7 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import * as authService from '../services/authService';
 import { authenticateToken, isAdmin } from '../middleware/auth';
-import { validate, registerSchema, loginSchema } from '../middleware/validation';
+import { validate, registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from '../middleware/validation';
+import { rateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -18,6 +19,32 @@ router.post('/login', validate(loginSchema), async (req: Request, res: Response,
   try {
     const result = await authService.loginUser(req.body);
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// #86: Forgot password — frontend POSTs /auth/forgot-password but the route was
+// missing (404). Rate-limited; always 200 (anti-enumeration). No mailer in this
+// deployment, so resetUrl is returned in the body for dev convenience.
+router.post('/forgot-password', rateLimiter(5, 60_000), validate(forgotPasswordSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await authService.forgotPassword(req.body.email);
+    res.json({
+      success: true,
+      message: 'If an account exists for that email, a reset link has been sent.',
+      ...(result.sent ? { resetUrl: result.resetUrl } : {})
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// #86: Reset password — frontend POSTs /auth/reset-password with { token, newPassword }.
+router.post('/reset-password', rateLimiter(10, 60_000), validate(resetPasswordSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await authService.resetPassword(req.body.token, req.body.newPassword);
+    res.json({ success: true, message: 'Password updated successfully.' });
   } catch (error) {
     next(error);
   }

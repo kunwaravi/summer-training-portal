@@ -164,3 +164,108 @@ body {
   border-color: #fca5a5 !important; /* Red 300 */
 }
 
+/* ============================================================
+   #84 COMPLETION — missing dark-surface overrides.
+   These classes were dark backgrounds/borders/gradients that the
+   original override list missed, causing dark-on-dark invisible
+   content in light mode. Surfaces → light slate, opacity variants
+   → white (matching the existing convention above).
+   Superseded by the token migration in #77.
+   ============================================================ */
+
+/* Solid surfaces that were missing */
+.light .bg-slate-700,
+.light .bg-slate-750,
+.light .bg-slate-905,
+.light .bg-slate-500 {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Missing opacity variants of 950 / 900 / 800 / 850 / 700 */
+.light .bg-slate-950\/10,
+.light .bg-slate-950\/20,
+.light .bg-slate-950\/25,
+.light .bg-slate-950\/70,
+.light .bg-slate-950\/80,
+.light .bg-slate-950\/95 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+.light .bg-slate-900\/30,
+.light .bg-slate-900\/50,
+.light .bg-slate-900\/80 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+.light .bg-slate-800\/40,
+.light .bg-slate-800\/60,
+.light .bg-slate-800\/80 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+.light .bg-slate-850\/20 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+.light .bg-slate-700\/50 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Missing border overrides */
+.light .border-slate-855,
+.light .border-slate-600,
+.light .border-slate-950 {
+  border-color: #e2e8f0 !important;
+}
+.light .border-slate-800\/50,
+.light .border-slate-800\/65,
+.light .border-slate-800\/70,
+.light .border-slate-800\/80 {
+  border-color: #e2e8f0 !important;
+}
+.light .border-slate-900\/50,
+.light .border-slate-900\/60 {
+  border-color: #e2e8f0 !important;
+}
+.light .border-slate-850\/60,
+.light .border-slate-700\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Slate gradients — become light surfaces so white text isn't hidden */
+.light .from-slate-800,
+.light .from-slate-900,
+.light .from-slate-950,
+.light .from-slate-700,
+.light .to-slate-800,
+.light .to-slate-900,
+.light .to-slate-950 {
+  --tw-gradient-from: #e2e8f0 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, #f8fafc) !important;
+  --tw-gradient-to: #f8fafc !important;
+  color: #0f172a !important;
+}
+.light .from-slate-400,
+.light .to-slate-400 {
+  --tw-gradient-from: #cbd5e1 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, #e2e8f0) !important;
+  --tw-gradient-to: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Dividers */
+.light .divide-slate-850,
+.light .divide-slate-900 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Hover state for the newly-covered button surfaces */
+.light button.bg-slate-700:hover,
+.light button.bg-slate-800:hover,
+.light button.bg-slate-850:hover {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+

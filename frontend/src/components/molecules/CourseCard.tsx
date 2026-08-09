@@ -101,9 +101,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
                           <span className="text-[10px] font-black text-amber-400 shrink-0 bg-amber-500/10 h-5 w-9 flex items-center justify-center rounded border border-amber-500/20">
                             W{syll.week}
                           </span>
-                          <div>
-                            <p className="text-xs font-bold text-white leading-tight">{syll.title}</p>
-                            <p className="text-[10px] text-slate-450 mt-0.5 font-medium leading-relaxed">{syll.details}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-white leading-tight break-words">{syll.title}</p>
+                            <p className="text-[10px] text-slate-450 mt-0.5 font-medium leading-relaxed break-words">{syll.details}</p>
                           </div>
                         </div>
                       ))}

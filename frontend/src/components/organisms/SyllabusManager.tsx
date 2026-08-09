@@ -160,19 +160,19 @@ const SyllabusManager: React.FC<SyllabusManagerProps> = ({
                     : 'bg-slate-950/20 border-slate-900 text-slate-500 opacity-50 cursor-not-allowed'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg transition-colors ${
-                  isActive 
-                    ? 'bg-cyan-500/20 text-cyan-400' 
-                    : isUnlocked 
-                      ? 'bg-slate-700/50 text-slate-400' 
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className={`p-2 rounded-lg transition-colors shrink-0 ${
+                  isActive
+                    ? 'bg-cyan-500/20 text-cyan-400'
+                    : isUnlocked
+                      ? 'bg-slate-700/50 text-slate-400'
                       : 'bg-slate-800 text-slate-600'
                  }`}>
                   {isCompleted ? <CheckCircle size={18} className="text-emerald-400" /> : isUnlocked ? <BookOpen size={18} /> : <Lock size={18} />}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Chapter {week.week}</p>
-                  <h4 className="text-sm font-bold truncate max-w-[170px]">{week.title}</h4>
+                  <h4 className="text-sm font-bold truncate">{week.title}</h4>
                 </div>
               </div>
               {isUnlocked && <ChevronRight size={16} className="text-slate-500 group-hover:translate-x-0.5 transition-transform" />}
