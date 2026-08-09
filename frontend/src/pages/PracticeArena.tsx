@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useUI } from '../context/UIContext';
 import { Trophy, Timer, ChevronLeft, ChevronRight, CheckCircle2, XCircle, ArrowLeft, RefreshCw, Award } from 'lucide-react';
+import Skeleton from '../components/atoms/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import CodePlayground from '../components/molecules/CodePlayground';
@@ -172,11 +173,62 @@ const PracticeArena = () => {
     return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
   };
 
+  // #46 — 3-tier timer cue: ok (emerald) → warn (amber, last 2 min) → critical (red, last 60s).
+  const timerTier = timeLeft <= 60 ? 'critical' : timeLeft <= 120 ? 'warn' : 'ok';
+  const timerColors: { icon: string; text: string; bar: string; ring: string } = {
+    ok: {
+      icon: 'text-emerald-600 dark:text-emerald-400',
+      text: 'text-emerald-600 dark:text-emerald-400',
+      bar: 'bg-emerald-500 dark:bg-emerald-400',
+      ring: 'border-slate-200 dark:border-slate-850',
+    },
+    warn: {
+      icon: 'text-amber-500 animate-pulse',
+      text: 'text-amber-600 dark:text-amber-400',
+      bar: 'bg-amber-500',
+      ring: 'border-amber-300 dark:border-amber-500/40',
+    },
+    critical: {
+      icon: 'text-rose-500 animate-pulse',
+      text: 'text-rose-600 dark:text-rose-400',
+      bar: 'bg-rose-500',
+      ring: 'border-rose-400 dark:border-rose-500/50 shadow-lg shadow-rose-500/10',
+    },
+  }[timerTier];
+  const timeFrac = Math.max(timeLeft / 900, 0);
+
   if (loading) {
     return (
-      <div className="py-24 text-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
-        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Assembling Arena Infrastructure...</p>
+      <div className="py-6 max-w-5xl mx-auto px-4 space-y-6" role="status" aria-label="Loading practice arena">
+        <span className="sr-only">Loading questions…</span>
+        {/* breadcrumb + timer pill */}
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-9 w-28 rounded-2xl" />
+        </div>
+        {/* header */}
+        <div className="text-center space-y-3">
+          <Skeleton className="h-5 w-44 mx-auto rounded-full" />
+          <Skeleton className="h-8 w-72 max-w-full mx-auto" />
+          <Skeleton className="h-4 w-96 max-w-full mx-auto" />
+        </div>
+        {/* mode switcher */}
+        <Skeleton className="h-14 w-72 max-w-full mx-auto rounded-2xl" />
+        {/* navigator + question card */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-1 space-y-4">
+            <Skeleton className="h-4 w-32" />
+            <div className="grid grid-cols-5 gap-3">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-10 w-10 rounded-xl" />
+              ))}
+            </div>
+            <Skeleton className="h-24 rounded-2xl" />
+          </div>
+          <div className="lg:col-span-3">
+            <Skeleton className="h-72 rounded-3xl" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -214,10 +266,19 @@ const PracticeArena = () => {
         </button>
 
         {!results && (
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 px-4 py-2 rounded-2xl shadow-inner">
-            <Timer className={`w-4 h-4 ${timeLeft < 120 ? 'text-rose-500 animate-pulse' : 'text-emerald-600 dark:text-emerald-400'}`} />
-            <span className={`font-mono text-sm font-black tracking-widest ${timeLeft < 120 ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+          <div
+            className={`flex items-center gap-2 bg-white dark:bg-slate-900 border px-4 py-2 rounded-2xl shadow-inner transition-colors ${timerColors.ring}`}
+            title={timerTier === 'critical' ? 'Time is almost up — submit now!' : timerTier === 'warn' ? 'Under 2 minutes remaining' : undefined}
+          >
+            <Timer className={`w-4 h-4 ${timerColors.icon}`} />
+            <span className={`font-mono text-sm font-black tracking-widest ${timerColors.text}`}>
               {formatTime(timeLeft)}
+            </span>
+            <span className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden ml-1 hidden sm:block">
+              <span
+                className={`block h-full rounded-full transition-all duration-1000 ${timerColors.bar}`}
+                style={{ width: `${timeFrac * 100}%` }}
+              />
             </span>
           </div>
         )}

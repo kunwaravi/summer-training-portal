@@ -5,7 +5,7 @@ import api from '../api';
 import { useCourses } from '../hooks/useCourses';
 import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database, Wrench, Building2, Flame } from 'lucide-react';
 import CourseCard from '../components/molecules/CourseCard';
-import Spinner from '../components/atoms/Spinner';
+import Skeleton from '../components/atoms/Skeleton';
 import SkillRadar from '../components/molecules/SkillRadar';
 import ProjectStatusCard from '../components/molecules/ProjectStatusCard';
 import LeaderboardTab from '../components/organisms/LeaderboardTab';
@@ -96,8 +96,31 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner size="lg" />
+      <div className="py-6 sm:py-8 space-y-8 sm:space-y-10 max-w-7xl mx-auto px-4" role="status" aria-label="Loading dashboard">
+        <span className="sr-only">Loading your dashboard…</span>
+        {/* welcome header */}
+        <div className="space-y-4">
+          <Skeleton className="h-9 w-64 max-w-full" />
+          <Skeleton className="h-4 w-96 max-w-full" />
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-28 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </div>
+        </div>
+        {/* stat cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-2xl" />
+          ))}
+        </div>
+        {/* tab bar */}
+        <Skeleton className="h-12 w-80 max-w-full rounded-2xl" />
+        {/* course grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-64 rounded-3xl" />
+          ))}
+        </div>
       </div>
     );
   }

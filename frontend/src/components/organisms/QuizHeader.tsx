@@ -18,9 +18,11 @@ const QuizHeader: React.FC<QuizHeaderProps> = ({ onCancel, timeLeft, formatTime 
       </button>
       
       <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono text-sm ${
-        timeLeft < 60 
-          ? 'bg-red-500/10 border-red-500/30 text-red-400 animate-pulse' 
-          : 'bg-slate-900/60 border-slate-800 text-slate-300'
+        timeLeft < 60
+          ? 'bg-red-500/10 border-red-500/30 text-red-400 animate-pulse'
+          : timeLeft < 120
+            ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 animate-pulse'
+            : 'bg-slate-900/60 border-slate-800 text-slate-300'
       }`}>
         <Clock size={16} />
         <span>{formatTime(timeLeft)}</span>
