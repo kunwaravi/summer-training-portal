@@ -3,7 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
-import { Mail, Lock, User, GraduationCap, UserPlus, LogIn, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, GraduationCap, UserPlus, LogIn, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/atoms/Button';
 import Input from '../components/atoms/Input';
@@ -31,6 +31,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ mode = 'login' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [shakeTrigger, setShakeTrigger] = useState(0);
+  // #87 — Show Password toggle (login + register)
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
   const { addToast } = useUI();
@@ -176,16 +178,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ mode = 'login' }) => {
           </div>
 
           <div className="text-center relative z-10 mb-8">
-            <div className="inline-flex items-center justify-center p-3 bg-blue-600/10 rounded-2xl mb-4 border border-blue-500/20 shadow-inner">
+            <div className="inline-flex items-center justify-center p-3 bg-indigo-50 dark:bg-blue-600/10 rounded-2xl mb-4 border border-indigo-100 dark:border-blue-500/20 shadow-inner">
               {isLogin ? (
-                <LogIn className="text-blue-500" size={24} />
+                <LogIn className="text-indigo-600 dark:text-blue-500" size={24} />
               ) : (
-                <UserPlus className="text-blue-500" size={24} />
+                <UserPlus className="text-indigo-600 dark:text-blue-500" size={24} />
               )}
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase italic">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase italic">
               {isLogin ? 'Member' : 'Student'}{' '}
-              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+              <span className="text-indigo-600 dark:text-transparent dark:bg-gradient-to-r dark:from-blue-400 dark:to-indigo-400 dark:bg-clip-text">
                 {isLogin ? 'Login' : 'Registration'}
               </span>
             </h2>
@@ -274,20 +276,30 @@ const LoginPage: React.FC<LoginPageProps> = ({ mode = 'login' }) => {
                   label="Secure Password"
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
                   icon={<Lock size={16} />}
                   className="focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      className="text-slate-400 hover:text-indigo-600 dark:hover:text-blue-400 transition-colors p-1"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  }
                 />
-                
+
                 {isLogin && (
                   <div className="flex justify-end">
                     <Link
                       to="/forgot-password"
-                      className="text-[11px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition"
+                      className="text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-blue-400 hover:text-indigo-500 dark:hover:text-blue-300 transition"
                     >
                       Forgot Password?
                     </Link>
@@ -368,7 +380,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ mode = 'login' }) => {
                   const query = ref ? `?ref=${ref}` : '';
                   navigate(isLogin ? `/register${query}` : `/login${query}`);
                 }}
-                className="text-blue-400 hover:text-blue-300 font-black ml-1 transition underline decoration-2 underline-offset-4"
+                className="text-indigo-600 dark:text-blue-400 hover:text-indigo-500 dark:hover:text-blue-300 font-black ml-1 transition underline decoration-2 underline-offset-4"
               >
                 {isLogin ? 'Join Free' : 'Login Here'}
               </button>
