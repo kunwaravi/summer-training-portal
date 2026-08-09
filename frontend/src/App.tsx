@@ -20,6 +20,7 @@ const Privacy = React.lazy(() => import('./pages/Privacy'));
 const Refund = React.lazy(() => import('./pages/Refund'));
 const About = React.lazy(() => import('./pages/About'));
 const Contact = React.lazy(() => import('./pages/Contact'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
 import Navbar from './components/Navbar';
 import FloatingSupportWidget from './components/atoms/FloatingSupportWidget';
 import './App.css';
@@ -68,6 +69,7 @@ function AppRoutes() {
             <Route path="/refund" element={<Refund />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </div>
