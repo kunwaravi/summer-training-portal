@@ -615,101 +615,57 @@ const AdminDashboard = () => {
     <div className="max-w-6xl mx-auto space-y-8 py-4 px-2">
       
       {/* Admin Title Block */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-5 gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl">
+          <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 rounded-xl">
             <Shield size={28} />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
               Staff Portal & Course CMS
             </h1>
-            <p className="text-slate-400 text-xs font-semibold">Nexus Corporate Academic Accreditations & Content Editors</p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold">Nexus Corporate Academic Accreditations & Content Editors</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={() => { fetchTransactions(); fetchCmsCourses(); }}
-            className="p-2.5 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded-xl transition-all"
+            className="p-2.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl transition-all"
             title="Reload Data"
+            aria-label="Reload data"
           >
             <RefreshCw size={18} />
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-800 gap-2">
-        <button
-          onClick={() => setActiveTab('transactions')}
-          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'transactions'
-              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <DollarSign size={16} /> Payment Audits
-        </button>
-        <button
-          onClick={() => setActiveTab('cms')}
-          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'cms'
-              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <BookOpen size={16} /> Course Syllabus CMS
-        </button>
-        <button
-          onClick={() => setActiveTab('users')}
-          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'users'
-              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <Users size={16} /> User Management
-        </button>
-        <button
-          onClick={() => setActiveTab('referrals')}
-          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'referrals'
-              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <Share2 size={16} /> Referral Tracker
-        </button>
-        <button
-          onClick={() => setActiveTab('analytics')}
-          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'analytics'
-              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <TrendingUp size={16} /> Analytics
-        </button>
-        <button
-          onClick={() => setActiveTab('messages')}
-          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'messages'
-              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <Mail size={16} /> Contact Messages
-        </button>
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`px-5 py-3 text-sm font-extrabold uppercase tracking-wider border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'settings'
-              ? 'border-cyan-400 text-cyan-400 bg-cyan-400/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <Settings size={16} /> Contact Settings
-        </button>
+      {/* Tabs — active pill, bigger icons, horizontal scroll on mobile (#89) */}
+      <div className="overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:thin] [scrollbar-color:#94a3b8_transparent]">
+        <div className="flex items-center gap-1.5 w-max">
+          {[
+            { id: 'transactions' as const, label: 'Payment Audits', icon: <DollarSign size={20} className="shrink-0" /> },
+            { id: 'cms' as const, label: 'Course Syllabus CMS', icon: <BookOpen size={20} className="shrink-0" /> },
+            { id: 'users' as const, label: 'User Management', icon: <Users size={20} className="shrink-0" /> },
+            { id: 'referrals' as const, label: 'Referral Tracker', icon: <Share2 size={20} className="shrink-0" /> },
+            { id: 'analytics' as const, label: 'Analytics', icon: <TrendingUp size={20} className="shrink-0" /> },
+            { id: 'messages' as const, label: 'Contact Messages', icon: <Mail size={20} className="shrink-0" /> },
+            { id: 'settings' as const, label: 'Contact Settings', icon: <Settings size={20} className="shrink-0" /> },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2.5 rounded-xl text-sm font-extrabold uppercase tracking-wide transition flex items-center gap-2.5 whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30 shadow-lg shadow-cyan-500/5 dark:shadow-cyan-500/10'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/60 border border-transparent'
+              }`}
+              aria-pressed={activeTab === tab.id}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Content Area */}
