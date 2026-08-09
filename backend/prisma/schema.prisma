@@ -31,7 +31,9 @@ model User {
   certificateStartDate DateTime?
   certificateEndDate   DateTime?
   streak            Int                    @default(0)
-  lastActiveAt      DateTime?              @default(now())
+  // lastActiveAt starts null so a brand-new user isn't shown as "already solved today"
+  // (issue #74); only an actual daily-challenge submission sets it.
+  lastActiveAt      DateTime?
   referralCode      String?                @unique
   referredBy        String?
   assignments       AssignmentSubmission[]
