@@ -122,6 +122,28 @@ router.get('/admin/pending', authenticateToken, isAdmin, async (req: Request, re
   }
 });
 
+// ADMIN - GET /api/assignments/admin/all - Full submission queue (review stats + history, issue #82)
+router.get('/admin/all', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const submissions = await prisma.assignmentSubmission.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: { submittedAt: 'desc' }
+    });
+    res.json({ submissions });
+  } catch (err: any) {
+    logger.error('Fetch all assignments error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // ADMIN - PUT /api/assignments/admin/evaluate/:id - Approve or reject assignment
 router.put(
   '/admin/evaluate/:id',

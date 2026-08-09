@@ -1,10 +1,11 @@
 import { useState, useEffect, Fragment } from 'react';
 import api from '../api';
-import { 
-  Shield, Users, Award, BookOpen, Edit3, Trash2, Plus, 
-  ArrowUp, ArrowDown, Eye, DollarSign, 
+import {
+  Shield, Users, Award, BookOpen, Edit3, Trash2, Plus,
+  ArrowUp, ArrowDown, Eye, DollarSign,
   Save, FileText, Image, RefreshCw, ChevronDown, ChevronRight,
-  TrendingUp, Share2, Mail, Settings
+  TrendingUp, Share2, Mail, Settings, ClipboardCheck,
+  Clock, CheckCircle2, XCircle, Check, X, ExternalLink, FileCode2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminPaymentTable from '../components/organisms/AdminPaymentTable';
@@ -42,13 +43,25 @@ interface Course {
   modules?: Module[];
 }
 
+const courseTitleById = (id: string) => coursesConfig.find((c) => c.id === id)?.title || id;
+
+const initialsOf = (name?: string) =>
+  (name || '?').split(' ').map((n) => n[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?';
+
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'analytics' | 'referrals' | 'messages' | 'settings'>('transactions');
-  
+  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'analytics' | 'referrals' | 'messages' | 'settings' | 'review'>('transactions');
+
   // Transaction logs states
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
-  
+
+  // Review queue states (#82)
+  const [reviewTab, setReviewTab] = useState<'assignments' | 'projects'>('assignments');
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loadingReview, setLoadingReview] = useState(true);
+  const [evaluatingId, setEvaluatingId] = useState<number | null>(null);
+
   // CMS courses states
   const [courses, setCourses] = useState<Course[]>([]);
   const [loadingCms, setLoadingCms] = useState(true);
@@ -208,6 +221,41 @@ const AdminDashboard = () => {
       console.error('Failed to fetch payment list:', err);
     } finally {
       setLoadingTransactions(false);
+    }
+  };
+
+  // Fetch full submission queues for the review tab (#82)
+  const fetchReview = async () => {
+    setLoadingReview(true);
+    try {
+      const [assignRes, projectRes] = await Promise.all([
+        api.get('/assignments/admin/all'),
+        api.get('/projects/admin/all'),
+      ]);
+      setAssignments(assignRes.data?.submissions ?? []);
+      setProjects(projectRes.data?.submissions ?? []);
+    } catch (err) {
+      console.error('Failed to load review queue:', err);
+    } finally {
+      setLoadingReview(false);
+    }
+  };
+
+  // Approve / reject a submission; awards XP server-side on approve
+  const handleEvaluate = async (submission: any, isProject: boolean, status: 'APPROVED' | 'REJECTED') => {
+    if (!window.confirm(`Mark ${isProject ? 'project' : 'assignment'} by "${submission.user?.name}" as ${status.toLowerCase()}?`)) {
+      return;
+    }
+    setEvaluatingId(submission.id);
+    try {
+      const endpoint = isProject ? `/projects/admin/evaluate/${submission.id}` : `/assignments/admin/evaluate/${submission.id}`;
+      await api.put(endpoint, { status });
+      await fetchReview();
+    } catch (err: any) {
+      console.error('Evaluate failed:', err);
+      alert(err.response?.data?.message || 'Failed to update submission.');
+    } finally {
+      setEvaluatingId(null);
     }
   };
 
@@ -409,6 +457,7 @@ const AdminDashboard = () => {
       fetchUsers();
       fetchMessages();
       fetchContactSettings();
+      fetchReview();
     }, 0);
     return () => clearTimeout(timer);
   }, []);
@@ -611,6 +660,15 @@ const AdminDashboard = () => {
     }, 1000);
   };
 
+  // Review queue derived data (#82)
+  const reviewIsProject = reviewTab === 'projects';
+  const reviewItems = reviewIsProject ? projects : assignments;
+  const reviewPending = reviewItems.filter((s) => s.status === 'PENDING').length;
+  const reviewApprovedToday = reviewItems.filter(
+    (s) => s.status === 'APPROVED' && new Date(s.updatedAt).toDateString() === new Date().toDateString()
+  ).length;
+  const reviewRejected = reviewItems.filter((s) => s.status === 'REJECTED').length;
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 py-4 px-2">
       
@@ -650,27 +708,207 @@ const AdminDashboard = () => {
             { id: 'analytics' as const, label: 'Analytics', icon: <TrendingUp size={20} className="shrink-0" /> },
             { id: 'messages' as const, label: 'Contact Messages', icon: <Mail size={20} className="shrink-0" /> },
             { id: 'settings' as const, label: 'Contact Settings', icon: <Settings size={20} className="shrink-0" /> },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-extrabold uppercase tracking-wide transition flex items-center gap-2.5 whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30 shadow-lg shadow-cyan-500/5 dark:shadow-cyan-500/10'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/60 border border-transparent'
-              }`}
-              aria-pressed={activeTab === tab.id}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+            { id: 'review' as const, label: 'Review Queue', icon: <ClipboardCheck size={20} className="shrink-0" /> },
+          ].map((tab) => {
+            const pendingTotal = tab.id === 'review'
+              ? assignments.filter((s) => s.status === 'PENDING').length + projects.filter((s) => s.status === 'PENDING').length
+              : 0;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-extrabold uppercase tracking-wide transition flex items-center gap-2.5 whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30 shadow-lg shadow-cyan-500/5 dark:shadow-cyan-500/10'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/60 border border-transparent'
+                }`}
+                aria-pressed={activeTab === tab.id}
+              >
+                {tab.icon}
+                {tab.label}
+                {tab.id === 'review' && pendingTotal > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[11px] font-black">
+                    {pendingTotal}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Content Area */}
       <div className="space-y-6">
-        
+
+        {/* ── Review Queue (#82) ─────────────────────────────────────────── */}
+        {activeTab === 'review' && (
+          <div className="space-y-6 animate-fade-in">
+            {/* Sub-tabs: Assignments / Projects */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">Review Queue</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Evaluate student submissions inline — approvals award XP instantly.</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setReviewTab('assignments')}
+                  className={`px-4 py-2 rounded-xl border text-[13px] font-bold transition ${
+                    reviewTab === 'assignments'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20'
+                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/40'
+                  }`}
+                  aria-pressed={reviewTab === 'assignments'}
+                >
+                  Assignments
+                  {assignments.filter((s) => s.status === 'PENDING').length > 0 && (
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[11px] font-black">
+                      {assignments.filter((s) => s.status === 'PENDING').length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setReviewTab('projects')}
+                  className={`px-4 py-2 rounded-xl border text-[13px] font-bold transition ${
+                    reviewTab === 'projects'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20'
+                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/40'
+                  }`}
+                  aria-pressed={reviewTab === 'projects'}
+                >
+                  Projects
+                  {projects.filter((s) => s.status === 'PENDING').length > 0 && (
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[11px] font-black">
+                      {projects.filter((s) => s.status === 'PENDING').length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Stat row: Pending / Approved today / Rejected */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <Clock size={12} className="text-amber-500" /> Pending
+                </p>
+                <p className="text-2xl font-black mt-1 text-slate-900 dark:text-white">{reviewPending}</p>
+              </div>
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <CheckCircle2 size={12} className="text-emerald-500" /> Approved today
+                </p>
+                <p className="text-2xl font-black mt-1 text-emerald-600 dark:text-emerald-400">{reviewApprovedToday}</p>
+              </div>
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <XCircle size={12} className="text-rose-500" /> Rejected
+                </p>
+                <p className="text-2xl font-black mt-1 text-rose-500 dark:text-rose-400">{reviewRejected}</p>
+              </div>
+            </div>
+
+            {/* Submissions table */}
+            <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+              {loadingReview ? (
+                <div className="py-16 text-center space-y-3">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500 mx-auto"></div>
+                  <p className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs">Loading {reviewIsProject ? 'projects' : 'assignments'}...</p>
+                </div>
+              ) : reviewItems.length === 0 ? (
+                <div className="py-16 text-center space-y-2">
+                  <FileCode2 size={32} className="mx-auto text-slate-300 dark:text-slate-600" />
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No {reviewIsProject ? 'projects' : 'assignments'} submitted yet</p>
+                  <p className="text-xs text-slate-500">New student submissions will appear here for review.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left min-w-[680px]">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        <th className="px-5 py-3">Student</th>
+                        <th className="px-5 py-3">Deliverable</th>
+                        <th className="px-5 py-3">Status</th>
+                        <th className="px-5 py-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-[13px]">
+                      {reviewItems.map((s) => {
+                        const xpAwarded = reviewIsProject ? 100 : 20;
+                        return (
+                          <tr key={s.id} className="border-b border-slate-100 dark:border-slate-800/60 last:border-0">
+                            <td className="px-5 py-3.5">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-xs font-black flex items-center justify-center shrink-0">
+                                  {initialsOf(s.user?.name)}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{s.user?.name}</p>
+                                  <p className="text-[11px] text-slate-400 truncate">
+                                    {courseTitleById(s.courseId)}{s.weekNumber ? ` · Week ${s.weekNumber}` : ''}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3.5">
+                              <a
+                                href={reviewIsProject ? s.sourceCodeUrl : s.fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-mono text-[12px] hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-300 transition"
+                                title="Open submission file"
+                              >
+                                <FileCode2 size={13} className="shrink-0" />
+                                <span className="max-w-[180px] truncate">{reviewIsProject ? s.title : s.fileName}</span>
+                              </a>
+                            </td>
+                            <td className="px-5 py-3.5">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                                s.status === 'APPROVED'
+                                  ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                                  : s.status === 'REJECTED'
+                                  ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400'
+                                  : 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400'
+                              }`}>
+                                {s.status === 'APPROVED' ? 'Approved' : s.status === 'REJECTED' ? 'Rejected' : 'Pending'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3.5 text-right">
+                              {s.status === 'PENDING' ? (
+                                <div className="inline-flex gap-2">
+                                  <button
+                                    onClick={() => handleEvaluate(s, reviewIsProject, 'APPROVED')}
+                                    disabled={evaluatingId === s.id}
+                                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black uppercase flex items-center gap-1 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    <Check size={13} /> Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleEvaluate(s, reviewIsProject, 'REJECTED')}
+                                    disabled={evaluatingId === s.id}
+                                    className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-black uppercase flex items-center gap-1 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    <X size={13} /> Reject
+                                  </button>
+                                </div>
+                              ) : s.status === 'APPROVED' ? (
+                                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-black uppercase">
+                                  +{xpAwarded} XP ✓
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-rose-500 dark:text-rose-400 font-black uppercase">No XP</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'transactions' && (
           <div className="space-y-6 animate-fade-in">
             {/* Direct Certificate Access Console */}

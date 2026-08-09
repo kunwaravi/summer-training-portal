@@ -113,6 +113,28 @@ router.get('/admin/pending', authenticateToken, isAdmin, async (req: Request, re
   }
 });
 
+// ADMIN - GET /api/projects/admin/all - Full project queue (review stats + history, issue #82)
+router.get('/admin/all', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const submissions = await prisma.projectSubmission.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: { submittedAt: 'desc' }
+    });
+    res.json({ submissions });
+  } catch (err: any) {
+    logger.error('Fetch all projects error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // ADMIN - PUT /api/projects/admin/evaluate/:id - Approve or reject project
 router.put(
   '/admin/evaluate/:id',
