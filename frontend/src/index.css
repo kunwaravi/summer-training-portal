@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* #78+ — class-based dark mode: `.dark` is added to <html> by ThemeContext.
+   This activates the `dark:` Tailwind variant so screens can be written
+   light-first (`bg-white`) with explicit dark overrides (`dark:bg-slate-900`),
+   superseding the old `.light` !important override chain per-screen. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* #77 — Design system foundation tokens (Tailwind v4 @theme).
    Shared brand tokens used by the light (overview) and dark (content) surfaces.
    Screens consume these in Phase 3/4; the light-mode overrides below remain
