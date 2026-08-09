@@ -1077,8 +1077,9 @@ const Home = () => {
               className="bg-slate-950 border border-slate-800 rounded-3xl p-6 lg:p-8 w-full max-w-2xl relative my-8"
             >
               {/* Close Trigger */}
-              <button 
+              <button
                 onClick={() => setPreviewCourse(null)}
+                aria-label="Close syllabus preview"
                 className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm transition-colors"
               >
                 ✕

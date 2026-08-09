@@ -95,7 +95,7 @@ const PeerSolutionsModal: React.FC<PeerSolutionsModalProps> = ({
                     {subtitle && <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{subtitle}</p>}
                   </div>
                 </div>
-                <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+                <button onClick={onClose} aria-label="Close peer solutions" className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
                   <X size={18} />
                 </button>
               </div>

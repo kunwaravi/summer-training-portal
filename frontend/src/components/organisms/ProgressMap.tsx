@@ -60,7 +60,8 @@ const ProgressMap: React.FC<ProgressMapProps> = ({
                 onNodeClick?.();
               }}
               title={`Chapter ${week.week}: ${week.title}`}
-              className={`relative flex flex-col items-center gap-1 group focus:outline-none ${
+              aria-label={`Chapter ${week.week}: ${week.title}`}
+              className={`relative flex flex-col items-center gap-1 group focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded-lg ${
                 isUnlocked ? 'cursor-pointer' : 'cursor-not-allowed'
               }`}
             >

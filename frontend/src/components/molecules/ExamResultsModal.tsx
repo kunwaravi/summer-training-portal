@@ -83,6 +83,7 @@ const ExamResultsModal: React.FC<ExamResultsModalProps> = ({
                 </span>
                 <button
                   onClick={onClose}
+                  aria-label="Close exam results"
                   className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-white transition-colors"
                 >
                   <X size={16} />

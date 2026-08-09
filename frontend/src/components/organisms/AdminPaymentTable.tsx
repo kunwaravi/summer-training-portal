@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, CheckCircle, Clock, XCircle, ShieldCheck, Trash2 } from 'lucide-react';
+import { Users, CheckCircle, Clock, XCircle, ShieldCheck, Trash2, Inbox } from 'lucide-react';
 import api from '../../api';
 import { useUI } from '../../context/UIContext';
 
@@ -122,7 +122,11 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
       {loading ? (
         <div className="py-12 text-center text-slate-500 font-semibold text-sm">Fetching payment records...</div>
       ) : transactions.length === 0 ? (
-        <div className="py-12 text-center text-slate-500 text-xs">No payment records found.</div>
+        <div className="py-12 text-center space-y-2">
+          <Inbox size={28} className="mx-auto text-slate-700" />
+          <p className="text-slate-500 text-xs font-bold">No payment records found.</p>
+          <p className="text-[11px] text-slate-600">New student enrollments will appear here for verification.</p>
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
@@ -177,6 +181,7 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                             disabled={isVerifying || isDeleting}
                             className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition active:scale-95 disabled:opacity-50"
                             title="Delete Request"
+                            aria-label="Delete payment record"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -200,6 +205,7 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                           disabled={isVerifying || isDeleting}
                           className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition active:scale-95 disabled:opacity-50"
                           title="Delete Request"
+                          aria-label="Delete payment record"
                         >
                           <Trash2 size={14} />
                         </button>

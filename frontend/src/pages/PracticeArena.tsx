@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useUI } from '../context/UIContext';
-import { Trophy, Timer, ChevronLeft, ChevronRight, CheckCircle2, XCircle, ArrowLeft, RefreshCw, Award } from 'lucide-react';
+import { Trophy, Timer, ChevronLeft, ChevronRight, CheckCircle2, XCircle, ArrowLeft, RefreshCw, Award, FileQuestion } from 'lucide-react';
 import Skeleton from '../components/atoms/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -236,8 +236,13 @@ const PracticeArena = () => {
   if (questions.length === 0) {
     return (
       <div className="py-24 text-center max-w-lg mx-auto space-y-6">
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white">No Questions Available</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">Practice questions for the {category} category are not currently seeded.</p>
+        <span className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400">
+          <FileQuestion size={24} />
+        </span>
+        <div className="space-y-1">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">No Questions Available</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">Practice questions for the {category} category are not currently seeded.</p>
+        </div>
         <button
           onClick={() => navigate('/dashboard')}
           className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold py-2.5 px-6 rounded-xl transition"

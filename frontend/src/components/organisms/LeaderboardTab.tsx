@@ -103,6 +103,7 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
           <input
             type="text"
             placeholder="Search by name..."
+            aria-label="Search leaderboard by name"
             value={search}
             onChange={handleSearchChange}
             className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition"
@@ -115,8 +116,22 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
           <Spinner size="md" />
         </div>
       ) : users.length === 0 ? (
-        <Card className="p-12 text-center text-slate-500">
-          No candidates found. Start practicing to top the board!
+        <Card className="p-12 text-center space-y-4">
+          <span className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400">
+            <Trophy size={24} />
+          </span>
+          <div className="space-y-1">
+            <h3 className="font-black text-slate-900 dark:text-white">The board is empty</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Be the first to claim the top spot. Solve practice questions and climb the ranks!
+            </p>
+          </div>
+          <a
+            href="/practice"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-colors"
+          >
+            <Zap size={14} /> Start Practicing
+          </a>
         </Card>
       ) : (
         <div className="bg-slate-900/30 border border-slate-900/60 rounded-2xl overflow-hidden shadow-sm">

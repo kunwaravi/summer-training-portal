@@ -31,10 +31,40 @@
   --color-cyan-accent: #22D3EE;    /* dark mode primary */
   --color-success-dark: #34D399;
   --color-streak-dark: #FBBF24;
+
+  /* #47 — Non-standard slate/amber/emerald/indigo shades used across the
+     codebase (e.g. text-slate-450, text-slate-350). Tailwind v4 only
+     generates utilities for shades registered here; without these the
+     classes emit no rule and silently inherit a parent colour. Values are
+     interpolations between the adjacent standard Tailwind shades. */
+  --color-slate-250: #D6DEE9;
+  --color-slate-350: #AAB8CA;
+  --color-slate-355: #A5B4C6;
+  --color-slate-450: #7F90A5;
+  --color-slate-550: #58677E;
+  --color-slate-650: #3D4B63;
+  --color-amber-450: #F6AC18;
+  --color-emerald-450: #23C98F;
+  --color-indigo-450: #7178F4;
+  --color-indigo-405: #8791FA;
 }
 
 :root {
   color-scheme: dark;
+}
+
+/* #47 — Global keyboard focus visibility (a11y).
+   Every interactive element gets a visible focus ring when keyboard-navigated:
+   indigo in light mode, cyan in dark. `focus:`-only styles still win on mouse;
+   this fires purely for keyboard activation. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid #6366F1;
+    outline-offset: 2px;
+  }
+  .dark :focus-visible {
+    outline-color: #22D3EE;
+  }
 }
 
 body {

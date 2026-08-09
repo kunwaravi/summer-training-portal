@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import { useCourses } from '../hooks/useCourses';
-import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database, Wrench, Building2, Flame } from 'lucide-react';
+import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database, Wrench, Building2, Flame, RefreshCw } from 'lucide-react';
 import CourseCard from '../components/molecules/CourseCard';
 import Skeleton from '../components/atoms/Skeleton';
 import SkillRadar from '../components/molecules/SkillRadar';
@@ -469,33 +469,53 @@ const Dashboard = () => {
               <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"></div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {courses.map((course: any) => {
-                const progressInfo = getCourseProgress(course.id);
-                const metadata = courseMetadata[course.id] || {
-                  icon: BookOpen,
-                  color: 'from-slate-700 to-slate-900',
-                  barColor: 'bg-slate-500',
-                };
+            {courses.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/30 py-14 px-6 text-center space-y-4">
+                <span className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400">
+                  <BookOpen size={24} />
+                </span>
+                <div className="space-y-1">
+                  <h3 className="font-black text-slate-900 dark:text-white">No training tracks yet</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                    Your tracks are being prepared. Check back shortly — new industrial learning paths appear here.
+                  </p>
+                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-colors"
+                >
+                  <RefreshCw size={14} /> Refresh
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                {courses.map((course: any) => {
+                  const progressInfo = getCourseProgress(course.id);
+                  const metadata = courseMetadata[course.id] || {
+                    icon: BookOpen,
+                    color: 'from-slate-700 to-slate-900',
+                    barColor: 'bg-slate-500',
+                  };
 
-                return (
-                  <CourseCard
-                    key={course.id}
-                    id={course.id}
-                    title={course.title}
-                    desc={course.description || course.desc}
-                    icon={metadata.icon}
-                    color={metadata.color}
-                    barColor={metadata.barColor}
-                    progress={progressInfo.progress}
-                    weekCompleted={progressInfo.weekCompleted}
-                    completed={progressInfo.completed}
-                    type="dashboard"
-                    onAction={(id) => navigate(`/course/${id}`)}
-                  />
-                );
-              })}
-            </div>
+                  return (
+                    <CourseCard
+                      key={course.id}
+                      id={course.id}
+                      title={course.title}
+                      desc={course.description || course.desc}
+                      icon={metadata.icon}
+                      color={metadata.color}
+                      barColor={metadata.barColor}
+                      progress={progressInfo.progress}
+                      weekCompleted={progressInfo.weekCompleted}
+                      completed={progressInfo.completed}
+                      type="dashboard"
+                      onAction={(id) => navigate(`/course/${id}`)}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         </>
       ) : activeTab === 'leaderboard' ? (

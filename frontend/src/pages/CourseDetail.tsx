@@ -1287,7 +1287,7 @@ const CourseDetail = () => {
                               ) : isUnlocked ? (
                                 submittingWeek === weekNum ? (
                                   <div className="flex flex-col gap-2 w-full md:w-56 text-left">
-                                    <input type="text" placeholder="Enter file name (e.g. main.c)" value={submittingFileName} onChange={(e) => setSubmittingFileName(e.target.value)} className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500" />
+                                    <input type="text" placeholder="Enter file name (e.g. main.c)" aria-label="Assignment file name" value={submittingFileName} onChange={(e) => setSubmittingFileName(e.target.value)} className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500" />
                                     <div className="flex gap-2">
                                       <button disabled={isSubmitting} onClick={() => handleUploadAssignment(weekNum)} className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-extrabold uppercase rounded text-[11px] tracking-wider transition-colors">Confirm</button>
                                     </div>
@@ -1358,6 +1358,7 @@ const CourseDetail = () => {
                 </div>
                 <button
                   onClick={() => setIsDoubtOpen(false)}
+                  aria-label="Close doubt form"
                   className="w-8 h-8 rounded-full bg-slate-900 border border-slate-850 text-slate-400 hover:text-white flex items-center justify-center text-sm transition-colors cursor-pointer"
                 >
                   ✕
@@ -1379,8 +1380,20 @@ const CourseDetail = () => {
                       <div className="h-10 bg-slate-905 rounded-lg w-full"></div>
                     </div>
                   ) : doubtsList.length === 0 ? (
-                    <div className="p-4 rounded-xl border border-dashed border-slate-900 bg-slate-950/20 text-center">
-                      <p className="text-xs text-slate-500 font-medium">No doubts posted yet. Be the first to ask!</p>
+                    <div className="p-5 rounded-xl border border-dashed border-slate-900 bg-slate-950/20 text-center space-y-3">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                        <MessageSquare size={18} />
+                      </span>
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-bold text-slate-300">No doubts posted yet</p>
+                        <p className="text-[11px] text-slate-600">Be the first to ask — the community's here to help.</p>
+                      </div>
+                      <button
+                        onClick={() => handleAskDoubt(course?.title || '')}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black uppercase text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10 rounded-lg transition-all cursor-pointer"
+                      >
+                        <MessageSquare size={11} /> Ask a Doubt
+                      </button>
                     </div>
                   ) : (
                     <div className="space-y-3.5">
@@ -1441,6 +1454,7 @@ const CourseDetail = () => {
                                     <input
                                       type="text"
                                       placeholder="Write a reply..."
+                                      aria-label="Write a reply"
                                       value={newCommentText}
                                       onChange={(e) => setNewCommentText(e.target.value)}
                                       onKeyDown={(e) => {

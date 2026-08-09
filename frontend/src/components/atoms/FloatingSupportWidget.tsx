@@ -82,6 +82,8 @@ const FloatingSupportWidget: React.FC = () => {
       {/* Main toggle floating action button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label={isOpen ? 'Close support options' : 'Open support options'}
+        aria-expanded={isOpen}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl transition-all duration-300 ${

@@ -99,6 +99,7 @@ const CodePlayground: React.FC<CodePlaygroundProps> = ({
             onClick={handleReset}
             className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
             title="Reset Code"
+            aria-label="Reset code"
           >
             <RotateCcw size={14} />
           </button>

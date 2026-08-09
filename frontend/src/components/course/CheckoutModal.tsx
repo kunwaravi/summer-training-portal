@@ -56,8 +56,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             exit={{ y: 20, opacity: 0 }}
             className="bg-slate-950 border border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-6 relative text-left max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-slate-950"
           >
-            <button 
+            <button
               onClick={onClose}
+              aria-label="Close checkout"
               className="absolute right-4 top-4 text-slate-500 hover:text-white transition"
             >
               ✕
@@ -136,6 +137,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <button
                         type="button"
                         onClick={() => onCopyToClipboard('edunexuss@ptyes')}
+                        aria-label="Copy UPI ID"
+                        title="Copy UPI ID"
                         className="absolute right-2 top-1.5 p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-cyan-400 transition"
                       >
                         {upiCopied ? <Check size={14} /> : <Clipboard size={14} />}

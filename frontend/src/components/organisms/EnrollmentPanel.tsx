@@ -216,6 +216,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
             >
               <button
                 onClick={() => setShowCheckoutModal(false)}
+                aria-label="Close payment modal"
                 className="absolute right-4 top-4 text-slate-500 hover:text-white transition"
               >
                 ✕
@@ -331,6 +332,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
                               onClick={() => copyToClipboard(UPI_ID)}
                               className="absolute right-2 top-1.5 p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-cyan-400 transition"
                               title="Copy UPI ID"
+                              aria-label="Copy UPI ID"
                             >
                               {upiCopied ? <CheckCircle2 size={14} className="text-green-400" /> : <Clipboard size={14} />}
                             </button>

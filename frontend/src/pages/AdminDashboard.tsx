@@ -1031,6 +1031,7 @@ const AdminDashboard = () => {
                         onClick={() => handleDeleteCourse(c.id, c.title)}
                         className="p-1 hover:bg-slate-800 rounded text-rose-500 transition focus:outline-none"
                         title="Delete Course Track"
+                        aria-label="Delete course track"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -1114,6 +1115,7 @@ const AdminDashboard = () => {
                                   onClick={() => handleDeleteModule(m.id, m.week)}
                                   className="p-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 hover:text-white rounded-lg text-[11px] font-bold transition flex items-center justify-center"
                                   title="Delete Module"
+                                  aria-label="Delete module"
                                 >
                                   <Trash2 size={12} />
                                 </button>
@@ -1395,6 +1397,7 @@ const AdminDashboard = () => {
                           onClick={() => handleOpenEditCandidate(u)}
                           className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 rounded-lg transition active:scale-90 mr-1.5"
                           title="Edit Candidate Profile"
+                          aria-label="Edit candidate profile"
                         >
                           <Edit3 size={14} />
                         </button>
@@ -1402,6 +1405,7 @@ const AdminDashboard = () => {
                           onClick={() => handleDeleteUser(u.id, u.name)}
                           className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition active:scale-90"
                           title="Remove Candidate"
+                          aria-label="Remove candidate"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -1429,6 +1433,7 @@ const AdminDashboard = () => {
                     </div>
                     <button
                       onClick={() => setEditingCandidate(null)}
+                      aria-label="Close edit candidate dialog"
                       className="text-slate-500 hover:text-white p-1 rounded-lg text-lg"
                     >
                       ✕
@@ -1606,6 +1611,7 @@ const AdminDashboard = () => {
                             onClick={() => handleDeleteMessage(m.id)}
                             className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition"
                             title="Remove Message"
+                            aria-label="Remove message"
                           >
                             <Trash2 size={14} />
                           </button>
