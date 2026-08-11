@@ -127,11 +127,16 @@ const PayPage: React.FC = () => {
    * OS app-picker for installed UPI apps — we do NOT fake an app-selection UI.
    * If the page never blurs (no app opened), show the graceful error.
    */
+  // UPI deep links (upi://) can only be opened by a UPI app, which only exists
+  // on phones. On desktop there is nothing to open, so we guide instead.
+  const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   const openUpiIntent = () => {
     setIntentError(null);
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (!isMobile) {
-      setIntentError('UPI app could not be opened. Please scan the QR code or copy the UPI ID and pay manually.');
+    if (!isMobileDevice) {
+      setIntentError(
+        'You are on a desktop — UPI apps only exist on phones. Scan the QR code above with your phone’s UPI app (PhonePe / GPay / Paytm), or copy the UPI ID and pay manually.'
+      );
       return;
     }
 
@@ -154,7 +159,7 @@ const PayPage: React.FC = () => {
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('visibilitychange', onVis);
       if (!appOpened) {
-        setIntentError('No compatible UPI app was found. Please scan the QR code or use the UPI ID.');
+        setIntentError('No UPI app opened. If your phone has no UPI app, install one (PhonePe / GPay / Paytm) or scan the QR code and pay manually.');
       }
     }, 2000);
   };
@@ -338,7 +343,7 @@ const PayPage: React.FC = () => {
             <Smartphone size={20} /> Pay by Any UPI App
           </button>
           <p className="text-center text-[11px] text-slate-400 mt-2 font-medium">
-            Tap to open your preferred UPI app
+            {isMobileDevice ? 'Tap to open your preferred UPI app' : 'Mobile-only — scan the QR or copy the UPI ID on your phone'}
           </p>
 
           {intentError && (
