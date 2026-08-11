@@ -66,17 +66,20 @@ const Certificate = () => {
     );
   }
 
-  // Handle fallback data for admin preview if actual data is missing
+  // Fallback for admin preview when the target user has no certificate data yet.
+  // PRIVACY (#100): the old fallback injected a fabricated person's identity —
+  // a real user previewed with missing data saw a stranger's name. Use the
+  // viewer's OWN fields or neutral placeholders instead.
   const displayData = data || {
-    name: user?.name || "AVINASH KUNWAR",
-    fatherName: user?.fatherName || "AKHILESH KUNWAR",
-    collegeName: user?.collegeName || "GOVERNMENT POLYTECHNIC GHAZIABAD",
-    branchName: user?.branchName || "Electronics Engineering",
-    courseName: "C++ & OOP for Embedded Systems",
-    credentialId: "NEX-CPP_EMBEDDED-AVINASH1001-VERIFIED",
-    startDate: "June 1, 2026",
-    endDate: "June 28, 2026",
-    grade: "A+"
+    name: user?.name || '—',
+    fatherName: user?.fatherName || '—',
+    collegeName: user?.collegeName || '—',
+    branchName: user?.branchName || '—',
+    courseName: '—',
+    credentialId: '—',
+    startDate: '—',
+    endDate: '—',
+    grade: '—'
   };
 
   const getPerformanceReviewText = (grade: string) => {
@@ -89,7 +92,7 @@ const Certificate = () => {
       'C': 'SATISFACTORY (GRADE C)',
       'D': 'ATTEMPTED (GRADE D)'
     };
-    return map[upperGrade] || 'EXCELLENT (GRADE A)';
+    return map[upperGrade] || 'NO GRADE RECORDED';
   };
 
   return (

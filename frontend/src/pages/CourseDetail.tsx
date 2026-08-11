@@ -399,9 +399,13 @@ const CourseDetail = () => {
   };
 
   const handleCopyCode = (code: string, topicIndex: number) => {
-    navigator.clipboard.writeText(code);
-    setCopiedText(`${topicIndex}`);
-    setTimeout(() => setCopiedText(null), 2000);
+    navigator.clipboard
+      .writeText(code)
+      .then(() => {
+        setCopiedText(`${topicIndex}`);
+        setTimeout(() => setCopiedText(null), 2000);
+      })
+      .catch(() => addToast('Could not copy code. Clipboard permission denied.', 'error'));
   };
 
   const handleAskDoubt = (topicTitle: string) => {
@@ -524,7 +528,9 @@ const CourseDetail = () => {
   }
 
   const completedPercentage = weeks.length > 0 ? Math.min(Math.round(((currentWeek) / weeks.length) * 100), 100) : 0;
-  const wordCount = selectedWeek?.description?.split(/\s+/).length + (activeModuleDetail?.topics?.reduce((acc: number, t: any) => acc + (t.text?.split(/\s+/).length || 0), 0) || 0);
+  // `|| 0` guards the case where selectedWeek is undefined (zero-module course):
+  // `undefined + n` is NaN, which rendered "⏱ NaN Min Read".
+  const wordCount = (selectedWeek?.description?.split(/\s+/).length || 0) + (activeModuleDetail?.topics?.reduce((acc: number, t: any) => acc + (t.text?.split(/\s+/).length || 0), 0) || 0);
   const readingTime = Math.max(Math.ceil(wordCount / 180), 1);
 
   return (

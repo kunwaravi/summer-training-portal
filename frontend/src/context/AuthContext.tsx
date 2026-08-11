@@ -39,9 +39,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const syncAuth = async () => {
       const storedUser = localStorage.getItem('user');
-      
+
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        // Corrupted/unparseable storage must not freeze the app on "Loading…"
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (err) {
+          console.error('Corrupt cached user — clearing session:', err);
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          setUser(null);
+        }
       }
 
       await refreshUser();

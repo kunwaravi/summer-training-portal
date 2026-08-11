@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
@@ -42,12 +42,20 @@ const Quiz = () => {
     }
   }, [results]);
 
+  // Keep the latest submit handler in a ref so the countdown timer never captures a
+  // stale closure over `answers` — otherwise auto-submit would submit the answers from
+  // the moment the timer started instead of what the user actually selected.
+  const submitRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    submitRef.current = () => handleSubmitQuiz(true);
+  });
+
   // Live Timer Count Down
   useEffect(() => {
     if (results || fetchingQuiz || !quizData?.questions?.length) return;
-    
+
     if (timeLeft <= 0) {
-      handleSubmitQuiz(true); // Auto-submit when time is up
+      submitRef.current(); // Auto-submit when time is up
       return;
     }
 
@@ -56,7 +64,6 @@ const Quiz = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, results, fetchingQuiz, quizData]);
 
   const handleOptionSelect = (option: string) => {

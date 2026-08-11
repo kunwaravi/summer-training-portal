@@ -92,9 +92,9 @@ router.post('/create-order', authenticateToken, validate(createOrderSchema), asy
 // POST /api/payments/verify - Student submits UPI payment proof, sets PENDING_VERIFICATION
 router.post('/verify', authenticateToken, validate(verifyPaymentSchema), async (req: any, res: any, next: any) => {
   try {
-    const { orderId, mockSignature, gatewayReference } = req.body;
+    const { orderId, gatewayReference } = req.body;
 
-    const verificationResult = await paymentService.submitPaymentForVerification(orderId, mockSignature, gatewayReference);
+    const verificationResult = await paymentService.submitPaymentForVerification(orderId, req.user.id, gatewayReference);
 
     if ('error' in verificationResult) {
       return res.status(verificationResult.status || 500).json({ message: verificationResult.error });

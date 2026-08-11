@@ -58,6 +58,11 @@ const Contact = () => {
     }
   };
 
+  // SECURITY: WEBSITE_URL is admin-editable — only render it as a link if it
+  // is actually an http(s) URL (a `javascript:` value would execute on click).
+  const rawWebsiteUrl = settings.WEBSITE_URL?.trim();
+  const safeWebsiteUrl = rawWebsiteUrl && /^https?:\/\//i.test(rawWebsiteUrl) ? rawWebsiteUrl : null;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-12 px-4 sm:px-6 lg:px-8 selection:bg-indigo-500/20 selection:text-indigo-300">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -115,9 +120,13 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Website</h3>
-                    <a href={settings.WEBSITE_URL} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-indigo-450 hover:underline break-all">
-                      {settings.WEBSITE_URL.replace('https://', '').replace('http://', '')}
-                    </a>
+                    {safeWebsiteUrl ? (
+                      <a href={safeWebsiteUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-indigo-450 hover:underline break-all">
+                        {safeWebsiteUrl.replace('https://', '').replace('http://', '')}
+                      </a>
+                    ) : (
+                      <span className="text-sm font-semibold text-slate-400 break-all">{rawWebsiteUrl || '—'}</span>
+                    )}
                   </div>
                 </div>
 

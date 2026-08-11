@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import { notFoundTo404 } from '../middleware/errorHandler';
 export const getAllCourses = async () => {
   const courses = await prisma.course.findMany({
     include: {
@@ -116,14 +117,14 @@ export const createCourse = async (data: { id: string; title: string; descriptio
 };
 
 export const updateCourse = async (courseId: string, data: { title?: string; description?: string; price?: number }) => {
-  return await prisma.course.update({
+  return await notFoundTo404(prisma.course.update({
     where: { id: courseId },
     data
-  });
+  }), `Course ${courseId} not found`);
 };
 
 export const deleteCourse = async (courseId: string) => {
-  return await prisma.course.delete({ where: { id: courseId } });
+  return await notFoundTo404(prisma.course.delete({ where: { id: courseId } }), `Course ${courseId} not found`);
 };
 
 export const createModule = async (courseId: string, data: { week: number; title: string; description?: string }) => {
@@ -138,14 +139,14 @@ export const createModule = async (courseId: string, data: { week: number; title
 };
 
 export const updateModule = async (moduleId: number, data: { week?: number; title?: string; description?: string }) => {
-  return await prisma.module.update({
+  return await notFoundTo404(prisma.module.update({
     where: { id: moduleId },
     data
-  });
+  }), `Module ${moduleId} not found`);
 };
 
 export const deleteModule = async (moduleId: number) => {
-  return await prisma.module.delete({ where: { id: moduleId } });
+  return await notFoundTo404(prisma.module.delete({ where: { id: moduleId } }), `Module ${moduleId} not found`);
 };
 
 export const createTopic = async (moduleId: number, data: { title: string; text: string; code?: string; note?: string; order?: number }) => {
@@ -162,12 +163,12 @@ export const createTopic = async (moduleId: number, data: { title: string; text:
 };
 
 export const updateTopic = async (topicId: number, data: { title?: string; text?: string; code?: string; note?: string; order?: number }) => {
-  return await prisma.topic.update({
+  return await notFoundTo404(prisma.topic.update({
     where: { id: topicId },
     data
-  });
+  }), `Topic ${topicId} not found`);
 };
 
 export const deleteTopic = async (topicId: number) => {
-  return await prisma.topic.delete({ where: { id: topicId } });
+  return await notFoundTo404(prisma.topic.delete({ where: { id: topicId } }), `Topic ${topicId} not found`);
 };

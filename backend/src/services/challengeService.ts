@@ -136,53 +136,55 @@ export const completeChallenge = async (userId: number, challengeId: number) => 
         data: { points: userRecord.points + 10 }
       });
     }
-  }
 
-  // If every published challenge in this module is now complete, advance module + course progress
-  const totalInModule = await prisma.challenge.count({
-    where: { moduleId: challenge.moduleId, isPublished: true }
-  });
-  const doneInModule = await prisma.challengeProgress.count({
-    where: { userId, moduleId: challenge.moduleId }
-  });
-
-  if (totalInModule > 0 && doneInModule >= totalInModule) {
-    await prisma.moduleProgress.upsert({
-      where: { userId_moduleId: { userId, moduleId: challenge.moduleId } },
-      update: { completed: true, quizPassed: true },
-      create: {
-        userId,
-        courseId: challenge.courseId,
-        moduleId: challenge.moduleId,
-        completed: true,
-        quizPassed: true
-      }
+    // If every published challenge in this module is now complete, advance
+    // module + course progress. Runs only on a genuinely new completion, so a
+    // duplicate submission no longer fires these unnecessary DB queries.
+    const totalInModule = await prisma.challenge.count({
+      where: { moduleId: challenge.moduleId, isPublished: true }
+    });
+    const doneInModule = await prisma.challengeProgress.count({
+      where: { userId, moduleId: challenge.moduleId }
     });
 
-    // totalModules derived from the DB (not the hardcoded /20 used in quizService)
-    const totalModules = await prisma.module.count({
-      where: { courseId: challenge.courseId }
-    });
-    const current = await prisma.courseProgress.findUnique({
-      where: { userId_courseId: { userId, courseId: challenge.courseId } }
-    });
-
-    const week = challenge.module.week;
-    if (week > (current?.weekCompleted || 0)) {
-      const progress = totalModules > 0 ? Math.min(Math.round((week / totalModules) * 100), 100) : 100;
-      const completed = totalModules > 0 && week >= totalModules;
-
-      await prisma.courseProgress.upsert({
-        where: { userId_courseId: { userId, courseId: challenge.courseId } },
-        update: { weekCompleted: week, progress, completed },
+    if (totalInModule > 0 && doneInModule >= totalInModule) {
+      await prisma.moduleProgress.upsert({
+        where: { userId_moduleId: { userId, moduleId: challenge.moduleId } },
+        update: { completed: true, quizPassed: true },
         create: {
           userId,
           courseId: challenge.courseId,
-          weekCompleted: week,
-          progress,
-          completed
+          moduleId: challenge.moduleId,
+          completed: true,
+          quizPassed: true
         }
       });
+
+      // totalModules derived from the DB (not the hardcoded /20 used in quizService)
+      const totalModules = await prisma.module.count({
+        where: { courseId: challenge.courseId }
+      });
+      const current = await prisma.courseProgress.findUnique({
+        where: { userId_courseId: { userId, courseId: challenge.courseId } }
+      });
+
+      const week = challenge.module.week;
+      if (week > (current?.weekCompleted || 0)) {
+        const progress = totalModules > 0 ? Math.min(Math.round((week / totalModules) * 100), 100) : 100;
+        const completed = totalModules > 0 && week >= totalModules;
+
+        await prisma.courseProgress.upsert({
+          where: { userId_courseId: { userId, courseId: challenge.courseId } },
+          update: { weekCompleted: week, progress, completed },
+          create: {
+            userId,
+            courseId: challenge.courseId,
+            weekCompleted: week,
+            progress,
+            completed
+          }
+        });
+      }
     }
   }
 

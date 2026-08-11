@@ -5,16 +5,18 @@ import { validate, quizSubmissionSchema, createQuestionSchema } from '../middlew
 
 const router = Router();
 
-// GET /api/quiz/questions/:courseId/:week - Fetch questions for a specific week's quiz (omitting correct answers)
-router.get('/questions/:courseId/:week', async (req: any, res: any, next: any) => {
+// GET /api/quiz/questions/topic/:topicId - Fetch questions for a specific topic's quiz (omitting correct answers)
+// Auth required: the question bank should not be enumerable without a session.
+// NOTE: registered BEFORE the generic /:courseId/:week route below, otherwise Express
+// would match "/questions/topic/517" as courseId="topic", week="517" and topic quizzes
+// would always 404 (this was a live UI-breaking bug).
+router.get('/questions/topic/:topicId', authenticateToken, async (req: any, res: any, next: any) => {
   try {
-    const { courseId, week } = req.params;
-    const weekNum = parseInt(week);
-
-    const quizData = await quizService.getQuizQuestions(courseId, weekNum);
+    const topicId = parseInt(req.params.topicId);
+    const quizData = await quizService.getTopicQuizQuestions(topicId);
 
     if (!quizData) {
-      return res.status(404).json({ message: 'Quiz for this week not found' });
+      return res.status(404).json({ message: 'Quiz for this topic not found' });
     }
 
     res.json(quizData);
@@ -23,14 +25,17 @@ router.get('/questions/:courseId/:week', async (req: any, res: any, next: any) =
   }
 });
 
-// GET /api/quiz/questions/topic/:topicId - Fetch questions for a specific topic's quiz (omitting correct answers)
-router.get('/questions/topic/:topicId', async (req: any, res: any, next: any) => {
+// GET /api/quiz/questions/:courseId/:week - Fetch questions for a specific week's quiz (omitting correct answers)
+// Auth required: the question bank should not be enumerable without a session.
+router.get('/questions/:courseId/:week', authenticateToken, async (req: any, res: any, next: any) => {
   try {
-    const topicId = parseInt(req.params.topicId);
-    const quizData = await quizService.getTopicQuizQuestions(topicId);
+    const { courseId, week } = req.params;
+    const weekNum = parseInt(week);
+
+    const quizData = await quizService.getQuizQuestions(courseId, weekNum);
 
     if (!quizData) {
-      return res.status(404).json({ message: 'Quiz for this topic not found' });
+      return res.status(404).json({ message: 'Quiz for this week not found' });
     }
 
     res.json(quizData);

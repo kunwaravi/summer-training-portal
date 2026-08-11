@@ -208,8 +208,9 @@ router.get('/leaderboard', authenticateToken, async (req: any, res: Response, ne
   try {
     const { search, page = '1', limit = '10' } = req.query;
 
+    // Clamp limit to 100 — unbounded `take` from a user-supplied limit is a DoS
     const pageNum = Math.max(1, parseInt(page as string));
-    const limitNum = Math.max(1, parseInt(limit as string));
+    const limitNum = Math.min(Math.max(1, parseInt(limit as string)), 100);
 
     const { leaderboard, total } = await getLeaderboard(search as string, pageNum, limitNum);
 

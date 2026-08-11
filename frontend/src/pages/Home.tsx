@@ -20,16 +20,18 @@ const courseDetails = [
     id: 'C',
     title: 'C & Systems Programming',
     difficulty: 'Beginner to Intermediate',
-    tags: ['Core Electronics', 'Hardware Mapping'],
+    tags: ['Core Programming', 'Memory & Pointers'],
     color: 'from-blue-500/20 via-blue-600/10 to-transparent border-blue-500/30',
     icon: Code2,
     colSpan: 'md:col-span-3',
-    desc: 'Master procedural programming, binary systems, hardware mapping, memory allocations, and register compilations.',
+    desc: 'Master C from first principles — syntax, memory management, pointers, data structures, file I/O, and systems-level thinking.',
     syllabus: [
-      { week: 1, title: 'Procedural Fundamentals', details: 'Variables, Data Types, Control Flows, and Memory Layouts', milestone: 'Program execution flow diagram' },
-      { week: 2, title: 'Modular Architecture', details: 'Functions, Scopes, Arrays, and Pointer Arithmetic', milestone: 'Function stack visual map' },
-      { week: 3, title: 'Structures & I/O Systems', details: 'Dynamic Memory Allocation, Structs, and Hardware File I/O', milestone: 'Custom heap allocator simulator' },
-      { week: 4, title: 'Low-Level Register Macros', details: 'Compilation pipelines, Register keywords, and direct hardware macros', milestone: 'Virtual peripheral registers setup' }
+      { week: 1, title: 'C Foundations', details: 'Why C matters, the compile pipeline, environment setup, and program anatomy', milestone: 'Run your first compiled program' },
+      { week: 2, title: 'Basics & Control Flow', details: 'Tokens, data types, operators, I/O, conditionals, loops, and functions', milestone: 'Write a temperature-converter' },
+      { week: 3, title: 'Pointers & Memory', details: 'Addresses, dereferencing, pointer arithmetic, arrays, strings, and malloc/free', milestone: 'Build a dynamic string library' },
+      { week: 4, title: 'Structures & File I/O', details: 'Structs, unions, typedef, plus formatted and binary file handling', milestone: 'Student records with file save/load' },
+      { week: 5, title: 'Preprocessor & DSA', details: 'Macros, header guards, linked lists, stacks, queues, sorting & searching', milestone: 'Implement a linked list stack' },
+      { week: 6, title: 'Capstone & Certification', details: 'Design a full C project, test like a professional, and revise for the exam', milestone: 'Ship a complete C application' }
     ]
   },
   {
@@ -40,12 +42,16 @@ const courseDetails = [
     color: 'from-purple-500/20 via-purple-600/10 to-transparent border-purple-500/30',
     icon: Cpu,
     colSpan: 'md:col-span-3',
-    desc: 'Architect high-performance OOP software structures, customized template classes, and embedded-optimized collections.',
+    desc: 'Master C++ & OOP for embedded systems — classes, RAII, templates, STL, and modern C++ — with 20 deep sections and hands-on quizzes.',
     syllabus: [
-      { week: 1, title: 'Object-Oriented Encapsulation', details: 'Classes, Objects, Members, and Access Specifiers', milestone: 'RAII Smart Lock instance' },
-      { week: 2, title: 'Inheritance & Polymorphism', details: 'Base/Derived classes, Virtual Functions, and VTables', milestone: 'VTable dispatch table mockup' },
-      { week: 3, title: 'Generic Programming', details: 'Function/Class templates, and Standard Template Library (STL) overrides', milestone: 'Vector class allocator override' },
-      { week: 4, title: 'Embedded Space Optimization', details: 'No-overhead allocations, inline functions, and lightweight classes', milestone: 'Zero-overhead custom ring buffer' }
+      { week: 1, title: 'C++ Foundations & Compilation Model', details: 'Why C++ still powers the world, the compile pipeline, C++ vs C, namespaces, and basic syntax', milestone: 'A compiled hello-world with a Makefile' },
+      { week: 2, title: 'Variables, Types & Operators', details: 'Primitive types, const/constexpr, type conversions, operators, and expression evaluation', milestone: 'A const/constexpr type lab' },
+      { week: 3, title: 'Control Flow & I/O', details: 'iostream input/output, formatting, conditional statements, switch, and for/while/do-while loops', milestone: 'A formatted iostream report' },
+      { week: 4, title: 'Functions & Containers', details: 'Functions, default & overloaded args, arrays, std::array, and std::string vs C-strings', milestone: 'A std::string text processor' },
+      { week: 5, title: 'Object-Oriented Programming', details: 'Classes & objects, access specifiers, constructors, destructors, and RAII', milestone: 'An RAII resource guard' },
+      { week: 6, title: 'Inheritance, Polymorphism & Advanced OOP', details: 'Inheritance & composition, virtual functions, operator overloading, and friends', milestone: 'A virtual-dispatch shape library' },
+      { week: 7, title: 'Templates & The Standard Library', details: 'Function/class templates, STL containers, iterators, algorithms, and smart pointers', milestone: 'An STL container + smart-pointer demo' },
+      { week: 8, title: 'Modern C++ & Embedded Project', details: 'Move semantics and C++11/14/17/20 features, culminating in a complete embedded C++ project', milestone: 'A complete embedded C++ project + certification' }
     ]
   },
   {
@@ -56,12 +62,28 @@ const courseDetails = [
     color: 'from-teal-500/20 via-teal-600/10 to-transparent border-teal-500/30',
     icon: Wifi,
     colSpan: 'md:col-span-2',
-    desc: 'Connect physical systems with ESP microcontrollers, ADCs, custom serial buses, MQTT client protocols, and remote cloud metrics.',
+    desc: 'Connect physical systems with ESP microcontrollers, ADCs, custom serial buses, MQTT client protocols, and remote cloud metrics — with 20 deep sections and hands-on quizzes.',
     syllabus: [
-      { week: 1, title: 'IoT Microcontroller Baselines', details: 'ESP Core architecture, pinouts, and hardware development setups', milestone: 'ESP32 development workspace setup' },
-      { week: 2, title: 'Hardware Interfacing', details: 'ADCs, DACs, I2C, SPI, and UART serial communication', milestone: 'Serial protocols logic mapping' },
-      { week: 3, title: 'Connectivity Protocols', details: 'WiFi configurations, MQTT Clients, publish/subscribe payloads', milestone: 'Publish MQTT payload mock' },
-      { week: 4, title: 'Cloud Dashboards & Alerts', details: 'Real-time telemetry, remote actuator control, and cloud hooks', milestone: 'Realtime line charts telemetry' }
+      { week: 1, title: 'Introduction to IoT & Smart Systems', details: 'What IoT means, smart-system loops, and real-world use cases', milestone: 'Define an IoT use case end to end' },
+      { week: 2, title: 'IoT Architecture & Reference Model', details: 'Four-layer stack, edge/fog/cloud, and designing a system architecture', milestone: 'Draw and justify a system architecture' },
+      { week: 3, title: 'Sensors & Transducers', details: 'Analog/digital sensors, ADCs, voltage dividers, wiring, and calibration', milestone: 'Read and calibrate a real sensor' },
+      { week: 4, title: 'Signal Conditioning, ADC & DAC', details: 'Amplify, level-shift, filter; sampling theory; PWM/DAC output; noise grounding', milestone: 'Build a clean signal chain' },
+      { week: 5, title: 'Actuators & Output Control', details: 'DC motors and H-bridges, relays for AC loads, PWM speed, and servo position', milestone: 'Drive a motor and a servo safely' },
+      { week: 6, title: 'Microcontrollers & Development Boards', details: 'MCU vs microprocessor, board landscape, GPIO architecture, board selection', milestone: 'Pick the right board for a project' },
+      { week: 7, title: 'Arduino Programming Fundamentals', details: 'Sketch structure, buttons and debounce, analog input, PWM output, serial logging', milestone: 'Build a button + LED + serial sketch' },
+      { week: 8, title: 'ESP32 Deep Dive', details: 'Dual cores, WiFi/BLE, ADC/DAC interfacing, timers, RTC, and low-power modes', milestone: 'Run a deep-sleep battery node' },
+      { week: 9, title: 'Serial Communication: UART', details: 'UART wiring, baud/parity, NMEA & AT parsing, and logic-analyzer debugging', milestone: 'Decode a GPS NMEA stream' },
+      { week: 10, title: 'Serial Communication: I2C', details: 'Two-wire bus, addressing, register reads, pull-ups, and bus troubleshooting', milestone: 'Scan and read an I2C sensor' },
+      { week: 11, title: 'Serial Communication: SPI', details: 'Four-wire bus, chip select, SPI vs I2C, modes, and timing debugging', milestone: 'Drive an SPI display or SD card' },
+      { week: 12, title: 'Networking & WiFi Connectivity', details: 'IP/TCP/UDP on an MCU, WPA2/WPA3, reconnects and watchdogs, mDNS hostnames', milestone: 'Build a self-healing WiFi node' },
+      { week: 13, title: 'HTTP, REST & WebSockets', details: 'HTTP from a microcontroller, REST + JSON, WebSockets, choosing the API style', milestone: 'Serve and consume a REST API' },
+      { week: 14, title: 'MQTT Protocol Deep Dive', details: 'Pub/sub, topics and wildcards, QoS, retained + Last Will, full device pipeline', milestone: 'Publish telemetry through a broker' },
+      { week: 15, title: 'Cloud Platforms & Dashboards', details: 'ThingsBoard/AWS IoT, provisioning, telemetry ingress, dashboards, alerts, RPC', milestone: 'Live telemetry on a dashboard' },
+      { week: 16, title: 'Data Collection, Storage & Telemetry', details: 'NVS/LittleFS/SD, time-series databases, reliability, and anomaly visualisation', milestone: 'Build a trustworthy data pipeline' },
+      { week: 17, title: 'IoT Security Fundamentals', details: 'Threat model, auth and secrets, TLS/certificates, secure boot, OTA, hardening', milestone: 'Harden a device end to end' },
+      { week: 18, title: 'Smart Home Systems & Integration', details: 'Hub pattern, Zigbee/Z-Wave/BLE/WiFi, voice assistants, hub project build', milestone: 'Bridge a device into a smart home' },
+      { week: 19, title: 'Industrial IoT & Real-World Applications', details: 'IIoT differences, Modbus/OPC-UA/MQTT, predictive maintenance, SCADA/digital twins', milestone: 'Translate a factory protocol' },
+      { week: 20, title: 'Building a Complete IoT Project + Certification', details: 'Requirements, hardware, firmware architecture, testing, documentation, exam', milestone: 'Ship a documented, tested project' }
     ]
   },
   {
@@ -74,10 +96,26 @@ const courseDetails = [
     colSpan: 'md:col-span-4',
     desc: 'Implement low-level peripheral drivers, nested vectored interrupts, RTOS task scheduling, semaphores, and power configurations.',
     syllabus: [
-      { week: 1, title: 'Peripheral Driver Baselines', details: 'GPIO register manipulation, clock gating, and writing abstract HALs', milestone: 'Visual Cortex-M Startup vector table' },
-      { week: 2, title: 'Interrupt Handlers & PWM', details: 'Timer hardware interrupts, nested interrupt priorities, and PWM control', milestone: 'GPIO physical register map tool' },
-      { week: 3, title: 'RTOS Task Management', details: 'Preemptive scheduler, task priorities, queues, and mutexes', milestone: 'NVIC priority visualizer' },
-      { week: 4, title: 'System Diagnostics & Safety', details: 'Watchdog timers, brown-out detectors, and ultra-low power modes', milestone: 'Realtime task context switcher schematic' }
+      { week: 1, title: 'Introduction to Embedded Systems', details: 'What embedded systems really are, real-time deadlines, the development environment, datasheets and schematics', milestone: 'Define a real-time deadline in ms' },
+      { week: 2, title: 'Embedded Hardware', details: 'Memory maps (flash, SRAM, registers), clocks and PLLs, power rails and brownouts, reset and boot/startup', milestone: 'Trace a boot from reset to main()' },
+      { week: 3, title: 'Embedded Software', details: 'C for microcontrollers, toolchains and Makefiles, GDB/SWD debugging, firmware design patterns', milestone: 'Build a flashable firmware from a Makefile' },
+      { week: 4, title: 'Microprocessors', details: 'Fetch-decode-execute, RISC vs CISC, von Neumann vs Harvard, the stack and the heap', milestone: 'Walk the fetch-decode-execute cycle' },
+      { week: 5, title: 'Microcontrollers', details: 'The system-on-a-chip, the peripheral bus, the peripheral zoo, memory-mapped I/O', milestone: 'Map the MCU peripherals and buses' },
+      { week: 6, title: 'AVR Basics', details: 'Register file, timers and PWM, interrupts and the SREG I-flag, building a UART driver', milestone: 'Write a register-level AVR UART driver' },
+      { week: 7, title: 'ARM Basics', details: 'Cortex-M registers, the NVIC, Thumb and Thumb-2, CMSIS', milestone: 'Configure an NVIC interrupt with CMSIS' },
+      { week: 8, title: 'GPIO Programming', details: 'GPIO modes and electricals, read-modify-write atomicity, debounce, a simple GPIO HAL', milestone: 'Build a clean GPIO HAL' },
+      { week: 9, title: 'Timers', details: 'Counters and prescalers, PWM, input capture, SysTick', milestone: 'Generate exact PWM with a compare unit' },
+      { week: 10, title: 'Interrupts', details: 'Interrupt latency, race conditions, priorities and inversion, ISR discipline', milestone: 'Write a race-free ISR with a flag' },
+      { week: 11, title: 'UART Communication', details: 'Wiring, framing and baud rate, polling vs interrupt vs DMA, framing protocols, printf over UART', milestone: 'Decode a framed UART packet' },
+      { week: 12, title: 'SPI Communication', details: 'Four wires and many slaves, master-slave and CS timing, real devices, debugging SPI', milestone: 'Talk to an SPI flash device' },
+      { week: 13, title: 'I2C Communication', details: 'Two wires, addresses and open-drain, register-mapped sensors, failure modes, I2C vs SPI', milestone: 'Read an I2C sensor register map' },
+      { week: 14, title: 'ADC and DAC', details: 'From voltage to a number, sampling and aliasing, DMA-streamed ADC, the DAC', milestone: 'Sample a signal without aliasing' },
+      { week: 15, title: 'RTOS Basics', details: 'Tasks and the scheduler, queues, semaphores and mutexes, classic RTOS bugs', milestone: 'Build a two-task RTOS app with a queue' },
+      { week: 16, title: 'Embedded Project Design', details: 'Requirements, architecture, real-time scheduling and WCET, power budgeting', milestone: 'Write requirements plus an architecture diagram' },
+      { week: 17, title: 'Development', details: 'Coding standards and review, static analysis, testing layers, heisenbugs', milestone: 'Run static analysis on firmware' },
+      { week: 18, title: 'Testing', details: 'The testing pyramid, the seam pattern, CI, coverage', milestone: 'Add host-side unit tests to firmware' },
+      { week: 19, title: 'Documentation', details: 'The design documents that matter, reading datasheets, readable docs, the decision log', milestone: 'Write a decision record for a design choice' },
+      { week: 20, title: 'Final Submission', details: 'Project planning, the live demo, the release review, the engineers mindset and certification', milestone: 'Deliver a documented, tested project plus the exam' }
     ]
   },
   {
@@ -88,12 +126,15 @@ const courseDetails = [
     color: 'from-pink-500/20 via-pink-600/10 to-transparent border-pink-500/30',
     icon: Terminal,
     colSpan: 'md:col-span-2',
-    desc: 'Learn HTML, CSS, JavaScript, and modern responsive design patterns in Hinglish.',
+    desc: 'Build production-ready websites from scratch — HTML, CSS, JavaScript, and a deployed portfolio.',
     syllabus: [
-      { week: 1, title: 'HTML5 & Semantic Structure', details: 'Web page basics, layout structure, and HTML5 semantic markup', milestone: 'Semantic page layout mockup' },
-      { week: 2, title: 'CSS3 Styling & Responsive Design', details: 'Colors, Flexbox layouts, media queries, and Tailwind CSS baselines', milestone: 'Flexbox layout portfolio setup' },
-      { week: 3, title: 'JavaScript & DOM Manipulation', details: 'Variables, loops, DOM events, and adding interactive page elements', milestone: 'Form validator logic handler' },
-      { week: 4, title: 'Web Hosting & Git Deploy', details: 'Building a portfolio website, version control, and deploying live to hosting', milestone: 'Deploy live page to Vercel/Netlify' }
+      { week: 1, title: 'HTML5 & Web Fundamentals', details: 'How the web works, page anatomy, headings, links, media, forms, and semantic tags', milestone: 'Your first HTML page in the browser' },
+      { week: 2, title: 'CSS3 & Modern Layouts', details: 'Selectors, the box model, units, flexbox, grid, transitions, and animations', milestone: 'A flexbox navigation + card layout' },
+      { week: 3, title: 'Responsive Design & Tailwind', details: 'Media queries, mobile-first thinking, and utility-first Tailwind CSS', milestone: 'A fully responsive single page' },
+      { week: 4, title: 'JavaScript Fundamentals', details: 'Variables, types, operators, control flow, functions, and array methods', milestone: 'A functions & array-methods toolkit' },
+      { week: 5, title: 'DOM, Events & Async JS', details: 'Manipulating the DOM, event handlers, promises, and fetching real APIs', milestone: 'A fetch-driven live data view' },
+      { week: 6, title: 'Portfolio Project Build', details: 'Plan, build, style, and add interactivity to a real deployed portfolio', milestone: 'A polished, responsive portfolio' },
+      { week: 7, title: 'Git, Deployment & Certification', details: 'Version control, static hosting, custom domains, and the final audit', milestone: 'A deployed live portfolio URL' }
     ]
   },
   {
@@ -104,12 +145,16 @@ const courseDetails = [
     color: 'from-amber-500/20 via-amber-600/10 to-transparent border-amber-500/30',
     icon: Terminal,
     colSpan: 'md:col-span-2',
-    desc: 'Master Python syntax, data analysis, automation scripts, and file structures in Hinglish.',
+    desc: 'Master Python from first principles to a shipped CLI tool — syntax, data structures, OOP, files & automation, pandas & Matplotlib, web data, and a tested, packaged project — with 20 deep sections and hands-on quizzes.',
     syllabus: [
-      { week: 1, title: 'Python Syntax & Logic', details: 'Variables, loops, conditionals, and standard console inputs/outputs', milestone: 'Basic calculator script' },
-      { week: 2, title: 'Data Structures & Functions', details: 'Lists, tuples, dictionaries, and modular reusable functions', milestone: 'File sorting dictionary utility' },
-      { week: 3, title: 'File IO & OOP in Python', details: 'Reading/writing files, handling exceptions, and object-oriented class syntax', milestone: 'Employee payroll class schema' },
-      { week: 4, title: 'Data Libraries & Analytics', details: 'Pandas dataframes, Matplotlib plotting, and scripting web scrapers', milestone: 'Custom chart plotter for CSV data' }
+      { week: 1, title: 'Python Foundations & Setup', details: 'Why Python, interpreted execution and the REPL, installing Python, IDEs, and your first script', milestone: 'Your first Python script in the REPL' },
+      { week: 2, title: 'Variables, Operators & Conditionals', details: 'Dynamic typing, numbers and strings, operators, type conversion, and if/elif/else logic', milestone: 'A number-guessing conditionals game' },
+      { week: 3, title: 'Loops, Functions & Data Structures', details: 'for/while loops and comprehensions, functions with defaults and *args, lists and tuples', milestone: 'A list-processing stats toolkit' },
+      { week: 4, title: 'Dictionaries, Strings & Files', details: 'Key-value storage, sets and counters, string methods and f-strings, reading and writing files', milestone: 'A word-counter that reads a file' },
+      { week: 5, title: 'Errors, OOP & Modules', details: 'Exception handling, classes and inheritance, modules/packages/pip, and decorators', milestone: 'A small class-based library app' },
+      { week: 6, title: 'Data Analysis & Visualization', details: 'Pandas DataFrames, grouping and aggregation, and charts with Matplotlib', milestone: 'A pandas analysis + Matplotlib chart' },
+      { week: 7, title: 'Automation & Web Data', details: 'pathlib and file automation, CSV/JSON handling, HTTP requests, and scraping with BeautifulSoup', milestone: 'An automated CSV/JSON pipeline with a scraper' },
+      { week: 8, title: 'Project: A Real CLI Tool', details: 'Planning and design, argparse, user-friendly errors, pytest testing, packaging, and final review', milestone: 'A tested, packaged CLI tool' }
     ]
   },
   {
@@ -120,12 +165,16 @@ const courseDetails = [
     color: 'from-emerald-500/20 via-emerald-600/10 to-transparent border-emerald-500/30',
     icon: Database,
     colSpan: 'md:col-span-2',
-    desc: 'Learn relational databases, SQL queries, joins, indexes, and schema design in Hinglish.',
+    desc: 'Learn relational databases end-to-end — queries, joins, normalization, transactions, security, and real projects — with 20 deep sections and hands-on quizzes.',
     syllabus: [
-      { week: 1, title: 'Database Baselines & DDL', details: 'Relational DB concepts, table creations, primary keys, and data definitions', milestone: 'Filtered student report cards query' },
-      { week: 2, title: 'SQL Queries & Joins', details: 'Filtering, SELECT statements, inner/outer joins, and subquery nestings', milestone: 'Multi-table inventory mapping' },
-      { week: 3, title: 'ACID Transactions & Views', details: 'Data alterations (DML), index speeds, views, and commit/rollback logic', milestone: 'Safe bank account transfer script' },
-      { week: 4, title: 'SQL Application Interfacing', details: 'Connecting DB to backend services, schema designs, and indexing queries', milestone: 'Index speed validation script' }
+      { week: 1, title: 'Database Foundations & Relational Concepts', details: 'What databases are, spreadsheets vs databases, tables/rows/columns, keys, and relationships', milestone: 'A keyed, connected ER sketch' },
+      { week: 2, title: 'SELECT, WHERE & Sorting', details: 'SELECT anatomy, WHERE filtering, NULLs, aliases, IN/BETWEEN/LIKE, AND/OR/NOT, ORDER BY, and pagination', milestone: 'A filtered + sorted query toolkit' },
+      { week: 3, title: 'Aggregates, GROUP BY & HAVING', details: 'COUNT/SUM/AVG/MIN/MAX, DISTINCT, scalar functions, GROUP BY, HAVING, and multi-column grouping', milestone: 'A per-city analytics summary' },
+      { week: 4, title: 'Joins & Subqueries', details: 'INNER/LEFT/FULL joins, self-joins, scalar subqueries, IN, correlated subqueries, and EXISTS', milestone: 'A joined customer-orders report' },
+      { week: 5, title: 'Schema Design & Normalization', details: 'Entity design, 1NF/2NF/3NF, CREATE TABLE, constraints, ALTER TABLE, and DROP/TRUNCATE', milestone: 'A normalized 3NF schema' },
+      { week: 6, title: 'Data Manipulation, Indexes & Performance', details: 'INSERT/UPDATE/DELETE, ON CONFLICT upserts, indexes, composite indexes, and EXPLAIN plans', milestone: 'An EXPLAIN-proven indexed query' },
+      { week: 7, title: 'Views, Transactions & Security', details: 'Views, materialized views, stored procedures, triggers, ACID in depth, SQL injection, privileges, and backups', milestone: 'An atomic, injection-safe module' },
+      { week: 8, title: 'Real Projects & Query Optimization', details: 'Library mini-project, schema polish, migrations, optimizing queries, caching, and the capstone booking system', milestone: 'A reproducible booking-system DB' }
     ]
   },
   {
@@ -138,10 +187,26 @@ const courseDetails = [
     colSpan: 'md:col-span-3',
     desc: 'Master mechanical systems engineering with AutoCAD 2D drafts, SolidWorks parts modeling, CATIA surfacing, and CNC G-code toolpath programming.',
     syllabus: [
-      { week: 1, title: 'AutoCAD 2D & Interface', details: 'Coordinate systems, basic drafting tools, layers, and dimensions', milestone: 'Flange 2D drafting layout' },
-      { week: 2, title: 'SolidWorks Part Modeling', details: 'Parametric modeling, sketches, relations, extrude, and revolve', milestone: 'Hinge bracket 3D part design' },
-      { week: 3, title: 'CATIA Shape Design', details: 'Generative shape design, sweeps, lofts, joins, and spline curves', milestone: 'Turbine aerofoil surface sweep' },
-      { week: 4, title: 'CNC Code & Project Work', details: 'CNC G-code & M-code toolpaths programming and assembly constraints', milestone: 'Pocket milling G-code & Piston assembly' }
+      { week: 1, title: 'AutoCAD Workspace, Units & Layers', details: 'Model space, drawing units, layers, and precision input (grid, snap, ortho)', milestone: 'Set up a layered template drawing' },
+      { week: 2, title: '2D Drawing & Editing Commands', details: 'Line/polyline/circle/arc, trim/extend/offset/mirror, fillets, object snaps', milestone: 'Draw and edit a flange profile' },
+      { week: 3, title: 'Dimensions, Annotations & Plotting', details: 'Dimension styles, text and leaders, tolerances, layouts and viewports, plotting', milestone: 'Dimension and plot a part to scale' },
+      { week: 4, title: 'Blocks, Templates & Productivity', details: 'Blocks, attributes, dynamic blocks, tool palettes, templates and standards', milestone: 'Build a reusable block library' },
+      { week: 5, title: 'SolidWorks Sketching & Constraints', details: 'Sketch entities, geometric relations, fully-defined sketches, reference geometry', milestone: 'Make a fully-defined sketch' },
+      { week: 6, title: 'Parametric Features: Extrude, Revolve & Loft', details: 'Extrudes, revolves, lofts, sweeps, feature order and design intent', milestone: 'Model a bracket from a sketch' },
+      { week: 7, title: 'SolidWorks Assemblies & Mates', details: 'Component insertion, standard and advanced mates, motion and interference', milestone: 'Assemble and test a hinge' },
+      { week: 8, title: 'Configurations & Design Tables', details: 'Configurations, design tables in Excel, global variables and equations', milestone: 'Drive a size family via a design table' },
+      { week: 9, title: 'CATIA Sketcher & Part Design', details: 'Sketcher constraints, pad/pocket/shaft/groove, holes and threads', milestone: 'Build a CATIA part from constraints' },
+      { week: 10, title: 'CATIA Surface Creation & Editing', details: 'Wireframe geometry, extruded/revolved/swept surfaces, trim/split/join, fillets', milestone: 'Create and join a surface body' },
+      { week: 11, title: 'Generative Shape Design Studio', details: 'GSD workbench, lofts/fills/blends, control points, surface quality checks', milestone: 'Style a class-A surface' },
+      { week: 12, title: 'Draft Analysis & Product Engineering', details: 'Draft analysis and parting lines, draft tool, thickness checks, packaging', milestone: 'Add draft and verify wall thickness' },
+      { week: 13, title: 'CNC Axis Systems & Coordinates', details: 'Machine axes, work coordinates, part zero and offsets, workholding', milestone: 'Set up a work coordinate system' },
+      { week: 14, title: 'G-Code Commands & Canned Cycles', details: 'Block/word structure, G00/G01/G02/G03 motion, canned cycles, compensation', milestone: 'Write a drilling cycle by hand' },
+      { week: 15, title: 'M-Code & Machine Control', details: 'Spindle/coolant codes, safe startup, subprograms and macros, zero return', milestone: 'Build a safe program header' },
+      { week: 16, title: 'Toolpath Planning & Simulation', details: 'Tool and feed selection, roughing vs finishing, simulation, post-processing', milestone: 'Simulate and verify a toolpath' },
+      { week: 17, title: 'Multi-Part Assembly Project', details: 'Planning, modeling mating parts, assembly fits, motion and adjustability', milestone: 'Design a mating part pair' },
+      { week: 18, title: 'Production Drawings & GD&T', details: '2D production drawings, section/detail/break views, GD&T and datums', milestone: 'Detail a part with GD&T' },
+      { week: 19, title: 'Bill of Materials & Documentation', details: 'BOM, balloons and linked properties, PDF/DWG/DXF export, drawing sets', milestone: 'Publish a BOM and drawing set' },
+      { week: 20, title: 'Final Submission & Design Review', details: 'Complete design workflow, review against requirements, final package, certification', milestone: 'Deliver a reviewed project + exam' }
     ]
   },
   {
@@ -154,10 +219,26 @@ const courseDetails = [
     colSpan: 'md:col-span-3',
     desc: 'Master civil site plans in AutoCAD Civil, 3DS Max architectural renders, Google SketchUp layouts, and Revit BIM structural grid designs.',
     syllabus: [
-      { week: 1, title: 'AutoCAD Civil Site Plans', details: 'Drafting floor plans, sections, elevations, and municipal standards', milestone: '2BHK residential plan layout' },
-      { week: 2, title: '3DS Max Render & SketchUp', details: 'V-Ray rendering, material mapping, camera views, and rapid SketchUp models', milestone: 'Villa exterior rendering & kitchen layout' },
-      { week: 3, title: 'Revit Structural Analysis', details: 'Slabs, foundations, columns, beams grid alignment, and concrete reinforcement', milestone: 'Beam-Column junction steel detail' },
-      { week: 4, title: 'Revit BIM & Project Work', details: 'BIM walls/roofs families, window schedules, documentation viewports sheets', milestone: 'G+3 building BIM portfolio sheets' }
+      { week: 1, title: 'AutoCAD Civil Setup: Units, Layers & Site Data', details: 'Civil units and scales, layers and styles, coordinate and survey point entry, grids and drawing aids', milestone: 'Set up a civil drawing template' },
+      { week: 2, title: 'Site Plans: Boundary, Utilities & Dimensions', details: 'Drafting the site boundary, utilities/setbacks/zoning, spot elevations and contours, dimensioning site plans', milestone: 'Draft a dimensioned site plan' },
+      { week: 3, title: 'Residential Floor Plans', details: 'Wall layouts and room planning, doors/windows/openings, furniture and appliance layout, plan coordination', milestone: 'Draw a 2BHK floor plan' },
+      { week: 4, title: 'Sections, Elevations & Municipal Plotting', details: 'Sections and elevations, hatching and annotations, title blocks, plotting for municipal submission', milestone: 'Plot sections and elevations for submission' },
+      { week: 5, title: '3ds Max Modeling for Architecture', details: 'Interface and viewport navigation, primitives/splines/editable polys, building shells, modeling details', milestone: 'Model a building shell' },
+      { week: 6, title: 'Materials & Texturing', details: 'Material editor and slots, diffuse/bump/specular maps, UVW mapping and real-world scale, PBR materials', milestone: 'Texture a villa with PBR maps' },
+      { week: 7, title: 'Lighting Fundamentals', details: 'Daylight/sun/sky, photometric lights and shadows, three-point lighting, exterior vs interior setups', milestone: 'Light an interior scene' },
+      { week: 8, title: 'Rendering & Post-Production', details: 'Camera setup and composition, render settings, V-Ray/Mental Ray workflow, Photoshop post-production', milestone: 'Produce a finished render' },
+      { week: 9, title: 'SketchUp Core Modeling Tools', details: 'Interface and axes, push/pull/offset/follow me, groups/components/instances, styles and scenes', milestone: 'Build a rapid furniture mockup' },
+      { week: 10, title: 'Components, Groups & Organization', details: 'Groups vs components, component library and dynamic components, outliner and layers, sandbox terrain', milestone: 'Organize a model with components' },
+      { week: 11, title: 'Extensions & Workflow', details: 'Extension warehouse and key extensions, Ruby console and macros, DWG/OBJ/3DS exchange, rapid prototyping workflow', milestone: 'Script a modeling macro' },
+      { week: 12, title: 'Layout & Presentation', details: 'Layout basics, viewports and scaled drawings, annotations/dimensions/callouts, exporting PDFs', milestone: 'Present a scaled Layout sheet' },
+      { week: 13, title: 'Revit Structure Basics', details: 'Structure interface and template, levels/grids/project setup, structural columns and load-bearing walls, views', milestone: 'Set up a structural project' },
+      { week: 14, title: 'Structural Elements & Detailing', details: 'Foundations and footings, structural framing beams/joists, slabs and openings, detailing notes/dimensions', milestone: 'Model a foundation grid' },
+      { week: 15, title: 'Reinforcement & Schedules', details: 'Rebar placement and cover, rebar sets and bending, structural schedules and quantities, beam-column junctions', milestone: 'Reinforce a beam-column junction' },
+      { week: 16, title: 'Documentation & Sheets', details: 'Sheet setup and title blocks, view placement, drafting views and line weights, PDF/DWG/BIM360 publishing', milestone: 'Publish a structural drawing set' },
+      { week: 17, title: 'Revit Architecture: Levels, Grids & Walls', details: 'Architecture interface and template, levels/grids/project north, wall types/layers/curtain walls, wall openings', milestone: 'Lay out levels, grids and walls' },
+      { week: 18, title: 'Doors, Windows & Families', details: 'Loading and placing doors/windows, system vs loadable families, family editor parameters, door/window schedules', milestone: 'Schedule doors and windows' },
+      { week: 19, title: 'Floors, Roofs & Stairs', details: 'Floor types and sketching, footprint/extrusion/sloped roofs, stairs/landings/railings, ramps and openings', milestone: 'Model floors, roof and stairs' },
+      { week: 20, title: 'Schedules, Sheets & Coordination', details: 'Material takeoffs and room schedules, views/sheets and drafting setup, links/clash/interference, final BIM delivery', milestone: 'Deliver a coordinated BIM package + exam' }
     ]
   }
 ];
@@ -183,10 +264,26 @@ const courseMetadata: Record<string, any> = {
     icon: Cpu,
     colSpan: 'md:col-span-3',
     milestones: {
-      1: 'RAII Smart Lock instance',
-      2: 'VTable dispatch table mockup',
-      3: 'Vector class allocator override',
-      4: 'Zero-overhead custom ring buffer'
+      1: 'A compiled hello-world with a Makefile',
+      2: 'A namespace-scoped syntax demo',
+      3: 'A const/constexpr type lab',
+      4: 'An operator-precedence evaluation chain',
+      5: 'A formatted iostream report',
+      6: 'A switch-driven menu program',
+      7: 'A loop-based number-series generator',
+      8: 'A default/overloaded-function toolkit',
+      9: 'A std::array type-safe collection',
+      10: 'A std::string text processor',
+      11: 'A class with access-specifier control',
+      12: 'An RAII resource guard',
+      13: 'A composed + inherited class hierarchy',
+      14: 'A virtual-dispatch shape library',
+      15: 'An operator-overload + friend demo',
+      16: 'A generic template container',
+      17: 'An STL container + iterator program',
+      18: 'An STL-algorithm + smart-pointer pipeline',
+      19: 'A move-semantics performance demo',
+      20: 'A complete embedded C++ project + certification'
     }
   },
   'IoT': {
@@ -196,10 +293,26 @@ const courseMetadata: Record<string, any> = {
     icon: Wifi,
     colSpan: 'md:col-span-2',
     milestones: {
-      1: 'ESP32 development workspace setup',
-      2: 'Serial protocols logic mapping',
-      3: 'Publish MQTT payload mock',
-      4: 'Realtime line charts telemetry'
+      1: 'Define an IoT use case end to end',
+      2: 'Draw and justify a system architecture',
+      3: 'Read and calibrate a real sensor',
+      4: 'Build a clean signal chain',
+      5: 'Drive a motor and a servo safely',
+      6: 'Pick the right board for a project',
+      7: 'Build a button + LED + serial sketch',
+      8: 'Run a deep-sleep battery node',
+      9: 'Decode a GPS NMEA stream',
+      10: 'Scan and read an I2C sensor',
+      11: 'Drive an SPI display or SD card',
+      12: 'Build a self-healing WiFi node',
+      13: 'Serve and consume a REST API',
+      14: 'Publish telemetry through a broker',
+      15: 'Live telemetry on a dashboard',
+      16: 'Build a trustworthy data pipeline',
+      17: 'Harden a device end to end',
+      18: 'Bridge a device into a smart home',
+      19: 'Translate a factory protocol',
+      20: 'Ship a documented, tested project'
     }
   },
   'Embedded': {
@@ -209,10 +322,26 @@ const courseMetadata: Record<string, any> = {
     icon: Server,
     colSpan: 'md:col-span-4',
     milestones: {
-      1: 'Visual Cortex-M Startup vector table',
-      2: 'GPIO physical register map tool',
-      3: 'NVIC priority visualizer',
-      4: 'Realtime task context switcher schematic'
+      1: 'Define a real-time deadline in ms',
+      2: 'Trace a boot from reset to main()',
+      3: 'Build a flashable firmware from a Makefile',
+      4: 'Walk the fetch-decode-execute cycle',
+      5: 'Map the MCU peripherals and buses',
+      6: 'Write a register-level AVR UART driver',
+      7: 'Configure an NVIC interrupt with CMSIS',
+      8: 'Build a clean GPIO HAL',
+      9: 'Generate exact PWM with a compare unit',
+      10: 'Write a race-free ISR with a flag',
+      11: 'Decode a framed UART packet',
+      12: 'Talk to an SPI flash device',
+      13: 'Read an I2C sensor register map',
+      14: 'Sample a signal without aliasing',
+      15: 'Build a two-task RTOS app with a queue',
+      16: 'Write requirements plus an architecture diagram',
+      17: 'Run static analysis on firmware',
+      18: 'Add host-side unit tests to firmware',
+      19: 'Write a decision record for a design choice',
+      20: 'Deliver a documented, tested project plus the exam'
     }
   },
   'WebDesign': {
@@ -222,36 +351,84 @@ const courseMetadata: Record<string, any> = {
     icon: Terminal,
     colSpan: 'md:col-span-2',
     milestones: {
-      1: 'Semantic page layout mockup',
-      2: 'Flexbox layout portfolio setup',
-      3: 'Form validator logic handler',
-      4: 'Deploy live page to Vercel/Netlify'
+      1: 'Your first HTML page in the browser',
+      2: 'A semantic page-structure mockup',
+      3: 'A styled, selector-driven component',
+      4: 'A box-model pixel-layout demo',
+      5: 'A flexbox navigation + card layout',
+      6: 'A grid gallery with hover transitions',
+      7: 'A fully responsive single page',
+      8: 'A Tailwind utility-built component',
+      9: 'A JS variables & types lab',
+      10: 'A branching/looping logic program',
+      11: 'A functions & array-methods toolkit',
+      12: 'Live DOM updates from JS',
+      13: 'An interactive event-driven widget',
+      14: 'A fetch-driven live data view',
+      15: 'A wireframe + portfolio build plan',
+      16: 'The semantic portfolio skeleton',
+      17: 'A polished, responsive portfolio',
+      18: 'Validation, modals & dark mode',
+      19: 'A deployed live portfolio URL',
+      20: 'Audited 90+ scores & certification'
     }
   },
   'Python': {
     difficulty: 'Beginner to Intermediate',
-    tags: ['Data Analysis', 'Automation Scripting'],
+    tags: ['Data Analysis', 'Automation'],
     color: 'from-amber-500/20 via-amber-600/10 to-transparent border-amber-500/30',
     icon: Terminal,
     colSpan: 'md:col-span-2',
     milestones: {
-      1: 'Basic calculator script',
-      2: 'File sorting dictionary utility',
-      3: 'Employee payroll class schema',
-      4: 'Custom chart plotter for CSV data'
+      1: 'Python code you can read aloud',
+      2: 'A working first script in your IDE',
+      3: 'A dynamic typed-variables lab',
+      4: 'A calculator-expression demo',
+      5: 'A number-guessing conditionals game',
+      6: 'A comprehension-based data pipeline',
+      7: 'A functions, args & scope toolkit',
+      8: 'A list/tuple data-shaping demo',
+      9: 'A dictionary/set membership lab',
+      10: 'A file-reading word-counter utility',
+      11: 'A safe exception-handling module',
+      12: 'A small class-based library app',
+      13: 'A pip-installed reusable package',
+      14: 'A pandas DataFrame analysis',
+      15: 'A Matplotlib chart plotter',
+      16: 'A batch file-renaming script',
+      17: 'A live scraped-data report',
+      18: 'A feature-scoped CLI design doc',
+      19: 'A working argparse CLI tool',
+      20: 'A tested, packaged CLI + certification'
     }
   },
   'SQL': {
     difficulty: 'Beginner to Intermediate',
-    tags: ['Relational DB', 'Query Optimizations'],
+    tags: ['Relational DB', 'Querying'],
     color: 'from-emerald-500/20 via-emerald-600/10 to-transparent border-emerald-500/30',
     icon: Database,
     colSpan: 'md:col-span-2',
     milestones: {
-      1: 'Filtered student report cards query',
-      2: 'Multi-table inventory mapping',
-      3: 'Safe bank account transfer script',
-      4: 'Index speed validation script'
+      1: 'A keyed, connected ER sketch',
+      2: 'A table/keys/relationships demo',
+      3: 'A filtered + sorted SELECT toolkit',
+      4: 'A paginated filtered report',
+      5: 'An aggregate summary query',
+      6: 'A per-city GROUP BY analytics',
+      7: 'A joined multi-table report',
+      8: 'A subquery/EXISTS filter',
+      9: 'A normalized 3NF schema',
+      10: 'A constrained CREATE TABLE set',
+      11: 'An ON CONFLICT upsert demo',
+      12: 'An EXPLAIN-proven indexed query',
+      13: 'A reusable view + function',
+      14: 'An atomic ACID transfer module',
+      15: 'An injection-safe query layer',
+      16: 'A pooled Node/Python connection',
+      17: 'A seeded library DB + queries',
+      18: 'A migration-reviewed schema',
+      19: 'An optimized + cached report',
+      20: 'A reproducible booking DB + certification'
     }
   },
   'CADDED_Mech': {
@@ -261,10 +438,26 @@ const courseMetadata: Record<string, any> = {
     icon: Wrench,
     colSpan: 'md:col-span-3',
     milestones: {
-      1: 'Flange 2D drafting layout',
-      2: 'Hinge bracket 3D part design',
-      3: 'Turbine aerofoil surface sweep',
-      4: 'Pocket milling G-code & Piston assembly'
+      1: 'Set up a layered template drawing',
+      2: 'Draw and edit a flange profile',
+      3: 'Dimension and plot a part to scale',
+      4: 'Build a reusable block library',
+      5: 'Make a fully-defined sketch',
+      6: 'Model a bracket from a sketch',
+      7: 'Assemble and test a hinge',
+      8: 'Drive a size family via a design table',
+      9: 'Build a CATIA part from constraints',
+      10: 'Create and join a surface body',
+      11: 'Style a class-A surface',
+      12: 'Add draft and verify wall thickness',
+      13: 'Set up a work coordinate system',
+      14: 'Write a drilling cycle by hand',
+      15: 'Build a safe program header',
+      16: 'Simulate and verify a toolpath',
+      17: 'Design a mating part pair',
+      18: 'Detail a part with GD&T',
+      19: 'Publish a BOM and drawing set',
+      20: 'Deliver a reviewed project + exam'
     }
   },
   'CADDED_Civil': {
@@ -274,10 +467,26 @@ const courseMetadata: Record<string, any> = {
     icon: Building2,
     colSpan: 'md:col-span-3',
     milestones: {
-      1: '2BHK residential plan layout',
-      2: 'Villa exterior rendering & kitchen layout',
-      3: 'Beam-Column junction steel detail',
-      4: 'G+3 building BIM portfolio sheets'
+      1: 'Set up a civil drawing template',
+      2: 'Draft a dimensioned site plan',
+      3: 'Draw a 2BHK floor plan',
+      4: 'Plot sections and elevations for submission',
+      5: 'Model a building shell',
+      6: 'Texture a villa with PBR maps',
+      7: 'Light an interior scene',
+      8: 'Produce a finished render',
+      9: 'Build a rapid furniture mockup',
+      10: 'Organize a model with components',
+      11: 'Script a modeling macro',
+      12: 'Present a scaled Layout sheet',
+      13: 'Set up a structural project',
+      14: 'Model a foundation grid',
+      15: 'Reinforce a beam-column junction',
+      16: 'Publish a structural drawing set',
+      17: 'Lay out levels, grids and walls',
+      18: 'Schedule doors and windows',
+      19: 'Model floors, roof and stairs',
+      20: 'Deliver a coordinated BIM package + exam'
     }
   }
 };
@@ -1095,7 +1304,9 @@ const Home = () => {
                 </div>
 
               <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-                <h4 className="text-[11px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2 mb-4">4-Week Training Roadmaps</h4>
+                <h4 className="text-[11px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2 mb-4">
+                  {previewCourse.syllabus.length}-Week Training Roadmap
+                </h4>
                 
                 <div className="space-y-3">
                   {previewCourse.syllabus.map((weekData: any) => {

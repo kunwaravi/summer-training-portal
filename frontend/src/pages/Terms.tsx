@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Scale, ShieldAlert, BookOpen, Award, Shield, FileEdit } from 'lucide-react';
 

@@ -24,7 +24,7 @@ export const validate = (schema: z.ZodTypeAny) => {
 export const registerSchema = z.object({
   body: z.object({
     email: z.string().email(),
-    password: z.string().min(6),
+    password: z.string().min(8, 'Password must be at least 8 characters long'),
     name: z.string().min(2),
     fatherName: z.string().min(2),
     collegeName: z.string().min(2),
@@ -118,7 +118,6 @@ export const createOrderSchema = z.object({
 export const verifyPaymentSchema = z.object({
   body: z.object({
     orderId: z.string(),
-    mockSignature: z.string(),
     gatewayReference: z.string().optional(),
   }),
 });

@@ -1,0 +1,5 @@
+# Never bake local secrets / artifacts into the image.
+node_modules
+dist
+.env
+*.log

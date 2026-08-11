@@ -51,7 +51,7 @@ const PracticeArena = () => {
   const [selectedLang, setSelectedLang] = useState<'C' | 'C++' | 'IoT'>('C');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { confirmDialog } = useUI();
+  const { confirmDialog, addToast } = useUI();
   const category = searchParams.get('category') || 'Programming';
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -59,6 +59,7 @@ const PracticeArena = () => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [timeLeft, setTimeLeft] = useState(900); // 15 minutes in seconds
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState<{
     score: number;
@@ -116,31 +117,35 @@ const PracticeArena = () => {
       }
     } catch (err) {
       console.error('Failed to submit practice test:', err);
-      alert('An error occurred during submission. Please try again.');
+      addToast('An error occurred during submission. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
-  }, [answers, questions.length, category, confirmDialog]);
+  }, [answers, questions.length, category, confirmDialog, addToast]);
 
   const handleAutoSubmit = useCallback(() => {
-    alert("Time is up! Your practice test is being submitted automatically.");
+    addToast('Time is up! Your practice test is being submitted automatically.', 'warning');
     submitTest(true);
   }, [submitTest]);
 
   // Fetch Questions
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const res = await api.get(`/practice/questions?category=${category}`);
-        setQuestions(res.data.questions);
-      } catch (err) {
-        console.error('Failed to fetch practice questions:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuestions();
+  const fetchQuestions = useCallback(async () => {
+    setLoading(true);
+    setFetchError(false);
+    try {
+      const res = await api.get(`/practice/questions?category=${category}`);
+      setQuestions(res.data.questions);
+    } catch (err) {
+      console.error('Failed to fetch practice questions:', err);
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+    }
   }, [category]);
+
+  useEffect(() => {
+    fetchQuestions();
+  }, [fetchQuestions]);
 
   // Countdown Timer
   useEffect(() => {
@@ -240,15 +245,31 @@ const PracticeArena = () => {
           <FileQuestion size={24} />
         </span>
         <div className="space-y-1">
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">No Questions Available</h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Practice questions for the {category} category are not currently seeded.</p>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+            {fetchError ? 'Failed to Load Questions' : 'No Questions Available'}
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
+            {fetchError
+              ? 'Could not reach the server. Check your connection and try again.'
+              : `Practice questions for the ${category} category are not currently seeded.`}
+          </p>
         </div>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold py-2.5 px-6 rounded-xl transition"
-        >
-          Return to Dashboard
-        </button>
+        <div className="flex items-center justify-center gap-3">
+          {fetchError && (
+            <button
+              onClick={() => fetchQuestions()}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-6 rounded-xl transition"
+            >
+              Retry
+            </button>
+          )}
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold py-2.5 px-6 rounded-xl transition"
+          >
+            Return to Dashboard
+          </button>
+        </div>
       </div>
     );
   }

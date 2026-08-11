@@ -6,7 +6,9 @@ import { rateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
-router.post('/register', validate(registerSchema), async (req: Request, res: Response, next: NextFunction) => {
+// Rate-limited to blunt credential-stuffing (login) and mass account creation
+// (register). Same in-memory limiter already used on forgot/reset-password.
+router.post('/register', rateLimiter(5, 300_000), validate(registerSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await authService.registerUser(req.body);
     res.status(201).json(result);
@@ -15,7 +17,7 @@ router.post('/register', validate(registerSchema), async (req: Request, res: Res
   }
 });
 
-router.post('/login', validate(loginSchema), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/login', rateLimiter(10, 60_000), validate(loginSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await authService.loginUser(req.body);
     res.json(result);
@@ -51,7 +53,7 @@ router.post('/reset-password', rateLimiter(10, 60_000), validate(resetPasswordSc
 });
 
 // GET /api/auth/me - Fetch currently logged in student profile
-router.get('/me', authenticateToken, async (req: any, res: Response, next: NextFunction) => {
+router.get('/me', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     res.json(req.user);
   } catch (error) {
@@ -60,7 +62,7 @@ router.get('/me', authenticateToken, async (req: any, res: Response, next: NextF
 });
 
 // GET /api/auth/admin/users - Fetch all users for admin dashboard dropdown
-router.get('/admin/users', authenticateToken, isAdmin, async (req: any, res: Response, next: NextFunction) => {
+router.get('/admin/users', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await authService.getAllUsers();
     res.json(users);
@@ -70,7 +72,7 @@ router.get('/admin/users', authenticateToken, isAdmin, async (req: any, res: Res
 });
 
 // DELETE /api/auth/admin/users/:userId - Delete a user (restricted to ADMIN, prevent self-deletion)
-router.delete('/admin/users/:userId', authenticateToken, isAdmin, async (req: any, res: Response, next: NextFunction) => {
+router.delete('/admin/users/:userId', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const targetUserId = parseInt(req.params.userId as string);
     const currentUserId = req.user.id;
@@ -87,7 +89,7 @@ router.delete('/admin/users/:userId', authenticateToken, isAdmin, async (req: an
 });
 
 // PUT /api/auth/admin/users/:userId - Update user details (restricted to ADMIN)
-router.put('/admin/users/:userId', authenticateToken, isAdmin, async (req: any, res: Response, next: NextFunction) => {
+router.put('/admin/users/:userId', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const targetUserId = parseInt(req.params.userId as string);
     const updatedUser = await authService.updateUserByAdmin(targetUserId, req.body);

@@ -1,10 +1,6 @@
 import prisma from '../lib/prisma';
 import crypto from 'crypto';
 import { getReferralStats } from './authService';
-import { getRequiredEnv } from '../lib/env';
-
-// SECURITY (#65): fail-fast — no hardcoded fallback secret.
-const WEBHOOK_SECRET = getRequiredEnv('PAYMENT_WEBHOOK_SECRET');
 
 export const getAllPayments = async () => {
   return await prisma.payment.findMany({
@@ -74,7 +70,9 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
   let couponDiscount = 0;
   if (couponCode) {
     const code = couponCode.toUpperCase().trim();
-    if (code === 'SAVI10') couponDiscount = 1.0;
+    // SECURITY (#100): SAVI10 was a 100%-off → auto-VERIFIED money-loss exploit
+    // (same pattern as the referral exploit #68). "Save 10" → 10% off.
+    if (code === 'SAVI10') couponDiscount = 0.1;
     else if (code === 'AVI050') couponDiscount = 0.5;
     else if (code === 'AVI030') couponDiscount = 0.3;
     else if (code === 'NEXUS499' || code === 'EDU499' || code === 'SPECIAL499') couponDiscount = basePrice > 0 ? 200 / basePrice : 0;
@@ -96,27 +94,23 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
     }
   });
 
-  const rawPayload = `${payment.id}:${payment.amount}:${payment.courseId}`;
-  const mockSignature = crypto
-    .createHmac('sha256', WEBHOOK_SECRET)
-    .update(rawPayload)
-    .digest('hex');
-
   return {
     orderId: payment.id,
     amount: payment.amount,
     courseId: payment.courseId,
-    mockSignature,
     discountApplied: finalDiscount * 100,
     referralCount,
     isFree: finalAmount === 0
   };
 };
 
-// Student submits payment proof — sets status to PENDING_VERIFICATION for admin review, or VERIFIED if free
+// Student submits payment proof — sets status to PENDING_VERIFICATION for admin review, or VERIFIED if free.
+// SECURITY (#100): the old "cryptographic signature" was mock theater — the client simply echoed an HMAC
+// the server had handed it, so it gated nothing. The real gates are (1) ownership: the authenticated
+// submitter must own the order (IDOR fix) and (2) manual admin verification.
 export const submitPaymentForVerification = async (
   orderId: string,
-  mockSignature: string,
+  userId: number,
   gatewayReference?: string
 ) => {
   const payment = await prisma.payment.findUnique({
@@ -125,18 +119,8 @@ export const submitPaymentForVerification = async (
 
   if (!payment) return { error: 'Order not found', status: 404 };
 
-  const rawPayload = `${payment.id}:${payment.amount}:${payment.courseId}`;
-  const expectedSignature = crypto
-    .createHmac('sha256', WEBHOOK_SECRET)
-    .update(rawPayload)
-    .digest('hex');
-
-  if (expectedSignature !== mockSignature) {
-    await prisma.payment.update({
-      where: { id: orderId },
-      data: { status: 'FAILED' }
-    });
-    return { error: 'Security Check: Cryptographic payment signature spoofing detected!', status: 403 };
+  if (payment.userId !== userId) {
+    return { error: 'This payment order does not belong to your account.', status: 403 };
   }
 
   // Mark as verified if free checkout (amount is 0), else pending verification

@@ -175,15 +175,20 @@ export class CertificateService {
       where: { verificationCode: cleanId }
     });
     if (record) {
+      // New format: the ID is 64-bit random — unguessable — so full (public,
+      // shareable-link) verification data is safe to return.
       return this.verifyUserAndCourse(record.userId, record.courseId);
     }
 
     // Legacy format: certificates issued before the random-ID fix. Parsed only
     // so already-printed credentials keep verifying. Do NOT extend this path.
+    // SECURITY (#100): legacy IDs are GUESSABLE (`1000 + userId` + first name),
+    // so the public verify endpoint must NOT return PII for them — an attacker
+    // enumerating IDs would harvest names/colleges. Verify only + course info.
     return this.verifyLegacy(cleanId);
   }
 
-  private static async verifyUserAndCourse(userId: number, courseId: string) {
+  private static async verifyUserAndCourse(userId: number, courseId: string, includePii = true) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -226,20 +231,28 @@ export class CertificateService {
       day: 'numeric'
     });
 
-    return {
+    const result: Record<string, unknown> = {
       verified: true,
       auditStatus: "ACTIVE / VERIFIED",
-      candidateName: user.name,
-      fatherName: user.fatherName,
-      collegeName: user.collegeName,
-      branchName: user.branchName,
       courseId,
       courseName: displayCourseName,
-      grade,
       completionDate,
       accreditationRegistry: "EduNexus Pro Credential Registry",
       compliance: "Verified by EduNexus Pro against training completion records"
     };
+
+    // PII is only returned for unguessable (new-format) credential IDs, or to
+    // an authenticated caller. The legacy path (verifyLegacy) passes includePii
+    // = false so guessable IDs can't be enumerated to harvest identities.
+    if (includePii) {
+      result.candidateName = user.name;
+      result.fatherName = user.fatherName;
+      result.collegeName = user.collegeName;
+      result.branchName = user.branchName;
+      result.grade = grade;
+    }
+
+    return result;
   }
 
   private static async verifyLegacy(credentialId: string) {
@@ -289,6 +302,8 @@ export class CertificateService {
       throw new AppError('Credential verification signature mismatch.', 400);
     }
 
-    return this.verifyUserAndCourse(user.id, courseId);
+    // includePii=false: legacy IDs are guessable — return only verified-status +
+    // course info, never the candidate's personal details.
+    return this.verifyUserAndCourse(user.id, courseId, false);
   }
 }

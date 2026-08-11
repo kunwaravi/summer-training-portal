@@ -16,17 +16,21 @@ setInterval(() => {
 export const rateLimiter = (limit: number, windowMs: number) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const ip = (req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown') as string;
+    // Key on ip + route path so each endpoint (register, login, forgot/reset) gets its
+    // OWN budget. A single shared IP-only key would let requests to one route consume
+    // another route's quota (e.g. 10 login attempts exhausting the 5/5min register limit).
+    const key = `${ip}:${req.baseUrl}${req.path}`;
     const now = Date.now();
-    const record = rateLimitStore.get(ip);
+    const record = rateLimitStore.get(key);
 
     if (!record || now > record.resetTime) {
-      rateLimitStore.set(ip, { count: 1, resetTime: now + windowMs });
+      rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
       return next();
     }
 
     record.count++;
     if (record.count > limit) {
-      logger.error(`Security Check: Rate limit exceeded for IP: ${ip} on path ${req.path}`);
+      logger.error(`Security Check: Rate limit exceeded for IP: ${ip} on path ${req.baseUrl}${req.path}`);
       return res.status(429).json({
         message: 'Too many requests from this device. Please try again later.'
       });

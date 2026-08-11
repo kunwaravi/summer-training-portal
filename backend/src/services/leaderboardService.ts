@@ -30,15 +30,15 @@ export const getLeaderboard = async (search: string, page: number, limit: number
   const [leaderboard, total] = await Promise.all([
     prisma.user.findMany({
       where: whereClause,
+      // SECURITY (#100): no email/role in the public leaderboard — any
+      // authenticated user could previously dump every account's email.
       select: {
         id: true,
         name: true,
-        email: true,
         points: true,
         badges: true,
         avatarUrl: true,
         collegeName: true,
-        role: true,
       },
       orderBy: {
         points: 'desc',

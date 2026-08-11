@@ -805,6 +805,50 @@ async function main() {
 
   // Seed Courses, Modules, Topics, and Quizzes
   for (const courseData of coursesList) {
+    // C, WebDesign, Python, SQL, C++, IoT, Embedded, CADDED_Mech and
+    // CADDED_Civil are upgraded to deep hand-written content by their reseed
+    // scripts (reseed_c_full.ts / reseed_webdesign_full.ts / reseed_python_full.ts /
+    // reseed_sql_full.ts / reseed_cpp_full.ts / reseed_iot_full.ts /
+    // reseed_embedded_full.ts / reseed_cadd_mech_full.ts / reseed_cadd_civil_full.ts,
+    // issues #92, #99, #97, #90, #91, #96, #95, #94, #93).
+    // Skipping them here prevents the template generators from ever re-seeding
+    // near-duplicate quizzes over the upgraded curriculum.
+    if (courseData.id === 'C') {
+      console.log('Skipping C — upgraded curriculum managed by reseed_c_full.ts.');
+      continue;
+    }
+    if (courseData.id === 'WebDesign') {
+      console.log('Skipping WebDesign — upgraded curriculum managed by reseed_webdesign_full.ts.');
+      continue;
+    }
+    if (courseData.id === 'Python') {
+      console.log('Skipping Python — upgraded curriculum managed by reseed_python_full.ts.');
+      continue;
+    }
+    if (courseData.id === 'SQL') {
+      console.log('Skipping SQL — upgraded curriculum managed by reseed_sql_full.ts.');
+      continue;
+    }
+    if (courseData.id === 'C++') {
+      console.log('Skipping C++ — upgraded curriculum managed by reseed_cpp_full.ts.');
+      continue;
+    }
+    if (courseData.id === 'IoT') {
+      console.log('Skipping IoT — upgraded curriculum managed by reseed_iot_full.ts.');
+      continue;
+    }
+    if (courseData.id === 'Embedded') {
+      console.log('Skipping Embedded — upgraded curriculum managed by reseed_embedded_full.ts.');
+      continue;
+    }
+    if (courseData.id === 'CADDED_Mech') {
+      console.log('Skipping CADDED_Mech — upgraded curriculum managed by reseed_cadd_mech_full.ts.');
+      continue;
+    }
+    if (courseData.id === 'CADDED_Civil') {
+      console.log('Skipping CADDED_Civil — upgraded curriculum managed by reseed_cadd_civil_full.ts.');
+      continue;
+    }
     let course = await prisma.course.findUnique({ where: { id: courseData.id } });
     if (!course) {
       course = await prisma.course.create({
@@ -945,9 +989,17 @@ async function main() {
   // Seed fCC-style interactive challenges (idempotent)
   await seedChallengeBlocks();
 
-  // Seed default admin account
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@nexus.com";
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  // Seed default admin account — SECURITY (#100): fail fast if credentials are
+  // not provided. The old `|| "admin@nexus.com"` / `|| "admin123"` fallbacks
+  // created a publicly-known admin account whenever the env vars were unset or
+  // empty (prod compose passed an empty ADMIN_PASSWORD, truthy → fallback hit).
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminEmail || !adminPassword) {
+    throw new Error(
+      'ADMIN_EMAIL and ADMIN_PASSWORD must be set before seeding — refusing to create a default admin account with known credentials.'
+    );
+  }
 
   const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {

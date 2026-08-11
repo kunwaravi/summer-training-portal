@@ -6,11 +6,11 @@ import { getRequiredEnv } from '../lib/env';
 // SECURITY (#65): fail-fast — no hardcoded fallback secret.
 const JWT_SECRET = getRequiredEnv('JWT_SECRET');
 
-export const authenticateToken = async (req: any, res: Response, next: NextFunction) => {
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
-    
+
     if (!token) {
       console.warn(`Auth Failed: No token provided for ${req.method} ${req.path}`);
       return res.status(401).json({ message: 'Access token missing' });
@@ -30,7 +30,7 @@ export const authenticateToken = async (req: any, res: Response, next: NextFunct
   }
 };
 
-export const isAdmin = (req: any, res: Response, next: NextFunction) => {
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   if (req.user && req.user.role === 'ADMIN') {
     next();
   } else {

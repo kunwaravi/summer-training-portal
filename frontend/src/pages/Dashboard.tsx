@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 import api from '../api';
 import { useCourses } from '../hooks/useCourses';
 import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database, Wrench, Building2, Flame, RefreshCw } from 'lucide-react';
@@ -62,16 +63,25 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard' | 'referrals'>('overview');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { addToast } = useUI();
   const { data: coursesData, loading } = useCourses();
   // Daily coding challenge + real streak (issue #74)
   const [daily, setDaily] = useState<any>(null);
   const [dailySolved, setDailySolved] = useState<boolean | null>(null);
   const [dailyFeedback, setDailyFeedback] = useState<string | null>(null);
   const [dailyAnswer, setDailyAnswer] = useState<string | null>(null);
+  const [dailyError, setDailyError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.get('/practice/daily').then((r) => setDaily(r.data)).catch(() => {});
-  }, []);
+    api
+      .get('/practice/daily')
+      .then((r) => setDaily(r.data))
+      .catch((err) => {
+        const msg = err.response?.data?.message || 'Failed to load the daily challenge.';
+        setDailyError(msg);
+        addToast(msg, 'error');
+      });
+  }, [addToast]);
 
   const submitDailyAnswer = async (answer: string) => {
     try {
@@ -363,6 +373,11 @@ const Dashboard = () => {
           {/* ── Daily Challenge + Skill Matrix (showcase §02) ──────────── */}
           <div className="grid lg:grid-cols-5 gap-4">
             {/* Daily Coding Challenge */}
+            {!daily && dailyError && (
+              <div className="lg:col-span-3 rounded-2xl bg-white dark:bg-slate-900/50 dark:backdrop-blur-sm border border-red-300 dark:border-red-800 shadow-sm p-5">
+                <p className="text-sm font-bold text-red-600 dark:text-red-400">{dailyError}</p>
+              </div>
+            )}
             {daily && (
               <div className="lg:col-span-3 rounded-2xl bg-white dark:bg-slate-900/50 dark:backdrop-blur-sm border border-slate-200 dark:border-slate-800 shadow-sm p-5">
                 <div className="flex items-center justify-between mb-3 gap-2">
@@ -545,8 +560,10 @@ const Dashboard = () => {
                 <button
                   onClick={() => {
                     if (user?.referralCode) {
-                      navigator.clipboard.writeText(user.referralCode);
-                      alert('Referral Code copied to clipboard!');
+                      navigator.clipboard
+                        .writeText(user.referralCode)
+                        .then(() => addToast('Referral Code copied to clipboard!', 'success'))
+                        .catch(() => addToast('Could not copy. Clipboard permission denied.', 'error'));
                     }
                   }}
                   className="text-[11px] text-blue-400 hover:text-blue-300 font-extrabold uppercase transition"
@@ -565,8 +582,10 @@ const Dashboard = () => {
                 <button
                   onClick={() => {
                     if (user?.referralCode) {
-                      navigator.clipboard.writeText(`${window.location.origin}/register?ref=${user.referralCode}`);
-                      alert('Invite Link copied to clipboard!');
+                      navigator.clipboard
+                        .writeText(`${window.location.origin}/register?ref=${user.referralCode}`)
+                        .then(() => addToast('Invite Link copied to clipboard!', 'success'))
+                        .catch(() => addToast('Could not copy. Clipboard permission denied.', 'error'));
                     }
                   }}
                   className="text-[11px] text-blue-400 hover:text-blue-300 font-extrabold uppercase transition"

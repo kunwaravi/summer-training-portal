@@ -23,6 +23,7 @@ const Contact = React.lazy(() => import('./pages/Contact'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 import Navbar from './components/Navbar';
 import FloatingSupportWidget from './components/atoms/FloatingSupportWidget';
+import ErrorBoundary from './components/atoms/ErrorBoundary';
 import './App.css';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -45,6 +46,7 @@ function AppRoutes() {
       <Navbar />
       <FloatingSupportWidget />
       <div className="container mx-auto px-4 py-8 flex-grow">
+        <ErrorBoundary>
         <Suspense fallback={
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
@@ -72,6 +74,7 @@ function AppRoutes() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </ErrorBoundary>
       </div>
       
       {/* Premium Footer */}

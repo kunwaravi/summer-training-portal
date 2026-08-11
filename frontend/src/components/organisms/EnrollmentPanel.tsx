@@ -3,10 +3,11 @@ import { Award, Check, ShieldAlert, Sparkles, QrCode, Clipboard, Clock, CheckCir
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../../api';
+import { useUI } from '../../context/UIContext';
 
-// ── Payment constants ────────────────────────────────────────────────────────
-const UPI_ID = 'edunexuss@ptyes';
-const PAYEE_NAME = 'Anjali Singh';
+// ── Payment config (configurable via Vite env — see frontend/.env.example) ──
+const UPI_ID = (import.meta.env.VITE_UPI_ID as string) || 'edunexuss@ptyes';
+const PAYEE_NAME = (import.meta.env.VITE_UPI_PAYEE as string) || 'Anjali Singh';
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface EnrollmentPanelProps {
@@ -24,6 +25,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
   onPaymentSuccess,
   navigate
 }) => {
+  const { addToast } = useUI();
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [processingCheckout, setProcessingCheckout] = useState(false);
   const [upiCopied, setUpiCopied] = useState(false);
@@ -49,8 +51,9 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
     setCouponError('');
     const code = couponCode.toUpperCase().trim();
 
+    // SECURITY (#100): SAVI10 = 10% off (was 100% — free-certificate exploit)
     if (code === 'SAVI10') {
-      setDiscount(1);
+      setDiscount(0.1);
       setIsCouponApplied(true);
     } else if (code === 'AVI050') {
       setDiscount(0.5);
@@ -79,7 +82,7 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
         couponCode: isCouponApplied ? couponCode : undefined
       });
 
-      const { orderId, mockSignature } = orderRes.data;
+      const { orderId } = orderRes.data;
       await new Promise((resolve) => setTimeout(resolve, 1200));
 
       const randomSuffix = Math.random().toString(36).substring(2, 9).toUpperCase();
@@ -89,7 +92,6 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
 
       const verifyRes = await api.post('/payments/verify', {
         orderId,
-        mockSignature,
         gatewayReference: gatewayRef
       });
 
@@ -105,16 +107,19 @@ const EnrollmentPanel: React.FC<EnrollmentPanelProps> = ({
       }
     } catch (err: any) {
       console.error('Payment submission failed:', err);
-      alert(err.response?.data?.message || 'Payment submission failed. Please try again.');
+      addToast(err.response?.data?.message || 'Payment submission failed. Please try again.', 'error');
     } finally {
       setProcessingCheckout(false);
     }
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setUpiCopied(true);
-    setTimeout(() => setUpiCopied(false), 2000);
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setUpiCopied(true);
+        setTimeout(() => setUpiCopied(false), 2000);
+      })
+      .catch(() => addToast('Could not copy UPI ID. Please copy it manually.', 'error'));
   };
 
   const upiPaymentString = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${currentPrice}&cu=INR`;

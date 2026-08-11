@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { Prisma } from '@prisma/client';
 
 export class AppError extends Error {
   statusCode: number;
@@ -12,6 +13,21 @@ export class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+/**
+ * Wrap a Prisma operation so a missing-record error (P2025, thrown by
+ * `update`/`delete` on a nonexistent id) becomes a 404 instead of a generic 500.
+ */
+export const notFoundTo404 = async <T>(op: Promise<T>, message = 'Record not found'): Promise<T> => {
+  try {
+    return await op;
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      throw new AppError(message, 404);
+    }
+    throw err;
+  }
+};
 
 export const errorHandler = (
   err: any,

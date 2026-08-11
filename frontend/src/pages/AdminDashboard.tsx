@@ -50,7 +50,7 @@ const initialsOf = (name?: string) =>
   (name || '?').split(' ').map((n) => n[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?';
 
 const AdminDashboard = () => {
-  const { confirmDialog } = useUI();
+  const { confirmDialog, addToast } = useUI();
   const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'analytics' | 'referrals' | 'messages' | 'settings' | 'review'>('transactions');
 
   // Transaction logs states
@@ -164,10 +164,10 @@ const AdminDashboard = () => {
     setSavingSettings(true);
     try {
       await api.put('/contact/settings', contactSettings);
-      alert('System settings updated successfully!');
+      addToast('System settings updated successfully!', 'success');
     } catch (err: any) {
       console.error('Failed to save settings:', err);
-      alert(err.response?.data?.message || 'Failed to save settings.');
+      addToast(err.response?.data?.message || 'Failed to save settings.', 'error');
     } finally {
       setSavingSettings(false);
     }
@@ -178,11 +178,11 @@ const AdminDashboard = () => {
     if (!ok) return;
     try {
       await api.delete(`/contact/messages/${id}`);
-      alert('Message deleted successfully.');
+      addToast('Message deleted successfully.', 'success');
       fetchMessages();
     } catch (err) {
       console.error('Failed to delete message:', err);
-      alert('Failed to delete message.');
+      addToast('Failed to delete message.', 'success');
     }
   };
 
@@ -260,7 +260,7 @@ const AdminDashboard = () => {
       await fetchReview();
     } catch (err: any) {
       console.error('Evaluate failed:', err);
-      alert(err.response?.data?.message || 'Failed to update submission.');
+      addToast(err.response?.data?.message || 'Failed to update submission.', 'error');
     } finally {
       setEvaluatingId(null);
     }
@@ -290,11 +290,11 @@ const AdminDashboard = () => {
     if (!ok) return;
     try {
       await api.delete(`/auth/admin/users/${userId}`);
-      alert(`User "${userName}" was successfully deleted.`);
+      addToast(`User "${userName}" was successfully deleted.`, 'success');
       fetchUsers(); // Refresh the users list
     } catch (err: any) {
       console.error('Failed to delete user:', err);
-      alert(err.response?.data?.message || 'Failed to delete user.');
+      addToast(err.response?.data?.message || 'Failed to delete user.', 'error');
     }
   };
 
@@ -321,12 +321,12 @@ const AdminDashboard = () => {
     setSavingCandidate(true);
     try {
       await api.put(`/auth/admin/users/${editingCandidate.id}`, candidateForm);
-      alert('Candidate profile updated successfully!');
+      addToast('Candidate profile updated successfully!', 'success');
       setEditingCandidate(null);
       fetchUsers();
     } catch (err: any) {
       console.error('Failed to update candidate profile:', err);
-      alert(err.response?.data?.message || 'Failed to update candidate profile.');
+      addToast(err.response?.data?.message || 'Failed to update candidate profile.', 'error');
     } finally {
       setSavingCandidate(false);
     }
@@ -362,7 +362,7 @@ const AdminDashboard = () => {
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCourseId || !newCourseTitle) {
-      alert('Course ID and Title are required.');
+      addToast('Course ID and Title are required.', 'warning');
       return;
     }
     try {
@@ -373,7 +373,7 @@ const AdminDashboard = () => {
         price: Number(newCoursePrice)
       };
       await api.post('/courses', payload);
-      alert(`Course "${newCourseTitle}" created successfully.`);
+      addToast(`Course "${newCourseTitle}" created successfully.`, 'success');
       
       const createdId = newCourseId.trim();
       // Clear fields
@@ -387,7 +387,7 @@ const AdminDashboard = () => {
       await fetchCmsCourses(createdId);
     } catch (err: any) {
       console.error('Failed to create course:', err);
-      alert(err.response?.data?.message || 'Failed to create course.');
+      addToast(err.response?.data?.message || 'Failed to create course.', 'error');
     }
   };
 
@@ -401,12 +401,12 @@ const AdminDashboard = () => {
     if (!ok) return;
     try {
       await api.delete(`/courses/${courseId}`);
-      alert(`Course "${courseTitle}" was successfully deleted.`);
+      addToast(`Course "${courseTitle}" was successfully deleted.`, 'success');
       // Refresh list of courses
       await fetchCmsCourses();
     } catch (err: any) {
       console.error('Failed to delete course:', err);
-      alert(err.response?.data?.message || 'Failed to delete course. Ensure no students have active progress or payments for this course first.');
+      addToast(err.response?.data?.message || 'Failed to delete course. Ensure no students have active progress or payments for this course first.', 'error');
     }
   };
 
@@ -423,7 +423,7 @@ const AdminDashboard = () => {
   const handleCreateModule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newModuleCourseId || !newModuleTitle) {
-      alert('Module Title is required.');
+      addToast('Module Title is required.', 'warning');
       return;
     }
     try {
@@ -433,7 +433,7 @@ const AdminDashboard = () => {
         description: newModuleDesc.trim()
       };
       await api.post(`/courses/${newModuleCourseId}/module`, payload);
-      alert(`Week ${newModuleWeek} Module created successfully.`);
+      addToast(`Week ${newModuleWeek} Module created successfully.`, 'success');
       
       const targetCourseId = newModuleCourseId;
       // Clear fields
@@ -447,7 +447,7 @@ const AdminDashboard = () => {
       await fetchCmsCourses(targetCourseId);
     } catch (err: any) {
       console.error('Failed to create module:', err);
-      alert(err.response?.data?.message || 'Failed to create module.');
+      addToast(err.response?.data?.message || 'Failed to create module.', 'error');
     }
   };
 
@@ -461,11 +461,11 @@ const AdminDashboard = () => {
     if (!ok) return;
     try {
       await api.delete(`/courses/module/${moduleId}`);
-      alert(`Week ${weekNum} Module deleted successfully.`);
+      addToast(`Week ${weekNum} Module deleted successfully.`, 'success');
       await fetchCmsCourses(selectedCourse?.id);
     } catch (err: any) {
       console.error('Failed to delete module:', err);
-      alert(err.response?.data?.message || 'Failed to delete module.');
+      addToast(err.response?.data?.message || 'Failed to delete module.', 'error');
     }
   };
 
@@ -550,10 +550,10 @@ const AdminDashboard = () => {
       }
 
       setEditingTopic(null);
-      alert('Topic saved successfully!');
+      addToast('Topic saved successfully!', 'success');
     } catch (err) {
       console.error('Failed to save topic:', err);
-      alert('Failed to save topic.');
+      addToast('Failed to save topic.', 'success');
     }
   };
 
@@ -569,7 +569,7 @@ const AdminDashboard = () => {
           setExpandedModuleId(moduleId);
         }
       }
-      alert('Topic deleted successfully.');
+      addToast('Topic deleted successfully.', 'success');
     } catch (err) {
       console.error('Failed to delete topic:', err);
     }
@@ -638,10 +638,10 @@ const AdminDashboard = () => {
       }
 
       setEditingQuiz(null);
-      alert('Quiz question saved successfully!');
+      addToast('Quiz question saved successfully!', 'success');
     } catch (err) {
       console.error('Failed to save quiz question:', err);
-      alert('Failed to save quiz question.');
+      addToast('Failed to save quiz question.', 'success');
     }
   };
 
@@ -657,7 +657,7 @@ const AdminDashboard = () => {
           setExpandedModuleId(moduleId);
         }
       }
-      alert('Quiz question deleted successfully.');
+      addToast('Quiz question deleted successfully.', 'success');
     } catch (err) {
       console.error('Failed to delete quiz question:', err);
     }
@@ -677,7 +677,7 @@ const AdminDashboard = () => {
         });
       }
       setMockAssetUrl('');
-      alert('Mock Diagram asset successfully mounted in WYSIWYG editor!');
+      addToast('Mock Diagram asset successfully mounted in WYSIWYG editor!', 'success');
     }, 1000);
   };
 
@@ -1083,9 +1083,18 @@ const AdminDashboard = () => {
                         return (
                           <div key={m.id} className="border border-slate-850 rounded-xl bg-slate-950/20 overflow-hidden">
                             
-                            {/* Module Header Bar */}
-                            <div 
+                            {/* Module Header Bar (keyboard-accessible accordion) */}
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              aria-expanded={isExpanded}
                               onClick={() => handleToggleExpandModule(m.id, selectedCourse.id, m.week)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  handleToggleExpandModule(m.id, selectedCourse.id, m.week);
+                                }
+                              }}
                               className="p-4 bg-slate-900/40 hover:bg-slate-900/80 flex items-center justify-between cursor-pointer transition select-none"
                             >
                               <div className="flex items-center gap-3">
@@ -1910,7 +1919,7 @@ const AdminDashboard = () => {
                       if (filtered.length === 0) {
                         return (
                           <tr>
-                            <td colSpan={6} className="py-8 text-center text-slate-500 italic">
+                            <td colSpan={7} className="py-8 text-center text-slate-500 italic">
                               No referrers found matching search criteria.
                             </td>
                           </tr>
@@ -1982,7 +1991,7 @@ const AdminDashboard = () => {
                             {/* Expandable sub-table for referred students */}
                             {isExpanded && (
                               <tr>
-                                <td colSpan={6} className="bg-slate-950/40 p-4 border-l-2 border-cyan-500">
+                                <td colSpan={7} className="bg-slate-950/40 p-4 border-l-2 border-cyan-500">
                                   <div className="space-y-3 pl-4">
                                     <h4 className="text-[11px] font-black uppercase tracking-widest text-cyan-400 flex items-center gap-1.5">
                                       Students Referred by {referrer.name} ({referredStudents.length})

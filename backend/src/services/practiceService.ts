@@ -101,14 +101,37 @@ export const submitDailyChallenge = async (userId: number, answer: string) => {
   const bonusXp = milestone && correct ? BONUS_XP : 0;
   const pointsEarned = correct ? 10 + bonusXp : 0;
 
-  await prisma.user.update({
-    where: { id: userId },
+  // Atomically claim today's reward. The updateMany WHERE guard means only one
+  // concurrent request can win — lastActiveAt must still be before today — so a
+  // losing parallel request (count === 0) is treated as already-solved and can
+  // never double-award XP.
+  const claim = await prisma.user.updateMany({
+    where: {
+      id: userId,
+      OR: [
+        { lastActiveAt: null },
+        { lastActiveAt: { lt: startOfDay(new Date()) } }
+      ]
+    },
     data: {
       streak: newStreak,
       lastActiveAt: new Date(),
       points: user.points + pointsEarned
     }
   });
+
+  if (claim.count === 0) {
+    return {
+      correct: false,
+      alreadySolved: true,
+      streak: newStreak,
+      milestone: false,
+      bonusXp: 0,
+      pointsEarned: 0,
+      correctAnswer: '',
+      explanation: ''
+    };
+  }
 
   return {
     correct,

@@ -52,7 +52,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 };
 
 const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loading, onVerified }) => {
-  const { confirmDialog } = useUI();
+  const { confirmDialog, addToast } = useUI();
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -67,11 +67,11 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
     setVerifyingId(paymentId);
     try {
       await api.post(`/payments/admin/verify/${paymentId}`);
-      alert(`✅ Payment verified! ${studentName}'s certificate is now unlocked.`);
+      addToast(`Payment verified! ${studentName}'s certificate is now unlocked.`, 'success');
       onVerified();
     } catch (err: any) {
       console.error('Failed to verify payment:', err);
-      alert(err.response?.data?.message || 'Failed to verify payment. Please try again.');
+      addToast(err.response?.data?.message || 'Failed to verify payment. Please try again.', 'error');
     } finally {
       setVerifyingId(null);
     }
@@ -89,11 +89,11 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
     setDeletingId(paymentId);
     try {
       await api.delete(`/payments/admin/${paymentId}`);
-      alert(`🗑️ Payment record for ${studentName} deleted.`);
+      addToast(`Payment record for ${studentName} deleted.`, 'success');
       onVerified();
     } catch (err: any) {
       console.error('Failed to delete payment:', err);
-      alert(err.response?.data?.message || 'Failed to delete payment. Please try again.');
+      addToast(err.response?.data?.message || 'Failed to delete payment. Please try again.', 'error');
     } finally {
       setDeletingId(null);
     }

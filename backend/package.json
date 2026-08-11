@@ -7,7 +7,16 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed:c:full": "ts-node prisma/reseed_c_full.ts",
+    "seed:webdesign:full": "ts-node prisma/reseed_webdesign_full.ts",
+    "seed:python:full": "ts-node prisma/reseed_python_full.ts",
+    "seed:sql:full": "ts-node prisma/reseed_sql_full.ts",
+    "seed:cpp:full": "ts-node prisma/reseed_cpp_full.ts",
+    "seed:iot:full": "ts-node prisma/reseed_iot_full.ts",
+    "seed:embedded:full": "ts-node prisma/reseed_embedded_full.ts",
+    "seed:caddmech:full": "ts-node prisma/reseed_cadd_mech_full.ts",
+    "seed:caddcivil:full": "ts-node prisma/reseed_cadd_civil_full.ts"
   },
   "prisma": {
     "seed": "npx ts-node prisma/seed.ts"

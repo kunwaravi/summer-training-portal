@@ -1,7 +1,5 @@
-import assert from 'node:assert';
 import { runCode } from './sandboxService';
 import { DatabaseSync } from 'node:sqlite';
-import vm from 'node:vm';
 
 /**
  * Challenge test runner (issue #72).
@@ -15,9 +13,12 @@ import vm from 'node:vm';
  *  - Python     → `stdout`, `pyEval(expr)`, `__userSource`
  *  - SQL        → `result` = { columns, values } after seedCode + user query
  *
- * Security: user/test code runs inside a Node `vm` context (no process, no
- * fs/network access) or the process-isolated sandbox for Python. All output is
- * length-capped.
+ * Security: the entire run (user code + assertions) executes inside a separate
+ * child Node process via sandboxService — ulimit'd, wall-clock + CPU capped,
+ * process-group killed, best-effort network isolation. It deliberately does
+ * NOT use Node's `vm` module: vm contexts share the Express process heap and
+ * are a documented escape hatch (constructor traversal reaches the host), so
+ * they must never evaluate untrusted student code. All output is length-capped.
  */
 
 export interface ChallengeTestResult {
@@ -37,8 +38,10 @@ export interface RunTestOutcome {
 const MAX_TEST_LINES = 30;
 const MAX_SINGLE_LINE_CHARS = 200;
 
-/** Minimal DOM shim sufficient for the HTML challenge assertions (tag selectors + textContent). */
-function buildDomShim(html: string) {
+const RESULTS_MARKER = '__EDUNEXUS_RESULTS__';
+
+/** Extract the DOM elements record from HTML — serializable, built in the parent. */
+function buildDomData(html: string): Record<string, { textContent: string }[]> {
   const tagRegex = /<([a-zA-Z][a-zA-Z0-9]*)(?:\s[^>]*)?>([\s\S]*?)<\/\1>/g;
   const elements: Record<string, { textContent: string }[]> = {};
   let m: RegExpExecArray | null;
@@ -48,31 +51,7 @@ function buildDomShim(html: string) {
     const textContent = inner.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
     (elements[tag] = elements[tag] || []).push({ textContent });
   }
-  const select = (sel: string) => elements[sel.toLowerCase().replace(/^[.#]/, '')] || [];
-  return {
-    querySelectorAll: (sel: string) => select(sel),
-    querySelector: (sel: string) => select(sel)[0] || null
-  };
-}
-
-/** Execute a single JavaScript assertion snippet in a vm context and report pass/fail. */
-function runAssertionLine(line: string, context: Record<string, unknown>): ChallengeTestResult {
-  const name = line.trim().slice(0, MAX_SINGLE_LINE_CHARS) || '(empty assertion)';
-  try {
-    const sandbox: Record<string, unknown> = {
-      assert,
-      ...context
-    };
-    vm.createContext(sandbox);
-    vm.runInContext(line, sandbox, { timeout: 2000 });
-    return { name, pass: true };
-  } catch (err: any) {
-    return {
-      name,
-      pass: false,
-      message: (err?.message || String(err)).slice(0, 300)
-    };
-  }
+  return elements;
 }
 
 /** Split the assertion source into individual lines (one assertion per line in seed data). */
@@ -105,60 +84,6 @@ function extractPyEvalExprs(testCode: string): string[] {
   return out;
 }
 
-/** Build the runner context for a challenge type given the user's code. */
-async function buildContext(challengeType: string, userCode: string, testCode = ''): Promise<Record<string, unknown>> {
-  const ctx: Record<string, unknown> = { __userSource: userCode };
-  const type = challengeType.toUpperCase();
-
-  switch (type) {
-    case 'HTML':
-    case 'CSS':
-      ctx.document = buildDomShim(userCode);
-      break;
-
-    case 'JAVASCRIPT':
-      {
-        const captured: string[] = [];
-        const sandbox: Record<string, unknown> = {
-          console: {
-            log: (...a: unknown[]) => captured.push(a.map(String).join(' ')),
-            error: (...a: unknown[]) => captured.push('[error] ' + a.map(String).join(' ')),
-            warn: (...a: unknown[]) => captured.push('[warn] ' + a.map(String).join(' '))
-          }
-        };
-        vm.createContext(sandbox);
-        vm.runInContext(userCode, sandbox, { timeout: 2000 });
-        ctx.stdout = captured.join('\n');
-      }
-      break;
-
-    case 'PYTHON':
-      {
-        // Run the user's code once to capture stdout (cached).
-        let stdout = '';
-        const py = await runCode('python', userCode);
-        stdout = (py.stdout || '') + (py.stderr || '');
-
-        ctx.stdout = stdout;
-        // Pre-compute every pyEval('expr') from the testCode synchronously.
-        // vm assertions can't await an async function, so pyEval returns a cache.
-        const cache: Record<string, unknown> = {};
-        for (const expr of extractPyEvalExprs(testCode)) {
-          cache[expr] = await evalPythonExpr(userCode, expr);
-        }
-        ctx.pyEval = (expr: string): unknown => cache[expr];
-      }
-      break;
-
-    // SQL is handled in runChallengeTests (needs seedCode bootstrap + user query).
-
-    default:
-      ctx.stdout = '';
-  }
-
-  return ctx;
-}
-
 function runSqlChallenge(bootstrapSql: string, userQuery: string) {
   const db = new DatabaseSync(':memory:');
   try {
@@ -173,6 +98,79 @@ function runSqlChallenge(bootstrapSql: string, userQuery: string) {
   }
 }
 
+interface RunnerPayload {
+  userCode: string;
+  assertions: string[];
+  domData?: Record<string, { textContent: string }[]>;
+  pyEvalCache?: Record<string, unknown>;
+  sqlResult?: { columns: string[]; values: unknown[][] };
+  preStdout?: string;
+  runUserCode: boolean;
+}
+
+/**
+ * Build a self-contained Node runner script. Payloads are injected via
+ * JSON.stringify (never raw code interpolation), and the user's code is only
+ * ever eval'd at runtime inside the sandboxed child process.
+ */
+function buildJsRunnerScript(payload: RunnerPayload): string {
+  const injected = JSON.stringify(payload);
+  return `
+const assert = require('node:assert');
+const __payload = ${injected};
+const captured = [];
+global.console = {
+  log: (...a) => captured.push(a.map(String).join(' ')),
+  error: (...a) => captured.push('[error] ' + a.map(String).join(' ')),
+  warn: (...a) => captured.push('[warn] ' + a.map(String).join(' '))
+};
+global.assert = assert;
+global.__userSource = __payload.userCode;
+global.stdout = __payload.preStdout || '';
+if (__payload.domData) {
+  global.document = {
+    querySelectorAll: (sel) => __payload.domData[sel.toLowerCase().replace(/^[.#]/, '')] || [],
+    querySelector: (sel) => (__payload.domData[sel.toLowerCase().replace(/^[.#]/, '')] || [])[0] || null
+  };
+}
+if (__payload.pyEvalCache) {
+  global.pyEval = (expr) => __payload.pyEvalCache[expr];
+}
+if (__payload.sqlResult) {
+  global.result = __payload.sqlResult;
+}
+let userCodeError = null;
+if (__payload.runUserCode) {
+  try { (0, eval)(__payload.userCode); }
+  catch (err) { userCodeError = (err && err.message) ? String(err.message) : String(err); }
+}
+const tests = [];
+for (const line of __payload.assertions) {
+  try {
+    (0, eval)(line);
+    tests.push({ name: String(line).slice(0, 200), pass: true });
+  } catch (err) {
+    tests.push({ name: String(line).slice(0, 200), pass: false, message: String((err && err.message) || err).slice(0, 300) });
+  }
+}
+process.stdout.write('${RESULTS_MARKER}' + JSON.stringify({ captured, tests, userCodeError }));
+`;
+}
+
+function failAll(assertionLines: string[], message: string, stdout: string): RunTestOutcome {
+  return {
+    passed: false,
+    passedCount: 0,
+    totalCount: assertionLines.length,
+    tests: assertionLines.map((line) => ({
+      name: line.slice(0, MAX_SINGLE_LINE_CHARS),
+      pass: false,
+      message
+    })),
+    stdout
+  };
+}
+
 export async function runChallengeTests(
   challenge: { challengeType: string; seedCode: string; testCode: string },
   userCode: string
@@ -180,39 +178,77 @@ export async function runChallengeTests(
   const type = (challenge.challengeType || '').trim().toUpperCase();
   const assertionLines = splitAssertions(challenge.testCode);
 
-  let context: Record<string, unknown> = {};
+  // Build the serializable run payload in the parent process.
+  let domData: Record<string, { textContent: string }[]> | undefined;
+  let pyEvalCache: Record<string, unknown> | undefined;
+  let sqlResult: { columns: string[]; values: unknown[][] } | undefined;
+  let preStdout = '';
+  let runUserCode = false;
+
   try {
-    // SQL context needs both seedCode (bootstrap) and the user query.
     if (type === 'SQL') {
-      context = {
-        __userSource: userCode,
-        result: runSqlChallenge(challenge.seedCode, userCode)
-      };
+      sqlResult = runSqlChallenge(challenge.seedCode, userCode);
+    } else if (type === 'PYTHON') {
+      // Run the user's code once to capture stdout (cached).
+      const py = await runCode('python', userCode);
+      preStdout = (py.stdout || '') + (py.stderr || '');
+      // Pre-compute every pyEval('expr') from the testCode synchronously.
+      // The child's pyEval returns this cache (it cannot await async work).
+      const cache: Record<string, unknown> = {};
+      for (const expr of extractPyEvalExprs(challenge.testCode)) {
+        cache[expr] = await evalPythonExpr(userCode, expr);
+      }
+      pyEvalCache = cache;
+    } else if (type === 'HTML' || type === 'CSS') {
+      domData = buildDomData(userCode);
     } else {
-      context = await buildContext(type, userCode, challenge.testCode);
+      runUserCode = true; // JAVASCRIPT (and any execute-in-place type)
     }
   } catch (err: any) {
-    return {
-      passed: false,
-      passedCount: 0,
-      totalCount: assertionLines.length,
-      tests: assertionLines.map((line) => ({
-        name: line.slice(0, MAX_SINGLE_LINE_CHARS),
-        pass: false,
-        message: 'Runner failed to build context: ' + (err?.message || String(err)).slice(0, 200)
-      })),
-      stdout: ''
-    };
+    return failAll(assertionLines, 'Runner failed to build context: ' + (err?.message || String(err)).slice(0, 200), '');
   }
 
-  const tests = assertionLines.map((line) => runAssertionLine(line, context));
+  const res = await runCode('javascript', buildJsRunnerScript({
+    userCode,
+    assertions: assertionLines,
+    domData,
+    pyEvalCache,
+    sqlResult,
+    preStdout,
+    runUserCode
+  }));
+
+  const markerLine = (res.stdout || '').split('\n').find((l) => l.startsWith(RESULTS_MARKER));
+  if (!markerLine) {
+    const reason = res.timedOut
+      ? 'Timed out running tests (3s limit).'
+      : (res.stderr || 'Runner crashed before producing results.').slice(0, 200);
+    return failAll(assertionLines, reason, '');
+  }
+
+  let parsed: { captured: string[]; tests: ChallengeTestResult[]; userCodeError?: string };
+  try {
+    parsed = JSON.parse(markerLine.slice(RESULTS_MARKER.length));
+  } catch {
+    return failAll(assertionLines, 'Runner produced unparseable output.', '');
+  }
+
+  // Python surfaces its interpreter stdout; the other types surface the
+  // captured console output from the JS child.
+  const userStdout = (type === 'PYTHON' ? preStdout : (parsed.captured || []).join('\n')).slice(0, 4096);
+
+  if (parsed.userCodeError) {
+    return failAll(assertionLines, 'User code error: ' + String(parsed.userCodeError).slice(0, 200), userStdout);
+  }
+
+  const tests = (parsed.tests || []).slice(0, assertionLines.length);
   const passedCount = tests.filter((t) => t.pass).length;
 
   return {
-    passed: passedCount === tests.length,
+    passed: passedCount === assertionLines.length,
     passedCount,
-    totalCount: tests.length,
+    totalCount: assertionLines.length,
     tests,
-    stdout: typeof context.stdout === 'string' ? context.stdout.slice(0, 4096) : ''
+    stdout: userStdout
   };
 }

@@ -127,7 +127,7 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ currentUserId }) => {
             </p>
           </div>
           <a
-            href="/practice"
+            href="/practice/arena"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-colors"
           >
             <Zap size={14} /> Start Practicing

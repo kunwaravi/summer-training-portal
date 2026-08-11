@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { rateLimiter } from '../middleware/rateLimiter';
+import { logger } from '../lib/logger';
 import {
   getCourseChallenges,
   getChallenge,
@@ -59,8 +60,12 @@ router.post('/:id/run-test', authenticateToken, rateLimiter(15, 60_000), async (
     );
 
     // Auto-record completion only when ALL assertions pass (server-side grading).
+    // The student's pass result is still returned even if recording fails; the
+    // failure is logged instead of silently swallowed.
     if (outcome.passed) {
-      await completeChallenge(req.user.id, id).catch(() => {});
+      await completeChallenge(req.user.id, id).catch((err) => {
+        logger.error(`Failed to record challenge completion (challenge ${id}, user ${req.user.id}):`, err);
+      });
     }
 
     res.json(outcome);
@@ -69,10 +74,22 @@ router.post('/:id/run-test', authenticateToken, rateLimiter(15, 60_000), async (
   }
 });
 
-// POST /api/challenges/:id/complete - record completion (client-side grading already passed)
+// POST /api/challenges/:id/complete - record completion for non-test-graded challenges only
 router.post('/:id/complete', authenticateToken, async (req: any, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.id as string, 10);
+    const challenge = await getChallenge(id);
+
+    // SECURITY (#100): server-graded challenges (non-empty assertion testCode)
+    // must be completed through /run-test, which records ONLY when every test
+    // passes. This endpoint used to let any student mark ANY published graded
+    // challenge complete — bypassing grading while still farming XP + progress.
+    if (challenge.testCode && challenge.testCode.trim().length > 0) {
+      return res.status(403).json({
+        message: 'This challenge is graded by automated tests. Run your code with "Run Tests" to complete it.'
+      });
+    }
+
     const result = await completeChallenge(req.user.id, id);
     res.json(result);
   } catch (error) {

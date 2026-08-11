@@ -16,7 +16,7 @@ const isAdmin = (req: any, res: Response, next: NextFunction): any => {
 };
 
 // GET /api/assignments/status/:courseId - Get all submissions for course
-router.get('/status/:courseId', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/status/:courseId', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { courseId } = req.params as any;
     const userId = req.user.id;
@@ -38,7 +38,7 @@ router.post(
   '/submit',
   authenticateToken,
   validateBody(['courseId', 'weekNumber', 'fileName']),
-  async (req: any, res: Response): Promise<any> => {
+  async (req: any, res: Response, next: NextFunction): Promise<any> => {
     try {
       const { courseId, weekNumber, fileName, fileUrl } = req.body;
       const userId = req.user.id;
@@ -94,13 +94,13 @@ router.post(
       res.json({ success: true, submission });
     } catch (err: any) {
       logger.error('Submit assignment error:', err);
-      res.status(500).json({ message: 'Internal server error' });
+      next(err);
     }
   }
 );
 
 // ADMIN - GET /api/assignments/admin/pending - Get all pending assignments
-router.get('/admin/pending', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
+router.get('/admin/pending', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
     const pending = await prisma.assignmentSubmission.findMany({
       where: { status: 'PENDING' },
@@ -123,7 +123,7 @@ router.get('/admin/pending', authenticateToken, isAdmin, async (req: Request, re
 });
 
 // ADMIN - GET /api/assignments/admin/all - Full submission queue (review stats + history, issue #82)
-router.get('/admin/all', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
+router.get('/admin/all', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
     const submissions = await prisma.assignmentSubmission.findMany({
       include: {
@@ -150,7 +150,7 @@ router.put(
   authenticateToken,
   isAdmin,
   validateBody(['status']),
-  async (req: Request, res: Response): Promise<any> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       const { id } = req.params as any;
       const idNum = parseInt(id);
@@ -188,7 +188,7 @@ router.put(
       res.json({ success: true, submission: updated });
     } catch (err: any) {
       logger.error('Evaluate assignment error:', err);
-      res.status(500).json({ message: 'Internal server error' });
+      next(err);
     }
   }
 );
@@ -196,7 +196,7 @@ router.put(
 // GET /api/assignments/:courseId/solutions?weekNumber=N - Peer solutions browser (issue #75)
 // Only learners with an APPROVED submission for that week can view peers; only APPROVED + shareSolution
 // submissions are shown; no PII (email, phone) is ever exposed.
-router.get('/:courseId/solutions', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/:courseId/solutions', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { courseId } = req.params as any;
     const weekNumber = parseInt(req.query.weekNumber as string);
@@ -248,7 +248,7 @@ router.patch(
   '/:id/privacy',
   authenticateToken,
   validateBody(['shareSolution']),
-  async (req: Request, res: Response): Promise<any> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       const id = parseInt(req.params.id as string);
       const { shareSolution } = req.body as any;
@@ -271,7 +271,7 @@ router.patch(
       res.json({ success: true, shareSolution: updated.shareSolution });
     } catch (err: any) {
       logger.error('Update assignment privacy error:', err);
-      res.status(500).json({ message: 'Internal server error' });
+      next(err);
     }
   }
 );

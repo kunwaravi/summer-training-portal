@@ -343,6 +343,14 @@ docker compose build --no-cache backend
 docker compose up -d db
 docker compose ps          # confirm db is "healthy"
 
+> 🗄️ **Postgres volume (read once):** `postgres_data` in this compose file is a standard
+> Docker **named volume** — it is created automatically on first `up` (no manual
+> `docker volume create edunexuspro_postgres_data` needed). Docker names it
+> `<project>_postgres_data`, so as long as you keep the same compose project name
+> (default: the directory name, e.g. `edunexuspro`), `docker compose down` WITHOUT
+> `-v` preserves all data across redeploys. Never add `-v` to `down` on this stack.
+> Backups target `/var/lib/docker/volumes/edunexuspro_postgres_data` (see §14).
+
 # 5. Bring up backend + frontend
 docker compose up -d backend frontend
 
@@ -529,15 +537,15 @@ Already audited — 35 findings. Top 9 critical fixes still pending (track in Gi
 
 | # | Fix | Effort |
 |---|-----|--------|
-| C1 | `/api/quiz/submit` me auth add karo, `userId` JWT se derive karo | 30 min |
-| C2 | `/api/certificate/:userId/:courseId` ko auth-gated karo, URL se `userId` hatao | 20 min |
-| C3 | `JWT_SECRET` fallback (`'supersecretkey'`) code se nikalo, fail-fast | 10 min |
-| C4 | `PAYMENT_WEBHOOK_SECRET` fallback nikalo | 10 min |
+| ~~C1~~ | ✅ Done — `/api/quiz/submit` requires `authenticateToken` | — |
+| C2 | ⚠️ Partially done — certificate routes are auth-gated; `userId` still carried in URL (admin cert link) | 20 min |
+| ~~C3~~ | ✅ Done — `JWT_SECRET` now via `getRequiredEnv` + fail-fast in `src/index.ts` | — |
+| ~~C4~~ | ✅ Done — `PAYMENT_WEBHOOK_SECRET` now via `getRequiredEnv` + fail-fast | — |
 | C5 | Mock payment ko Razorpay se replace karo | 1-2 days |
 | C6 | Hardcoded `admin@nexus.com / admin123` seed ko env-driven banao | 15 min |
 | C7 | ISO claims — confirm certifications exist; warna disclaimer add karo | — |
-| C8 | Dockerfile me `prisma db push --accept-data-loss` → `migrate deploy` | 30 min |
-| C9 | CORS wide-open → restrict to `https://edunexus.kibm.in` | 5 min |
+| ~~C8~~ | ✅ Done — Dockerfile uses `prisma migrate deploy` (idempotent, on-start) | — |
+| ~~C9~~ | ✅ Done — CORS restricted to `CORS_ORIGIN` (default `https://edunexus.kibm.in`) | — |
 
 Audit ka full report repo me alag se file karna hai — GitHub issues ke through track karenge.
 

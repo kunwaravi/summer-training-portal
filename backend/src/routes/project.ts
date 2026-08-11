@@ -16,7 +16,7 @@ const isAdmin = (req: any, res: Response, next: NextFunction): any => {
 };
 
 // GET /api/projects/status/:courseId - Get student project status
-router.get('/status/:courseId', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/status/:courseId', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { courseId } = req.params;
     const userId = req.user.id;
@@ -39,7 +39,7 @@ router.post(
   '/submit',
   authenticateToken,
   validateBody(['courseId', 'title', 'description', 'sourceCodeUrl', 'reportUrl']),
-  async (req: any, res: Response): Promise<any> => {
+  async (req: any, res: Response, next: NextFunction): Promise<any> => {
     try {
       const { courseId, title, description, sourceCodeUrl, reportUrl, githubUrl } = req.body;
       const userId = req.user.id;
@@ -85,13 +85,13 @@ router.post(
       res.json({ success: true, submission });
     } catch (err: any) {
       logger.error('Submit project error:', err);
-      res.status(500).json({ message: 'Internal server error' });
+      next(err);
     }
   }
 );
 
 // ADMIN - GET /api/projects/admin/pending - Get all pending projects
-router.get('/admin/pending', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
+router.get('/admin/pending', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
     const pending = await prisma.projectSubmission.findMany({
       where: { status: 'PENDING' },
@@ -114,7 +114,7 @@ router.get('/admin/pending', authenticateToken, isAdmin, async (req: Request, re
 });
 
 // ADMIN - GET /api/projects/admin/all - Full project queue (review stats + history, issue #82)
-router.get('/admin/all', authenticateToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
+router.get('/admin/all', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
     const submissions = await prisma.projectSubmission.findMany({
       include: {
@@ -141,7 +141,7 @@ router.put(
   authenticateToken,
   isAdmin,
   validateBody(['status']),
-  async (req: Request, res: Response): Promise<any> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       const id = parseInt(req.params.id as string);
       const { status, feedback } = req.body;
@@ -178,7 +178,7 @@ router.put(
       res.json({ success: true, submission: updated });
     } catch (err: any) {
       logger.error('Evaluate project error:', err);
-      res.status(500).json({ message: 'Internal server error' });
+      next(err);
     }
   }
 );
@@ -186,7 +186,7 @@ router.put(
 // GET /api/projects/:courseId/solutions - Peer project solutions browser (issue #75)
 // Only learners with an APPROVED project can view peers; only APPROVED + shareSolution
 // submissions are shown; no PII (email, phone) is ever exposed.
-router.get('/:courseId/solutions', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/:courseId/solutions', authenticateToken, async (req: any, res: Response, next: NextFunction): Promise<any> => {
   try {
     const { courseId } = req.params as any;
     const userId = req.user.id;
@@ -235,7 +235,7 @@ router.patch(
   '/:id/privacy',
   authenticateToken,
   validateBody(['shareSolution']),
-  async (req: Request, res: Response): Promise<any> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       const id = parseInt(req.params.id as string);
       const { shareSolution } = req.body as any;
@@ -258,7 +258,7 @@ router.patch(
       res.json({ success: true, shareSolution: updated.shareSolution });
     } catch (err: any) {
       logger.error('Update project privacy error:', err);
-      res.status(500).json({ message: 'Internal server error' });
+      next(err);
     }
   }
 );

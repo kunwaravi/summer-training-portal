@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import { notFoundTo404 } from '../middleware/errorHandler';
 
 export const getQuizQuestions = async (courseId: string, week: number) => {
   const moduleRecord = await prisma.module.findFirst({
@@ -76,8 +77,16 @@ export const submitQuiz = async (userId: number, courseId: string, week: number,
   });
 
   if (passed) {
+    // SECURITY (#100): award XP for a passing submission only ONCE per
+    // (user, course, week). Re-submitting an already-passed quiz used to farm
+    // unlimited 100/150 XP. (QuizResult has no topicId, so week is the scope.)
+    const alreadyPassed = await prisma.quizResult.findFirst({
+      where: { userId, courseId, week, passed: true },
+      select: { id: true },
+    });
+
     const userRecord = await prisma.user.findUnique({ where: { id: userId } });
-    if (userRecord) {
+    if (userRecord && !alreadyPassed) {
       let xpToAward = 100;
       if (score === 100) {
         xpToAward += 50;
@@ -303,19 +312,18 @@ export const createQuizQuestion = async (moduleId: number, data: { text: string;
 };
 
 export const updateQuizQuestion = async (questionId: number, data: { text?: string; options?: string[]; correctAnswer?: string }) => {
-  const updatedQuestion = await prisma.quizQuestion.update({
+  return await notFoundTo404(prisma.quizQuestion.update({
     where: { id: questionId },
     data: {
       text: data.text,
       options: data.options,
       correctAnswer: data.correctAnswer
     }
-  });
-  return updatedQuestion;
+  }), `Quiz question ${questionId} not found`);
 };
 
 export const deleteQuizQuestion = async (questionId: number) => {
-  return await prisma.quizQuestion.delete({ where: { id: questionId } });
+  return await notFoundTo404(prisma.quizQuestion.delete({ where: { id: questionId } }), `Quiz question ${questionId} not found`);
 };
 
 export const getTopicQuizQuestions = async (topicId: number) => {

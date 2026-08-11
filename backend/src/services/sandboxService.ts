@@ -115,7 +115,10 @@ const runLimited = (commandLine: string, cwd: string, timeoutMs: number, memLimi
     const child = spawn('bash', ['-c', buildWrapper(commandLine, memLimitKb)], {
       cwd,
       detached: true,
-      env: { ...process.env, PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' },
+      // SECURITY: never pass the server's env into student code — JWT_SECRET /
+      // DATABASE_URL / webhook keys would otherwise be readable via process.env
+      // (JS/Python) or /proc/self/environ (C/C++). PATH only.
+      env: { PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
