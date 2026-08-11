@@ -33,9 +33,25 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cookieParser());
 
-const allowedOrigin = process.env.CORS_ORIGIN || 'https://edunexus.kibm.in';
+// CORS: accept a comma-separated list (CORS_ORIGIN="https://a.com,https://b.com").
+// In development, localhost dev-server origins are added automatically so the
+// browser can reach the API without the "blocked by CORS" failure on login.
+const configuredOrigins = (process.env.CORS_ORIGIN || 'https://edunexus.kibm.in')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const allowedOrigins =
+  process.env.NODE_ENV === 'development'
+    ? [...configuredOrigins, 'http://localhost:5173', 'http://127.0.0.1:5173']
+    : configuredOrigins;
+
 app.use(cors({
-  origin: allowedOrigin,
+  // Allow requests with no Origin header (curl, server-to-server, health checks).
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
