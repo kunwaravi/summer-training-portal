@@ -35,6 +35,26 @@ router.post('/admin/verify/:paymentId', authenticateToken, isAdmin, async (req: 
   }
 });
 
+// POST /api/payments/admin/fail/:paymentId - Admin marks a payment as failed
+router.post('/admin/fail/:paymentId', authenticateToken, isAdmin, async (req: any, res: any, next: any) => {
+  try {
+    const { paymentId } = req.params;
+    const result = await paymentService.adminMarkFailed(paymentId);
+
+    if ('error' in result) {
+      return res.status(result.status || 500).json({ message: result.error });
+    }
+
+    res.json({
+      success: true,
+      message: 'Payment marked as failed.',
+      payment: result.payment
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // DELETE /api/payments/admin/:paymentId - Admin deletes a payment record
 router.delete('/admin/:paymentId', authenticateToken, isAdmin, async (req: any, res: any, next: any) => {
   try {
@@ -61,10 +81,12 @@ router.get('/status/:courseId', authenticateToken, async (req: any, res: any, ne
     const { courseId } = req.params;
 
     const payment = await paymentService.getPaymentStatus(userId, courseId);
+    const pendingPayment = await paymentService.getPendingPaymentStatus(userId, courseId);
 
     res.json({
       paid: !!payment,
-      payment
+      payment,
+      pending: pendingPayment ? { id: pendingPayment.id, status: pendingPayment.status } : null
     });
   } catch (error) {
     next(error);
@@ -89,7 +111,7 @@ router.post('/create-order', authenticateToken, validate(createOrderSchema), asy
   }
 });
 
-// POST /api/payments/verify - Student submits UPI payment proof, sets PENDING_VERIFICATION
+// POST /api/payments/verify - Student submits UPI payment proof, sets PENDING (admin verification)
 router.post('/verify', authenticateToken, validate(verifyPaymentSchema), async (req: any, res: any, next: any) => {
   try {
     const { orderId, gatewayReference } = req.body;

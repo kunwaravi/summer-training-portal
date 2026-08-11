@@ -31,15 +31,28 @@ export const getPaymentStatus = async (userId: number, courseId: string) => {
   return payment;
 };
 
+// Latest row still awaiting admin action (PENDING or legacy PENDING_VERIFICATION).
+// Used by the /pay page to resume the "awaiting verification" state after a refresh.
+export const getPendingPaymentStatus = async (userId: number, courseId: string) => {
+  return await prisma.payment.findFirst({
+    where: {
+      userId,
+      courseId,
+      status: { in: ['PENDING', 'PENDING_VERIFICATION'] }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+};
+
 export const createOrder = async (userId: number, courseId: string, amount: number, couponCode?: string) => {
   const existingPayment = await prisma.payment.findFirst({
-    where: { userId, courseId, status: { in: ['VERIFIED', 'PENDING_VERIFICATION'] } }
+    where: { userId, courseId, status: { in: ['VERIFIED', 'PENDING', 'PENDING_VERIFICATION'] } }
   });
 
   if (existingPayment?.status === 'VERIFIED') {
     return { error: 'Certificate already unlocked for this course.', status: 400 };
   }
-  if (existingPayment?.status === 'PENDING_VERIFICATION') {
+  if (existingPayment?.status === 'PENDING' || existingPayment?.status === 'PENDING_VERIFICATION') {
     return { error: 'Payment proof already submitted and is pending admin verification. Please wait.', status: 400 };
   }
 
@@ -82,8 +95,9 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
   const finalDiscount = Math.max(referralDiscount, couponDiscount);
   const finalAmount = Math.round(basePrice * (1 - finalDiscount));
 
-  // If finalAmount is 0 (100% discount via 10+ referrals or coupon), approve it automatically
-  const status = finalAmount === 0 ? 'VERIFIED' : 'PENDING';
+  // Payment state machine (#100): INITIATED → PENDING → VERIFIED / FAILED.
+  // Free checkout (finalAmount 0 via coupon/referral) skips straight to VERIFIED.
+  const status = finalAmount === 0 ? 'VERIFIED' : 'INITIATED';
 
   const payment = await prisma.payment.create({
     data: {
@@ -104,7 +118,7 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
   };
 };
 
-// Student submits payment proof — sets status to PENDING_VERIFICATION for admin review, or VERIFIED if free.
+// Student submits payment proof — sets status to PENDING for admin review, or VERIFIED if free.
 // SECURITY (#100): the old "cryptographic signature" was mock theater — the client simply echoed an HMAC
 // the server had handed it, so it gated nothing. The real gates are (1) ownership: the authenticated
 // submitter must own the order (IDOR fix) and (2) manual admin verification.
@@ -123,8 +137,8 @@ export const submitPaymentForVerification = async (
     return { error: 'This payment order does not belong to your account.', status: 403 };
   }
 
-  // Mark as verified if free checkout (amount is 0), else pending verification
-  const newStatus = payment.amount === 0 ? 'VERIFIED' : 'PENDING_VERIFICATION';
+  // Mark as verified if free checkout (amount is 0), else PENDING admin verification
+  const newStatus = payment.amount === 0 ? 'VERIFIED' : 'PENDING';
   const updatedPayment = await prisma.payment.update({
     where: { id: orderId },
     data: {
@@ -151,6 +165,27 @@ export const adminVerifyPayment = async (paymentId: string) => {
   const updatedPayment = await prisma.payment.update({
     where: { id: paymentId },
     data: { status: 'VERIFIED' }
+  });
+
+  return { success: true, payment: updatedPayment };
+};
+
+// Admin manually marks a payment as failed (e.g. proof invalid / no UPI received).
+// Completes the #100 state machine: INITIATED → PENDING → VERIFIED / FAILED.
+export const adminMarkFailed = async (paymentId: string) => {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId }
+  });
+
+  if (!payment) return { error: 'Payment not found', status: 404 };
+
+  if (payment.status === 'VERIFIED' || payment.status === 'SUCCESS') {
+    return { error: 'Cannot fail an already verified payment.', status: 400 };
+  }
+
+  const updatedPayment = await prisma.payment.update({
+    where: { id: paymentId },
+    data: { status: 'FAILED' }
   });
 
   return { success: true, payment: updatedPayment };

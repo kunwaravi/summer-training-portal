@@ -1324,7 +1324,7 @@ const AdminDashboard = () => {
                                 const existing = courseMap.get(py.courseId) || {};
                                 if (py.status === 'VERIFIED') {
                                   courseMap.set(py.courseId, { ...existing, paid: true });
-                                } else if (py.status === 'PENDING_VERIFICATION') {
+                                } else if (py.status === 'PENDING' || py.status === 'PENDING_VERIFICATION') {
                                   courseMap.set(py.courseId, { ...existing, pending: true });
                                 }
                               });

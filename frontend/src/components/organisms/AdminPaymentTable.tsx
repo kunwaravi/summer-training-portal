@@ -29,14 +29,20 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
     color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25',
     icon: <CheckCircle size={11} className="inline mr-1" />
   },
-  PENDING_VERIFICATION: {
+  INITIATED: {
+    label: 'Initiated',
+    color: 'bg-sky-500/10 text-sky-400 border border-sky-500/25',
+    icon: <Clock size={11} className="inline mr-1" />
+  },
+  PENDING: {
     label: 'Awaiting Verify',
     color: 'bg-amber-500/10 text-amber-400 border border-amber-500/25',
     icon: <Clock size={11} className="inline mr-1" />
   },
-  PENDING: {
-    label: 'Pending',
-    color: 'bg-slate-500/10 text-slate-400 border border-slate-500/25',
+  // Legacy rows created before the INITIATED→PENDING rename
+  PENDING_VERIFICATION: {
+    label: 'Awaiting Verify',
+    color: 'bg-amber-500/10 text-amber-400 border border-amber-500/25',
     icon: <Clock size={11} className="inline mr-1" />
   },
   FAILED: {
@@ -77,6 +83,28 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
     }
   };
 
+  const handleFail = async (paymentId: string, studentName: string) => {
+    const ok = await confirmDialog({
+      title: 'Mark payment as failed?',
+      message: `Mark the payment for "${studentName}" as failed? They will be able to retry payment.`,
+      confirmLabel: 'Mark Failed',
+      danger: true,
+    });
+    if (!ok) return;
+
+    setDeletingId(paymentId);
+    try {
+      await api.post(`/payments/admin/fail/${paymentId}`);
+      addToast(`Payment for ${studentName} marked as failed.`, 'success');
+      onVerified();
+    } catch (err: any) {
+      console.error('Failed to mark payment as failed:', err);
+      addToast(err.response?.data?.message || 'Failed to update payment. Please try again.', 'error');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleDelete = async (paymentId: string, studentName: string) => {
     const ok = await confirmDialog({
       title: 'Delete payment record?',
@@ -99,7 +127,8 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
     }
   };
 
-  const pendingCount = transactions.filter(t => t.status === 'PENDING_VERIFICATION').length;
+  // Awaiting-verify rows are PENDING (new) or PENDING_VERIFICATION (legacy).
+  const pendingCount = transactions.filter(t => t.status === 'PENDING' || t.status === 'PENDING_VERIFICATION').length;
 
   return (
     <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-6 space-y-4">
@@ -145,7 +174,7 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
             <tbody className="divide-y divide-slate-850">
               {transactions.map((t, idx) => {
                 const cfg = statusConfig[t.status] || statusConfig['PENDING'];
-                const isAwaitingVerify = t.status === 'PENDING_VERIFICATION';
+                const isAwaitingVerify = t.status === 'PENDING' || t.status === 'PENDING_VERIFICATION';
                 const isVerifying = verifyingId === t.id;
                 const isDeleting = deletingId === t.id;
 
@@ -177,6 +206,15 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                             {isVerifying ? 'Verifying...' : 'Verify Now'}
                           </button>
                           <button
+                            onClick={() => handleFail(t.id, t.user?.name)}
+                            disabled={isVerifying || isDeleting}
+                            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition active:scale-95 disabled:opacity-50"
+                            title="Mark as Failed"
+                            aria-label="Mark payment as failed"
+                          >
+                            <XCircle size={14} />
+                          </button>
+                          <button
                             onClick={() => handleDelete(t.id, t.user?.name)}
                             disabled={isVerifying || isDeleting}
                             className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition active:scale-95 disabled:opacity-50"
@@ -200,15 +238,28 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                           <span className="text-slate-600 font-semibold">N/A</span>
                         )
                       ) : (
-                        <button
-                          onClick={() => handleDelete(t.id, t.user?.name)}
-                          disabled={isVerifying || isDeleting}
-                          className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition active:scale-95 disabled:opacity-50"
-                          title="Delete Request"
-                          aria-label="Delete payment record"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        <>
+                          {t.status === 'INITIATED' && (
+                            <button
+                              onClick={() => handleFail(t.id, t.user?.name)}
+                              disabled={isVerifying || isDeleting}
+                              className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition active:scale-95 disabled:opacity-50"
+                              title="Mark as Failed"
+                              aria-label="Mark payment as failed"
+                            >
+                              <XCircle size={14} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDelete(t.id, t.user?.name)}
+                            disabled={isVerifying || isDeleting}
+                            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition active:scale-95 disabled:opacity-50"
+                            title="Delete Request"
+                            aria-label="Delete payment record"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </>
                       )}
                     </td>
                   </tr>
