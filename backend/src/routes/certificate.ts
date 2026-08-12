@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, isAdmin } from '../middleware/auth';
 import { CertificateService } from '../services/certificateService';
 import { rateLimiter } from '../middleware/rateLimiter';
 
@@ -13,6 +13,50 @@ router.get('/verify/:credentialId', rateLimiter(20, 60_000), async (req: Request
     const credentialId = req.params.credentialId as string;
     const verificationData = await CertificateService.verifyCertificate(credentialId);
     res.json(verificationData);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/certificate/admin/all - List all issued credentials with verification
+// status for the admin console (issue #101). Must be registered BEFORE /:courseId
+// so "admin" isn't swallowed by the courseId param route.
+router.get('/admin/all', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const records = await CertificateService.getAllCertificateRecords();
+    res.json(records);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/certificate/admin/:recordId/verify - Admin marks a credential VERIFIED (issue #101)
+router.post('/admin/:recordId/verify', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const recordId = req.params.recordId as string;
+    const result = await CertificateService.setCredentialVerification(recordId, true);
+
+    if ('error' in result) {
+      return res.status(result.status || 500).json({ message: result.error });
+    }
+
+    res.json({ success: true, message: 'Credential verified. QR scan now reports Verified.', record: result.record });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/certificate/admin/:recordId/unverify - Admin reverts a credential to PENDING (issue #101)
+router.post('/admin/:recordId/unverify', authenticateToken, isAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const recordId = req.params.recordId as string;
+    const result = await CertificateService.setCredentialVerification(recordId, false);
+
+    if ('error' in result) {
+      return res.status(result.status || 500).json({ message: result.error });
+    }
+
+    res.json({ success: true, message: 'Credential un-verified (status: PENDING).', record: result.record });
   } catch (error) {
     next(error);
   }

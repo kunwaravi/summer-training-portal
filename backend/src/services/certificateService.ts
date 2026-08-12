@@ -113,17 +113,25 @@ export class CertificateService {
     // Reuses an existing record for this user+course so a re-generated
     // certificate keeps its already-printed ID verifiable (issue #66).
     let credentialId = this.generateCredentialId(courseId);
+    let verificationStatus = 'PENDING';
+    let verifiedAt: Date | null = null;
     const existingRecord = await prisma.certificateRecord.findFirst({
       where: { userId: user.id, courseId }
     });
     if (existingRecord) {
       credentialId = existingRecord.verificationCode;
+      verificationStatus = existingRecord.verificationStatus;
+      verifiedAt = existingRecord.verifiedAt;
     } else {
+      // Issue #101: a newly issued credential starts PENDING — the admin must
+      // verify it from the Certificate Access Console before its QR scan
+      // reports "Verified".
       await prisma.certificateRecord.create({
         data: {
           userId: user.id,
           courseId,
-          verificationCode: credentialId
+          verificationCode: credentialId,
+          verificationStatus
         }
       });
     }
@@ -156,6 +164,8 @@ export class CertificateService {
       courseName: displayCourseName,
       grade: grade,
       credentialId,
+      verificationStatus,
+      verifiedAt,
       completionDate,
       startDate,
       endDate,
@@ -175,9 +185,11 @@ export class CertificateService {
       where: { verificationCode: cleanId }
     });
     if (record) {
-      // New format: the ID is 64-bit random — unguessable — so full (public,
-      // shareable-link) verification data is safe to return.
-      return this.verifyUserAndCourse(record.userId, record.courseId);
+      // Issue #101: verification is admin-controlled and persisted on the
+      // record — the status is the source of truth, not a live derivation.
+      // The ID is 64-bit random (unguessable), so full verification data is
+      // safe to return once the admin has marked it VERIFIED.
+      return this.verifyIssuedCredential(record);
     }
 
     // Legacy format: certificates issued before the random-ID fix. Parsed only
@@ -188,7 +200,29 @@ export class CertificateService {
     return this.verifyLegacy(cleanId);
   }
 
-  private static async verifyUserAndCourse(userId: number, courseId: string, includePii = true) {
+  /**
+   * Issue #101: new-format credential lookup driven by the record's persisted
+   * verificationStatus. PENDING → reported as not-yet-verified (no PII);
+   * VERIFIED → full verification data, skipping the completion/payment re-check
+   * because the admin's VERIFIED decision is final (admin-granted credentials
+   * may legitimately lack either).
+   */
+  private static async verifyIssuedCredential(record: any) {
+    if (record.verificationStatus !== 'VERIFIED') {
+      return {
+        verified: false,
+        auditStatus: 'PENDING / AWAITING ADMIN VERIFICATION',
+        courseId: record.courseId,
+        courseName: this.getDisplayCourseName(record.courseId),
+        accreditationRegistry: 'EduNexus Pro Credential Registry',
+        message: 'This credential has been issued but is awaiting official verification.'
+      };
+    }
+
+    return this.verifyUserAndCourse(record.userId, record.courseId, true, false);
+  }
+
+  private static async verifyUserAndCourse(userId: number, courseId: string, includePii = true, requireActive = true) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -201,21 +235,25 @@ export class CertificateService {
       throw new AppError('No registered candidate matches this credential.', 404);
     }
 
-    const progress = user.progresses.find(p => p.courseId === courseId);
-    const totalModules = await prisma.module.count({ where: { courseId } });
-    const requiredWeeks = totalModules > 0 ? totalModules : 20;
-    const isCompleted = progress && (progress.completed || progress.weekCompleted >= requiredWeeks);
+    // Legacy derivation gate — only for records that are not admin-verified
+    // (requireActive=true). Verified records skip it (issue #101).
+    if (requireActive) {
+      const progress = user.progresses.find(p => p.courseId === courseId);
+      const totalModules = await prisma.module.count({ where: { courseId } });
+      const requiredWeeks = totalModules > 0 ? totalModules : 20;
+      const isCompleted = progress && (progress.completed || progress.weekCompleted >= requiredWeeks);
 
-    const successPayment = await prisma.payment.findFirst({
-      where: {
-        userId,
-        courseId,
-        status: 'VERIFIED'
+      const successPayment = await prisma.payment.findFirst({
+        where: {
+          userId,
+          courseId,
+          status: 'VERIFIED'
+        }
+      });
+
+      if (!isCompleted || !successPayment) {
+        throw new AppError('Credential is still active/uncompleted or unpaid in database.', 403);
       }
-    });
-
-    if (!isCompleted || !successPayment) {
-      throw new AppError('Credential is still active/uncompleted or unpaid in database.', 403);
     }
 
     const grade = this.calculateGrade(user.results, courseId);
@@ -305,5 +343,42 @@ export class CertificateService {
     // includePii=false: legacy IDs are guessable — return only verified-status +
     // course info, never the candidate's personal details.
     return this.verifyUserAndCourse(user.id, courseId, false);
+  }
+
+  /**
+   * Issue #101: list every issued credential with its persisted verification
+   * status, so the admin console can show and toggle each one.
+   */
+  static async getAllCertificateRecords() {
+    return await prisma.certificateRecord.findMany({
+      include: {
+        user: {
+          select: { id: true, name: true, email: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  /**
+   * Issue #101: admin verify/un-verify a credential from the console.
+   * VERIFIED stamps verifiedAt; back to PENDING clears it.
+   */
+  static async setCredentialVerification(recordId: string, verified: boolean) {
+    const record = await prisma.certificateRecord.findUnique({
+      where: { id: recordId }
+    });
+
+    if (!record) return { error: 'Credential record not found.', status: 404 };
+
+    const updatedRecord = await prisma.certificateRecord.update({
+      where: { id: recordId },
+      data: {
+        verificationStatus: verified ? 'VERIFIED' : 'PENDING',
+        verifiedAt: verified ? new Date() : null
+      }
+    });
+
+    return { success: true, record: updatedRecord };
   }
 }

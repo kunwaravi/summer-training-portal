@@ -440,6 +440,16 @@ const Certificate = () => {
                             <strong>Credential ID:</strong> {displayData.credentialId}<br />
                             Verify credentials authenticity at:<br />
                             <span style={{ color: '#d4af37' }}>{window.location.host}/verify</span>
+                            {/* Issue #101: reflect the persisted verification status on the certificate */}
+                            {displayData.verificationStatus && (
+                              <div style={{ marginTop: 6 }}>
+                                {displayData.verificationStatus === 'VERIFIED' ? (
+                                  <span style={{ color: '#4ade80', fontWeight: 700, fontSize: 10 }}>✓ VERIFIED</span>
+                                ) : (
+                                  <span style={{ color: '#fbbf24', fontWeight: 700, fontSize: 10 }}>⏳ PENDING — AWAITING ADMIN VERIFICATION</span>
+                                )}
+                              </div>
+                            )}
                         </div>
                     </div>
                     

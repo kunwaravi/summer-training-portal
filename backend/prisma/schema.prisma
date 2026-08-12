@@ -232,12 +232,14 @@ model PracticeAttempt {
 }
 
 model CertificateRecord {
-  id               String   @id @default(uuid())
-  userId           Int
-  courseId         String
-  verificationCode String   @unique
-  createdAt        DateTime @default(now())
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String    @id @default(uuid())
+  userId             Int
+  courseId           String
+  verificationCode   String    @unique
+  verificationStatus String    @default("PENDING") // PENDING | VERIFIED — admin-controlled (issue #101)
+  verifiedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

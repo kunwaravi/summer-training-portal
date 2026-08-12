@@ -6,7 +6,7 @@ import {
   ArrowUp, ArrowDown, Eye, DollarSign,
   Save, FileText, Image, RefreshCw, ChevronDown, ChevronRight,
   TrendingUp, Share2, Mail, Settings, ClipboardCheck,
-  Clock, CheckCircle2, XCircle, Check, X, FileCode2
+  Clock, CheckCircle2, XCircle, Check, X, FileCode2, ShieldCheck, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminPaymentTable from '../components/organisms/AdminPaymentTable';
@@ -89,6 +89,10 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
   const [selectedCourseId, setSelectedCourseId] = useState<string>('C');
+  // Credential verification console states (issue #101)
+  const [certRecords, setCertRecords] = useState<any[]>([]);
+  const [credentialLoading, setCredentialLoading] = useState(false);
+  const [credentialUpdating, setCredentialUpdating] = useState(false);
 
   // Referral tracker states
   const [referralSearch, setReferralSearch] = useState('');
@@ -276,6 +280,40 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       console.error('Failed to load users for dropdown:', err);
+    }
+  };
+
+  // Issue #101: fetch all issued credentials with their verification status
+  const fetchCertRecords = async () => {
+    setCredentialLoading(true);
+    try {
+      const res = await api.get('/certificate/admin/all');
+      setCertRecords(res.data);
+    } catch (err) {
+      console.error('Failed to load credential records:', err);
+    } finally {
+      setCredentialLoading(false);
+    }
+  };
+
+  // Issue #101: the credential record for the currently selected student + track
+  const selectedCredential = certRecords.find(
+    (r) => String(r.userId) === selectedStudentId && r.courseId === selectedCourseId
+  );
+
+  const handleToggleCredentialVerification = async () => {
+    if (!selectedCredential || credentialUpdating) return;
+    const isVerified = selectedCredential.verificationStatus === 'VERIFIED';
+    setCredentialUpdating(true);
+    try {
+      const action = isVerified ? 'unverify' : 'verify';
+      const res = await api.post(`/certificate/admin/${selectedCredential.id}/${action}`);
+      addToast(res.data.message || (isVerified ? 'Credential un-verified.' : 'Credential verified.'), 'success');
+      fetchCertRecords();
+    } catch (err: any) {
+      addToast(err.response?.data?.message || 'Failed to update credential verification.', 'error');
+    } finally {
+      setCredentialUpdating(false);
     }
   };
 
@@ -477,6 +515,7 @@ const AdminDashboard = () => {
       fetchMessages();
       fetchContactSettings();
       fetchReview();
+      fetchCertRecords();
     }, 0);
     return () => clearTimeout(timer);
   }, []);
@@ -981,9 +1020,65 @@ const AdminDashboard = () => {
                   View Certificate
                 </button>
               </div>
+
+              {/* Issue #101: Credential Verify — verify/un-verify the selected credential */}
+              <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="text-[11px] uppercase font-black tracking-wider text-slate-300 flex items-center gap-1.5">
+                    <ShieldCheck size={14} className="text-emerald-400" /> Credential Verification Status
+                  </h4>
+                  <button
+                    onClick={fetchCertRecords}
+                    disabled={credentialLoading}
+                    className="text-[11px] text-slate-400 hover:text-white transition font-bold uppercase tracking-wider inline-flex items-center gap-1 disabled:opacity-50"
+                  >
+                    <RefreshCw size={12} /> {credentialLoading ? 'Loading…' : 'Refresh'}
+                  </button>
+                </div>
+
+                {selectedCredential ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex-1 space-y-1 min-w-0">
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Credential ID</p>
+                      <p className="text-xs font-mono text-slate-200 break-all">{selectedCredential.verificationCode}</p>
+                      <div className="flex items-center gap-2 pt-1">
+                        {selectedCredential.verificationStatus === 'VERIFIED' ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            <ShieldCheck size={12} /> Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                            <ShieldAlert size={12} /> Pending Verification
+                          </span>
+                        )}
+                        {selectedCredential.verifiedAt && (
+                          <span className="text-[10px] text-slate-500">
+                            verified {new Date(selectedCredential.verifiedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleToggleCredentialVerification}
+                      disabled={credentialUpdating}
+                      className={
+                        selectedCredential.verificationStatus === 'VERIFIED'
+                          ? 'px-4 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg border border-slate-700 text-slate-300 hover:border-rose-500/50 hover:text-rose-400 transition disabled:opacity-50 shrink-0'
+                          : 'px-4 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition disabled:opacity-50 shrink-0'
+                      }
+                    >
+                      {credentialUpdating ? 'Updating…' : selectedCredential.verificationStatus === 'VERIFIED' ? 'Un-verify Credential' : '✓ Verify Credential'}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500">
+                    No credential issued yet for this student + track. Click <strong>View Certificate</strong> to generate it, then verify it here.
+                  </p>
+                )}
+              </div>
             </div>
 
-            <AdminPaymentTable 
+            <AdminPaymentTable
               transactions={transactions} 
               loading={loadingTransactions}
               onVerified={fetchTransactions}

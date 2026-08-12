@@ -213,8 +213,8 @@ const Verify = () => {
         </form>
 
         <AnimatePresence mode="wait">
-          {/* Success panel */}
-          {result && (
+          {/* Success panel — only when the credential is verified */}
+          {result?.verified === true && (
             <motion.div
               key="success"
               initial={{ opacity: 0, y: 10 }}
@@ -289,6 +289,54 @@ const Verify = () => {
                   </div>
                 </div>
               )}
+
+              <button
+                onClick={() => { setResult(null); setCredentialId(''); inputRef.current?.focus(); }}
+                className="text-xs text-slate-500 hover:text-slate-300 transition font-semibold"
+              >
+                Verify another credential
+              </button>
+            </motion.div>
+          )}
+
+          {/* Pending panel — credential issued but not yet verified by admin (issue #101) */}
+          {result && result.verified === false && (
+            <motion.div
+              key="pending"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6 mt-6"
+            >
+              <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
+                <div className="flex items-center gap-3 pb-4 border-b border-amber-500/20">
+                  <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-400 shrink-0">
+                    <ShieldAlert size={28} />
+                  </div>
+                  <div>
+                    <h4 className="text-amber-400 font-extrabold text-sm uppercase tracking-wider">
+                      Pending Verification
+                    </h4>
+                    <p className="text-slate-400 text-[11px] font-mono tracking-tight mt-0.5 break-all">
+                      {credentialId.trim().toUpperCase()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mt-4 text-xs">
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Status</span>
+                    <span className="font-bold text-amber-400 text-sm mt-0.5 block">{result.auditStatus}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Course</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.courseName}</span>
+                  </div>
+                  <p className="text-slate-400 leading-relaxed pt-1">
+                    {result.message || 'This credential has been issued but is awaiting official verification by the EduNexus Pro administration. Please check back later.'}
+                  </p>
+                </div>
+              </div>
 
               <button
                 onClick={() => { setResult(null); setCredentialId(''); inputRef.current?.focus(); }}
