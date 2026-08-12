@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as paymentService from '../services/paymentService';
 import { authenticateToken, isAdmin } from '../middleware/auth';
 import { validate, createOrderSchema, verifyPaymentSchema } from '../middleware/validation';
+import { rateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -94,7 +95,7 @@ router.get('/status/:courseId', authenticateToken, async (req: any, res: any, ne
 });
 
 // POST /api/payments/create-order - Initialize checkout order
-router.post('/create-order', authenticateToken, validate(createOrderSchema), async (req: any, res: any, next: any) => {
+router.post('/create-order', authenticateToken, rateLimiter(10, 60_000), validate(createOrderSchema), async (req: any, res: any, next: any) => {
   try {
     const userId = req.user.id;
     const { courseId, amount, couponCode } = req.body;
@@ -112,7 +113,7 @@ router.post('/create-order', authenticateToken, validate(createOrderSchema), asy
 });
 
 // POST /api/payments/verify - Student submits UPI payment proof, sets PENDING (admin verification)
-router.post('/verify', authenticateToken, validate(verifyPaymentSchema), async (req: any, res: any, next: any) => {
+router.post('/verify', authenticateToken, rateLimiter(10, 60_000), validate(verifyPaymentSchema), async (req: any, res: any, next: any) => {
   try {
     const { orderId, gatewayReference } = req.body;
 

@@ -1,11 +1,14 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { CertificateService } from '../services/certificateService';
+import { rateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
 // GET /api/certificate/verify/:credentialId - Public verification registry endpoint
-router.get('/verify/:credentialId', async (req: Request, res: Response, next: NextFunction) => {
+// SECURITY: rate-limited so predictable legacy credential IDs can't be
+// enumerated to harvest student PII.
+router.get('/verify/:credentialId', rateLimiter(20, 60_000), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const credentialId = req.params.credentialId as string;
     const verificationData = await CertificateService.verifyCertificate(credentialId);

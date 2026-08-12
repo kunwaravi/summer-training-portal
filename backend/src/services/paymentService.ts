@@ -89,15 +89,21 @@ export const createOrder = async (userId: number, courseId: string, amount: numb
     else if (code === 'AVI050') couponDiscount = 0.5;
     else if (code === 'AVI030') couponDiscount = 0.3;
     else if (code === 'NEXUS499' || code === 'EDU499' || code === 'SPECIAL499') couponDiscount = basePrice > 0 ? 200 / basePrice : 0;
+    // SECURITY: cap coupon discount at 50% (same as the referral cap #68). A
+    // 499-coupon on a course priced ≤ ₹200 would otherwise exceed 100% off.
+    couponDiscount = Math.min(couponDiscount, 0.5);
   }
 
   // Calculate final discount-adjusted price (using maximum of referral or coupon discount)
   const finalDiscount = Math.max(referralDiscount, couponDiscount);
-  const finalAmount = Math.round(basePrice * (1 - finalDiscount));
+  // Clamp so a ≥100% discount can never produce a zero/negative amount that a
+  // later auto-VERIFY check could treat as "paid".
+  const finalAmount = Math.max(0, Math.round(basePrice * (1 - finalDiscount)));
 
   // Payment state machine (#100): INITIATED → PENDING → VERIFIED / FAILED.
-  // Free checkout (finalAmount 0 via coupon/referral) skips straight to VERIFIED.
-  const status = finalAmount === 0 ? 'VERIFIED' : 'INITIATED';
+  // SECURITY: EVERY order starts INITIATED — even a ₹0 order requires manual
+  // admin verification. No coupon/discount path may auto-VERIFY payment.
+  const status = 'INITIATED';
 
   const payment = await prisma.payment.create({
     data: {
@@ -137,8 +143,9 @@ export const submitPaymentForVerification = async (
     return { error: 'This payment order does not belong to your account.', status: 403 };
   }
 
-  // Mark as verified if free checkout (amount is 0), else PENDING admin verification
-  const newStatus = payment.amount === 0 ? 'VERIFIED' : 'PENDING';
+  // SECURITY: always route to admin verification — even ₹0 (fully-discounted)
+  // orders require manual approval. No order may auto-VERIFY on submit.
+  const newStatus = 'PENDING';
   const updatedPayment = await prisma.payment.update({
     where: { id: orderId },
     data: {
