@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import api from '../api';
 import { useUI } from '../context/UIContext';
 import {
@@ -53,13 +53,18 @@ const courseTitleById = (id: string) => coursesConfig.find((c) => c.id === id)?.
 const initialsOf = (name?: string) =>
   (name || '?').split(' ').map((n) => n[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?';
 
+// M-049: the eight admin dashboard tabs. Data is fetched per tab (lazy) — a tab
+// only loads the sources its render reads, on first open + refetch on switch.
+type AdminTab = 'transactions' | 'cms' | 'users' | 'analytics' | 'referrals' | 'messages' | 'settings' | 'review';
+
 const AdminDashboard = () => {
   const { confirmDialog, addToast } = useUI();
-  const [activeTab, setActiveTab] = useState<'transactions' | 'cms' | 'users' | 'analytics' | 'referrals' | 'messages' | 'settings' | 'review'>('transactions');
+  const [activeTab, setActiveTab] = useState<AdminTab>('transactions');
 
   // Transaction logs states
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Review queue states (#82)
   const [reviewTab, setReviewTab] = useState<'assignments' | 'projects'>('assignments');
@@ -190,7 +195,7 @@ const AdminDashboard = () => {
       fetchMessages();
     } catch (err) {
       console.error('Failed to delete message:', err);
-      addToast('Failed to delete message.', 'success');
+      addToast('Failed to delete message.', 'error');
     }
   };
 
@@ -276,6 +281,7 @@ const AdminDashboard = () => {
 
   // Fetch all registered users for certificate generator & directory
   const fetchUsers = async () => {
+    setLoadingUsers(true);
     try {
       const res = await api.get('/auth/admin/users');
       setUsers(res.data);
@@ -284,6 +290,8 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       console.error('Failed to load users for dropdown:', err);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
@@ -511,15 +519,62 @@ const AdminDashboard = () => {
     }
   };
 
+  // M-049: per-source in-flight guard — prevents duplicate request storms when
+  // the same source is requested from more than one tab in quick succession.
+  const inFlightRef = useRef<Record<string, boolean>>({});
+  const runFetch = (key: string, fn: () => Promise<void>) => {
+    if (inFlightRef.current[key]) return;
+    inFlightRef.current[key] = true;
+    Promise.resolve(fn()).finally(() => {
+      inFlightRef.current[key] = false;
+    });
+  };
+
+  // M-049: which data sources each tab's render actually reads. A tab only
+  // fetches these (lazily), instead of eagerly loading all 7 datasets on mount.
+  // - transactions hosts the Direct Certificate Access console → needs users + certRecords too
+  // - referrals & analytics derive from users (+ payments / certs / courses for analytics)
+  const TAB_SOURCES: Record<AdminTab, Array<{ key: string; run: () => Promise<void> }>> = {
+    transactions: [
+      { key: 'transactions', run: fetchTransactions },
+      { key: 'users', run: fetchUsers },
+      { key: 'certs', run: fetchCertRecords },
+    ],
+    cms: [{ key: 'cms', run: fetchCmsCourses }],
+    users: [
+      { key: 'users', run: fetchUsers },
+      { key: 'certs', run: fetchCertRecords },
+    ],
+    messages: [{ key: 'messages', run: fetchMessages }],
+    settings: [{ key: 'settings', run: fetchContactSettings }],
+    review: [{ key: 'review', run: fetchReview }],
+    referrals: [{ key: 'users', run: fetchUsers }],
+    analytics: [
+      { key: 'users', run: fetchUsers },
+      { key: 'transactions', run: fetchTransactions },
+      { key: 'certs', run: fetchCertRecords },
+      { key: 'cms', run: fetchCmsCourses },
+    ],
+  };
+
+  // Tab switch: set the tab, then (re)fetch its sources. Refetching on every
+  // switch keeps counts fresh; the same-tab guard avoids duplicates on re-render;
+  // the in-flight guard avoids duplicate storms.
+  const handleTabClick = (tabId: AdminTab) => {
+    if (tabId === activeTab) return;
+    setActiveTab(tabId);
+    TAB_SOURCES[tabId].forEach((s) => runFetch(s.key, s.run));
+  };
+
+  // M-049: mount fetches ONLY what the default tab (transactions) needs to render
+  // plus the review queue that powers the tab-bar pending badge (audit §10 —
+  // "the review badge source if retained"). Every other tab loads on first open.
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchTransactions();
-      fetchCmsCourses();
-      fetchUsers();
-      fetchMessages();
-      fetchContactSettings();
-      fetchReview();
-      fetchCertRecords();
+      runFetch('transactions', fetchTransactions);
+      runFetch('users', fetchUsers);
+      runFetch('certs', fetchCertRecords);
+      runFetch('review', fetchReview);
     }, 0);
     return () => clearTimeout(timer);
   }, []);
@@ -596,7 +651,7 @@ const AdminDashboard = () => {
       addToast('Topic saved successfully!', 'success');
     } catch (err) {
       console.error('Failed to save topic:', err);
-      addToast('Failed to save topic.', 'success');
+      addToast('Failed to save topic.', 'error');
     }
   };
 
@@ -684,7 +739,7 @@ const AdminDashboard = () => {
       addToast('Quiz question saved successfully!', 'success');
     } catch (err) {
       console.error('Failed to save quiz question:', err);
-      addToast('Failed to save quiz question.', 'success');
+      addToast('Failed to save quiz question.', 'error');
     }
   };
 
@@ -780,7 +835,7 @@ const AdminDashboard = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabClick(tab.id)}
                 className={`px-4 py-2.5 rounded-xl text-sm font-extrabold uppercase tracking-wide transition flex items-center gap-2.5 whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30 shadow-lg shadow-cyan-500/5 dark:shadow-cyan-500/10'
@@ -1361,7 +1416,7 @@ const AdminDashboard = () => {
                 <Users size={18} className="text-cyan-400" /> Registered Candidate Directory
               </h3>
               <span className="text-[11px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold">
-                {users.length} Candidates Registered
+                {loadingUsers && users.length === 0 ? 'Loading candidates…' : `${users.length} Candidates Registered`}
               </span>
             </div>
 
@@ -1819,97 +1874,111 @@ const AdminDashboard = () => {
 
         {activeTab === 'analytics' && (
           <div className="space-y-6 animate-fade-in text-slate-350">
-            {/* Stat Cards */}
+            {/* M-049: metrics computed live from admin data (users, payments,
+                certificates, courses). No fabricated numbers. */}
+            <div className="p-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 text-[11px] leading-relaxed text-cyan-300 flex items-center justify-between gap-3">
+              <span>
+                Metrics are computed live from the admin data this dashboard already fetches
+                (users, payments, certificates, courses) and refresh each time this tab opens.
+                Figures that would need a dedicated analytics endpoint are marked unavailable —
+                nothing here is estimated.
+              </span>
+              {(loadingTransactions || credentialLoading || loadingCms || loadingUsers) && (
+                <span className="shrink-0 text-[11px] font-black uppercase tracking-wider text-cyan-400">Refreshing…</span>
+              )}
+            </div>
+
+            {/* Real stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { label: 'Total Enrolled', value: '1,250', change: '+12% this week', isUp: true },
-                { label: 'Completion Rate', value: '78.4%', change: '+3.2% vs last month', isUp: true },
-                { label: 'Avg Quiz Accuracy', value: '81.2%', change: '-0.5% vs yesterday', isUp: false },
-                { label: 'Active Certificates', value: '412', change: '+24 issued today', isUp: true },
+                { label: 'Registered Users', value: users.length },
+                { label: 'Started a Course', value: users.filter((u: any) => (u.progresses?.length ?? 0) > 0).length },
+                { label: 'Verified Payments', value: transactions.filter((t: any) => t.status === 'VERIFIED').length },
+                { label: 'Certificates Issued', value: certRecords.length },
               ].map((card, idx) => (
                 <div key={idx} className="p-6 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2">
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">{card.label}</span>
                   <div className="flex items-baseline justify-between">
-                    <h3 className="text-2xl font-black text-white">{card.value}</h3>
-                    <span className={`text-[11px] font-bold ${card.isUp ? 'text-emerald-400' : 'text-rose-450'}`}>
-                      {card.change}
-                    </span>
+                    <h3 className="text-2xl font-black text-white">{card.value.toLocaleString()}</h3>
+                    <span className="text-[11px] font-bold text-emerald-400">live</span>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Visual Funnels & Cohort Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Cohort Drop-off Analysis */}
-              <div className="bg-slate-900/30 border border-slate-800 p-6 rounded-2xl space-y-6">
-                <div>
-                  <h4 className="text-sm font-bold text-white uppercase tracking-wider">Weekly Learner Funnel (Drop-off)</h4>
-                  <p className="text-[11px] text-slate-500 mt-1">Percentage of registered students reaching each learning milestone.</p>
-                </div>
+            {/* Learner progression — real 3-stage funnel */}
+            <div className="bg-slate-900/30 border border-slate-800 p-6 rounded-2xl space-y-6">
+              <div>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Learner Progression</h4>
+                <p className="text-[11px] text-slate-500 mt-1">Registered → started a course (has progress) → earned a certificate. Computed from live admin data.</p>
+              </div>
+              {users.length === 0 ? (
+                <p className="text-xs text-slate-500">No user data loaded yet.</p>
+              ) : (
                 <div className="space-y-4">
                   {[
-                    { milestone: 'Registered & Profiles Setup', count: 1250, pct: 100, color: 'bg-blue-500' },
-                    { milestone: 'Enrolled in 1+ Tracks', count: 1080, pct: 86.4, color: 'bg-indigo-500' },
-                    { milestone: 'Completed Week 1 Quiz', count: 890, pct: 71.2, color: 'bg-purple-500' },
-                    { milestone: 'Completed Week 5 Quiz', count: 620, pct: 49.6, color: 'bg-pink-500' },
-                    { milestone: 'Completed Week 10 Quiz', count: 480, pct: 38.4, color: 'bg-amber-500' },
-                    { milestone: 'Claimed Certificate (₹499 Paid)', count: 412, pct: 32.9, color: 'bg-emerald-500' }
-                  ].map((m, idx) => (
-                    <div key={idx} className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-semibold text-slate-350">{m.milestone}</span>
-                        <span className="text-slate-500 font-mono">{m.count} students ({m.pct}%)</span>
+                    { milestone: 'Registered Users', count: users.length },
+                    { milestone: 'Started a Course (has progress)', count: users.filter((u: any) => (u.progresses?.length ?? 0) > 0).length },
+                    { milestone: 'Earned Certificate', count: certRecords.length },
+                  ].map((m, idx) => {
+                    const pct = users.length > 0 ? Math.round((m.count / users.length) * 100) : 0;
+                    return (
+                      <div key={idx} className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-semibold text-slate-350">{m.milestone}</span>
+                          <span className="text-slate-500 font-mono">{m.count} ({pct}%)</span>
+                        </div>
+                        <div className="h-3 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-slate-900">
+                          <div
+                            className="h-full bg-cyan-500/70 rounded-full"
+                            style={{ width: `${pct}%` }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="h-3 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-slate-900">
-                        <div 
-                          className={`h-full ${m.color} rounded-full transition-all duration-1000`}
-                          style={{ width: `${m.pct}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Course Track Performance comparison */}
-              <div className="bg-slate-900/30 border border-slate-800 p-6 rounded-2xl space-y-6">
-                <div>
-                  <h4 className="text-sm font-bold text-white uppercase tracking-wider">Track Distribution & Popularity</h4>
-                  <p className="text-[11px] text-slate-500 mt-1">Enrollment split and certificates generated by training track.</p>
-                </div>
+            {/* Track distribution — real enrollments & certificates per course */}
+            <div className="bg-slate-900/30 border border-slate-800 p-6 rounded-2xl space-y-6">
+              <div>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Track Distribution</h4>
+                <p className="text-[11px] text-slate-500 mt-1">Enrollments (users with course progress) and certificates issued per track, from live admin data.</p>
+              </div>
+              {courses.length === 0 ? (
+                <p className="text-xs text-slate-500">Course data not available yet.</p>
+              ) : (
                 <div className="space-y-5 pt-2">
-                  {[
-                    { track: 'C & Systems Programming', enrollments: 450, certs: 180, pct: 82 },
-                    { track: 'C++ & OOP Embedded', enrollments: 320, certs: 110, pct: 64 },
-                    { track: 'IoT & Smart Interfacing', enrollments: 280, certs: 74, pct: 56 },
-                    { track: 'Embedded Systems & RTOS', enrollments: 200, certs: 48, pct: 40 }
-                  ].map((t, idx) => (
-                    <div key={idx} className="flex items-center gap-4">
-                      <div className="w-24 text-xs font-bold text-slate-400 truncate" title={t.track}>{t.track.split(' & ')[0]}</div>
-                      <div className="flex-1 flex items-center gap-3">
-                        {/* Bar comparison */}
+                  {courses.map((course) => {
+                    const enrolled = users.filter((u: any) => (u.progresses ?? []).some((p: any) => p.courseId === course.id)).length;
+                    const certs = certRecords.filter((r: any) => r.courseId === course.id).length;
+                    const pct = users.length > 0 ? Math.round((enrolled / users.length) * 100) : 0;
+                    return (
+                      <div key={course.id} className="flex items-center gap-4">
+                        <div className="w-32 text-xs font-bold text-slate-400 truncate" title={course.title}>{course.title.split(' & ')[0]}</div>
                         <div className="flex-1 h-6 bg-slate-950 rounded-lg overflow-hidden border border-slate-900 relative">
-                          <div 
-                            className="h-full bg-cyan-500/10 border-r-2 border-cyan-400 flex items-center justify-end pr-2 transition-all duration-1000"
-                            style={{ width: `${t.pct}%` }}
-                          >
-                            <span className="text-[11px] font-black text-cyan-400 font-mono">{t.pct}% active</span>
-                          </div>
+                          <div className="h-full bg-cyan-500/10 border-r-2 border-cyan-400" style={{ width: `${pct}%` }}></div>
                         </div>
-                        <div className="text-[11px] font-bold text-slate-500 shrink-0 text-right w-24">
-                          {t.enrollments} enr / {t.certs} cert
+                        <div className="text-[11px] font-bold text-slate-500 shrink-0 text-right w-28">
+                          {enrolled} enr / {certs} cert
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+              )}
+            </div>
 
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-[11px] leading-relaxed text-blue-300">
-                  <strong>Founder Insight:</strong> C Programming remains the absolute gateway track with 36% of all traffic. 
-                  Week 1 and 2 quiz results show high retention, with a 14% drop-off at Week 3 when register-masking and pointers concepts are introduced.
-                </div>
-              </div>
+            {/* Clearly-labeled unavailable metrics — no fabricated numbers */}
+            <div className="p-6 bg-slate-900/30 border border-dashed border-slate-700 rounded-2xl space-y-3">
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider">Not available from current admin APIs</h4>
+              <p className="text-[11px] leading-relaxed text-slate-500">
+                Quiz accuracy, completion rate, and per-week quiz funnel breakdowns cannot be computed from the
+                endpoints this dashboard consumes (users, payments, certificates, courses). A dedicated analytics
+                endpoint would be required — these figures are marked unavailable rather than estimated.
+              </p>
             </div>
           </div>
         )}
