@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminPaymentTable from '../components/organisms/AdminPaymentTable';
+import Dialog from '../components/atoms/Dialog';
 import { coursesConfig } from '../config/courses';
 
 interface Topic {
@@ -1521,36 +1522,41 @@ const AdminDashboard = () => {
             </div>
 
             {/* Edit Candidate Profile Modal */}
-            {editingCandidate && (
-              <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl"
+            <Dialog
+              open={!!editingCandidate}
+              onClose={() => setEditingCandidate(null)}
+              closeOnBackdrop={false}
+              title="Edit Candidate Profile"
+              size="lg"
+              backdropClassName="bg-slate-950/80 backdrop-blur-sm"
+              className="bg-slate-900 border-slate-800 rounded-2xl p-6 space-y-6"
+            >
+              {editingCandidate && (
+              <>
+              <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+                <div>
+                  <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <Edit3 size={18} className="text-cyan-400" /> Edit Candidate Profile
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Candidate ID: #{editingCandidate.id}</p>
+                </div>
+                <button
+                  onClick={() => setEditingCandidate(null)}
+                  aria-label="Close edit candidate dialog"
+                  className="text-slate-500 hover:text-white p-1 rounded-lg text-lg"
                 >
-                  <div className="flex justify-between items-center pb-4 border-b border-slate-800">
-                    <div>
-                      <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                        <Edit3 size={18} className="text-cyan-400" /> Edit Candidate Profile
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">Candidate ID: #{editingCandidate.id}</p>
-                    </div>
-                    <button
-                      onClick={() => setEditingCandidate(null)}
-                      aria-label="Close edit candidate dialog"
-                      className="text-slate-500 hover:text-white p-1 rounded-lg text-lg"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  ✕
+                </button>
+              </div>
 
-                  <form onSubmit={handleSaveCandidate} className="space-y-4 text-xs">
+              <form onSubmit={handleSaveCandidate} className="space-y-4 text-xs">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-[11px] font-black uppercase text-slate-400">Full Name</label>
                         <input
                           type="text"
                           required
+                          data-dialog-autofocus
                           value={candidateForm.name}
                           onChange={(e) => setCandidateForm({ ...candidateForm, name: e.target.value })}
                           className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
@@ -1658,9 +1664,9 @@ const AdminDashboard = () => {
                       </button>
                     </div>
                   </form>
-                </motion.div>
-              </div>
-            )}
+              </>
+              )}
+            </Dialog>
           </div>
         )}
 
@@ -2192,15 +2198,17 @@ const AdminDashboard = () => {
       </div>
 
       {/* Gorgeous Side-by-Side Live WYSIWYG Editor Modal (Issue #8) */}
-      <AnimatePresence>
+      <Dialog
+        open={!!editingTopic}
+        onClose={() => setEditingTopic(null)}
+        closeOnBackdrop={false}
+        title={isNewTopic ? 'Create Dynamic Topic Block' : 'Modify Topic Block'}
+        size="full"
+        backdropClassName="bg-black/90 backdrop-blur-md"
+        className="bg-slate-950 border-slate-800 rounded-2xl h-[85vh]"
+      >
         {editingTopic && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl overflow-hidden"
-            >
+        <>
               {/* Modal Header */}
               <div className="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
                 <div className="flex items-center gap-2 text-cyan-400">
@@ -2238,9 +2246,10 @@ const AdminDashboard = () => {
                   {/* Topic Title */}
                   <div className="space-y-1">
                     <label className="text-[11px] uppercase font-bold text-slate-400">Topic Title</label>
-                    <input 
+                    <input
                       type="text"
                       required
+                      data-dialog-autofocus
                       placeholder="e.g. Memory Layout & Static Variables"
                       value={editingTopic.title}
                       onChange={(e) => setEditingTopic({ ...editingTopic, title: e.target.value })}
@@ -2361,37 +2370,38 @@ const AdminDashboard = () => {
                   <Save size={14} /> Commit & Publish Block
                 </button>
               </div>
-
-            </motion.div>
-          </div>
+        </>
         )}
-      </AnimatePresence>
+      </Dialog>
 
       {/* Quiz Question CRUD Editor Modal */}
-      <AnimatePresence>
+      <Dialog
+        open={!!editingQuiz}
+        onClose={() => setEditingQuiz(null)}
+        closeOnBackdrop={false}
+        title={isNewQuiz ? 'Create Quiz Question' : 'Modify Quiz Question'}
+        size="lg"
+        backdropClassName="bg-black/90 backdrop-blur-md"
+        className="bg-slate-950 border-slate-800 rounded-2xl p-6 text-left space-y-5"
+      >
         {editingQuiz && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl p-6 text-left space-y-5"
-            >
-              <div className="flex items-center gap-2 text-yellow-400 pb-2 border-b border-slate-900">
-                <Award size={18} />
-                <h3 className="text-sm font-black uppercase tracking-wider">
-                  {isNewQuiz ? 'Create Quiz Question' : 'Modify Quiz Question'}
-                </h3>
-              </div>
+        <>
+        <div className="flex items-center gap-2 text-yellow-400 pb-2 border-b border-slate-900">
+          <Award size={18} />
+          <h3 className="text-sm font-black uppercase tracking-wider">
+            {isNewQuiz ? 'Create Quiz Question' : 'Modify Quiz Question'}
+          </h3>
+        </div>
 
               <div className="space-y-4">
                 
                 {/* Question Text */}
                 <div className="space-y-1">
                   <label className="text-[11px] uppercase font-bold text-slate-400">Question Statement</label>
-                  <input 
+                  <input
                     type="text"
                     required
+                    data-dialog-autofocus
                     placeholder="e.g. Which keyword stops switch fall-through in C?"
                     value={editingQuiz.text}
                     onChange={(e) => setEditingQuiz({ ...editingQuiz, text: e.target.value })}
@@ -2450,37 +2460,36 @@ const AdminDashboard = () => {
                   Commit Question
                 </button>
               </div>
-
-            </motion.div>
-          </div>
+        </>
         )}
-      </AnimatePresence>
+      </Dialog>
 
       {/* Create New Learning Track (Course) Modal */}
-      <AnimatePresence>
-        {showAddCourseModal && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 text-left space-y-5"
-            >
-              <div className="flex items-center gap-2 text-cyan-400 pb-2 border-b border-slate-900">
-                <BookOpen size={18} />
-                <h3 className="text-sm font-black uppercase tracking-wider">
-                  Create New Course Track
-                </h3>
-              </div>
+      <Dialog
+        open={!!showAddCourseModal}
+        onClose={() => setShowAddCourseModal(false)}
+        closeOnBackdrop={false}
+        title="Create New Course Track"
+        size="md"
+        backdropClassName="bg-black/90 backdrop-blur-md"
+        className="bg-slate-950 border-slate-800 rounded-2xl p-6 text-left space-y-5"
+      >
+        <div className="flex items-center gap-2 text-cyan-400 pb-2 border-b border-slate-900">
+          <BookOpen size={18} />
+          <h3 className="text-sm font-black uppercase tracking-wider">
+            Create New Course Track
+          </h3>
+        </div>
 
-              <form onSubmit={handleCreateCourse} className="space-y-4">
+        <form onSubmit={handleCreateCourse} className="space-y-4">
                 
                 {/* Course ID */}
                 <div className="space-y-1">
                   <label className="text-[11px] uppercase font-bold text-slate-400">Course Identifier (ID)</label>
-                  <input 
+                  <input
                     type="text"
                     required
+                    data-dialog-autofocus
                     placeholder="e.g. CADDED_Mech"
                     value={newCourseId}
                     onChange={(e) => setNewCourseId(e.target.value)}
@@ -2551,37 +2560,35 @@ const AdminDashboard = () => {
                 </div>
 
               </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      </Dialog>
 
       {/* Create New Week Module Modal */}
-      <AnimatePresence>
-        {showAddModuleModal && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 text-left space-y-5"
-            >
-              <div className="flex items-center gap-2 text-cyan-400 pb-2 border-b border-slate-900">
-                <BookOpen size={18} />
-                <h3 className="text-sm font-black uppercase tracking-wider">
-                  Create Week {newModuleWeek} Module
-                </h3>
-              </div>
+      <Dialog
+        open={!!showAddModuleModal}
+        onClose={() => setShowAddModuleModal(false)}
+        closeOnBackdrop={false}
+        title={`Create Week ${newModuleWeek} Module`}
+        size="md"
+        backdropClassName="bg-black/90 backdrop-blur-md"
+        className="bg-slate-950 border-slate-800 rounded-2xl p-6 text-left space-y-5"
+      >
+        <div className="flex items-center gap-2 text-cyan-400 pb-2 border-b border-slate-900">
+          <BookOpen size={18} />
+          <h3 className="text-sm font-black uppercase tracking-wider">
+            Create Week {newModuleWeek} Module
+          </h3>
+        </div>
 
-              <form onSubmit={handleCreateModule} className="space-y-4">
+        <form onSubmit={handleCreateModule} className="space-y-4">
                 
                 {/* Module Week Number */}
                 <div className="space-y-1">
                   <label className="text-[11px] uppercase font-bold text-slate-400">Week Number</label>
-                  <input 
+                  <input
                     type="number"
                     required
                     min={1}
+                    data-dialog-autofocus
                     value={newModuleWeek}
                     onChange={(e) => setNewModuleWeek(Number(e.target.value))}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 transition font-bold"
@@ -2637,10 +2644,7 @@ const AdminDashboard = () => {
                 </div>
 
               </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      </Dialog>
 
     </div>
   );

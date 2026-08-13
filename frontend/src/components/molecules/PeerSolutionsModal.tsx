@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Users, X, ExternalLink, GitBranch, FileText, Eye, Share2, Check } from 'lucide-react';
 import Spinner from '../atoms/Spinner';
+import Dialog from '../atoms/Dialog';
 
 /**
  * Peer Solution Viewer (issue #75) — freeCodeCamp-style community solutions modal.
@@ -63,28 +63,16 @@ const PeerSolutionsModal: React.FC<PeerSolutionsModalProps> = ({
   };
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.6 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-50 bg-black no-print"
-          />
-
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print"
-          >
-            <div className="w-full max-w-2xl max-h-[85vh] flex flex-col bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
-              {/* Header */}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={title}
+      size="xl"
+      backdropClassName="bg-black"
+      backdropOpacity={0.6}
+      className="bg-slate-900 border-slate-700 rounded-2xl"
+    >
+      {/* Header */}
               <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-purple-500/15 text-purple-400">
@@ -206,11 +194,7 @@ const PeerSolutionsModal: React.FC<PeerSolutionsModalProps> = ({
                   <Share2 size={11} /> Privacy respected · no email/phone shown
                 </span>
               </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+    </Dialog>
   );
 };
 

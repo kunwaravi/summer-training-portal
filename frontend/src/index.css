@@ -83,6 +83,19 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
+/* ============================================================
+   z-index layering (M-042) — single, documented scale.
+   New layers must slot in here; never raise a value ad hoc.
+
+     50        overlays / dialogs (Dialog primitive default)
+     60        confirm dialogs stacked over overlays (zIndex prop)
+    9999       floating support FAB (legacy high value, kept)
+    10001      toasts — always on top, above the FAB (Task 6)
+
+   The navbar is sticky z-50; a dialog later in the DOM paints over
+   it at the same layer, which is the intended relationship.
+   ============================================================ */
+
 /* Premium Light Mode Styles Overrides */
 .light body {
   background-color: #f1f5f9 !important;

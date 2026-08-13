@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/atoms/Button';
+import Dialog from '../components/atoms/Dialog';
 import FormField from '../components/molecules/FormField';
 import Card from '../components/atoms/Card';
 
@@ -1269,30 +1270,24 @@ const Home = () => {
       </div>
 
       {/* Syllabus Timelines Preview Modal */}
-      <AnimatePresence>
+      <Dialog
+        open={!!previewCourse}
+        onClose={() => setPreviewCourse(null)}
+        title={previewCourse?.title || 'Syllabus Preview'}
+        size="xl"
+        backdropClassName="bg-black/80 backdrop-blur-md"
+        className="bg-slate-950 border-slate-800 rounded-3xl p-6 lg:p-8 my-8"
+      >
         {previewCourse && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setPreviewCourse(null)}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-slate-950 border border-slate-800 rounded-3xl p-6 lg:p-8 w-full max-w-2xl relative my-8"
-            >
-              {/* Close Trigger */}
-              <button
-                onClick={() => setPreviewCourse(null)}
-                aria-label="Close syllabus preview"
-                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm transition-colors"
-              >
-                ✕
-              </button>
+        <>
+        {/* Close Trigger */}
+        <button
+          onClick={() => setPreviewCourse(null)}
+          aria-label="Close syllabus preview"
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm transition-colors"
+        >
+          ✕
+        </button>
 
               <div className="space-y-6">
                 <div>
@@ -1371,10 +1366,9 @@ const Home = () => {
                   </Button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+        </>
         )}
-      </AnimatePresence>
+      </Dialog>
 
     </div>
   );

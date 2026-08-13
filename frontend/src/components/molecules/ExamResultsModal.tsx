@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, CheckCircle, XCircle, RotateCcw, Award, Lock, ArrowLeft } from 'lucide-react';
+import Dialog from '../atoms/Dialog';
 
 /**
  * Exam Results Modal (issue #76) — freeCodeCamp-style exam-results-modal.
@@ -56,27 +57,17 @@ const ExamResultsModal: React.FC<ExamResultsModalProps> = ({
   const circumference = 2 * Math.PI * radius;
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.75 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black no-print"
-          />
-
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 24 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 24 }}
-            transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print"
-          >
-            <div className="w-full max-w-lg max-h-[88vh] flex flex-col bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
-              {/* Header */}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={`Exam Results · ${courseId}`}
+      size="lg"
+      closeOnBackdrop={false}
+      backdropClassName="bg-black"
+      backdropOpacity={0.75}
+      className="bg-slate-900 border-slate-700 rounded-2xl"
+    >
+      {/* Header */}
               <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between shrink-0">
                 <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">
                   Exam Results · {courseId}
@@ -202,11 +193,7 @@ const ExamResultsModal: React.FC<ExamResultsModalProps> = ({
                   </div>
                 )}
               </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+    </Dialog>
   );
 };
 
