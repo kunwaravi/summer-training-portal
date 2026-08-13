@@ -11,6 +11,7 @@ import SkillRadar from '../components/molecules/SkillRadar';
 import ProjectStatusCard from '../components/molecules/ProjectStatusCard';
 import LeaderboardTab from '../components/organisms/LeaderboardTab';
 import PageContainer from '../components/layout/PageContainer';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/Tabs';
 
 const courseMetadata: Record<string, any> = {
   'C': {
@@ -268,44 +269,35 @@ const Dashboard = () => {
       </div>
 
       {/* ── Navigation Tabs ───────────────────────────────────────────── */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6 text-sm overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`pb-4 font-black uppercase tracking-widest text-[11px] sm:text-xs transition-colors relative whitespace-nowrap ${
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+        <TabsList className="flex border-b border-slate-200 dark:border-slate-800 gap-6 text-sm overflow-x-auto">
+          <TabsTrigger value="overview" className={`pb-4 font-black uppercase tracking-widest text-[11px] sm:text-xs transition-colors relative whitespace-nowrap ${
             activeTab === 'overview' ? 'text-indigo-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-          }`}
-        >
-          Overview
-          {activeTab === 'overview' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-blue-500"></span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('leaderboard')}
-          className={`pb-4 font-black uppercase tracking-widest text-[11px] sm:text-xs transition-colors relative whitespace-nowrap ${
+          }`}>
+            Overview
+            {activeTab === 'overview' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-blue-500"></span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="leaderboard" className={`pb-4 font-black uppercase tracking-widest text-[11px] sm:text-xs transition-colors relative whitespace-nowrap ${
             activeTab === 'leaderboard' ? 'text-indigo-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-          }`}
-        >
-          Leaderboard
-          {activeTab === 'leaderboard' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-blue-500"></span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('referrals')}
-          className={`pb-4 font-black uppercase tracking-widest text-[11px] sm:text-xs transition-colors relative whitespace-nowrap ${
+          }`}>
+            Leaderboard
+            {activeTab === 'leaderboard' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-blue-500"></span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="referrals" className={`pb-4 font-black uppercase tracking-widest text-[11px] sm:text-xs transition-colors relative whitespace-nowrap ${
             activeTab === 'referrals' ? 'text-indigo-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-          }`}
-        >
-          Referrals & Rewards
-          {activeTab === 'referrals' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-blue-500"></span>
-          )}
-        </button>
-      </div>
+          }`}>
+            Referrals & Rewards
+            {activeTab === 'referrals' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-blue-500"></span>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-      {activeTab === 'overview' ? (
-        <>
+        <TabsContent value="overview" className="space-y-8 sm:space-y-10">
           {/* ── Stat Cards (showcase §02) ──────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {[
@@ -533,10 +525,13 @@ const Dashboard = () => {
               </div>
             )}
           </div>
-        </>
-      ) : activeTab === 'leaderboard' ? (
-        <LeaderboardTab currentUserId={user?.id} />
-      ) : (
+        </TabsContent>
+
+        <TabsContent value="leaderboard">
+          <LeaderboardTab currentUserId={user?.id} />
+        </TabsContent>
+
+        <TabsContent value="referrals">
         <div className="space-y-8 animate-fade-in text-slate-350">
           {/* Referral Intro Header */}
           <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-3xl relative overflow-hidden">
@@ -670,7 +665,8 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </PageContainer>
   );
 };

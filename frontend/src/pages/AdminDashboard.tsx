@@ -13,6 +13,8 @@ import AdminPaymentTable from '../components/organisms/AdminPaymentTable';
 import Dialog from '../components/atoms/Dialog';
 import { coursesConfig } from '../config/courses';
 import PageContainer from '../components/layout/PageContainer';
+import Select from '../components/ui/Select';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
 
 interface Topic {
   id?: number;
@@ -982,33 +984,33 @@ const AdminDashboard = () => {
                 <p className="text-slate-400 text-xs mt-1">Select any registered student and track to generate/preview their certificate instantly, bypassing payment & completion rules.</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1 space-y-1.5">
-                  <label className="text-[11px] uppercase font-black tracking-wider text-slate-400">Select Student</label>
-                  <select
+                <div className="flex-1">
+                  <Select
+                    label="Select Student"
                     value={selectedStudentId}
                     onChange={(e) => setSelectedStudentId(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-cyan-500"
+                    className="px-4 py-2.5 text-xs"
                   >
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.name} ({u.email})
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
-                <div className="w-full sm:w-1/3 space-y-1.5">
-                  <label className="text-[11px] uppercase font-black tracking-wider text-slate-400">Select Track</label>
-                  <select
+                <div className="w-full sm:w-1/3">
+                  <Select
+                    label="Select Track"
                     value={selectedCourseId}
                     onChange={(e) => setSelectedCourseId(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-cyan-500"
+                    className="px-4 py-2.5 text-xs"
                   >
                     {coursesConfig.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title} ({c.id})
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 <button
                   onClick={() => {
@@ -1363,37 +1365,36 @@ const AdminDashboard = () => {
               </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
-                    <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('id')}>
-                      Student ID {sortField === 'id' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('name')}>
-                      Candidate Name {sortField === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th className="py-3 px-4">Academic Details</th>
-                    <th className="py-3 px-4">Pursuing Courses</th>
-                    <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('referralCount')}>
-                      Referrals {sortField === 'referralCount' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th className="py-3 px-4">Role</th>
-                    <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('createdAt')}>
-                      Registration Date {sortField === 'createdAt' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-850">
-                  {sortedUsers.map((u) => (
-                    <tr key={u.id} className="hover:bg-slate-900/40 text-slate-300 transition">
-                      <td className="py-3.5 px-4 font-mono text-[11px] text-cyan-400">#{u.id}</td>
-                      <td className="py-3.5 px-4">
+            <Table className="text-xs">
+              <TableHeader>
+                <TableRow className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
+                  <TableHead className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('id')}>
+                    Student ID {sortField === 'id' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                  </TableHead>
+                  <TableHead className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('name')}>
+                    Candidate Name {sortField === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                  </TableHead>
+                  <TableHead className="py-3 px-4">Academic Details</TableHead>
+                  <TableHead className="py-3 px-4">Pursuing Courses</TableHead>
+                  <TableHead className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('referralCount')}>
+                    Referrals {sortField === 'referralCount' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                  </TableHead>
+                  <TableHead className="py-3 px-4">Role</TableHead>
+                  <TableHead className="py-3 px-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('createdAt')}>
+                    Registration Date {sortField === 'createdAt' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                  </TableHead>
+                  <TableHead className="py-3 px-4 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-slate-850">
+                {sortedUsers.map((u) => (
+                  <TableRow key={u.id} className="hover:bg-slate-900/40 text-slate-300 transition">
+                      <TableCell className="py-3.5 px-4 font-mono text-[11px] text-cyan-400">#{u.id}</TableCell>
+                      <TableCell className="py-3.5 px-4">
                         <div className="font-bold text-white">{u.name}</div>
                         <div className="text-[11px] text-slate-500 font-mono">{u.email}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4">
                         {u.collegeName ? (
                           <>
                             <div className="font-semibold text-slate-350">{u.collegeName}</div>
@@ -1402,8 +1403,8 @@ const AdminDashboard = () => {
                         ) : (
                           <span className="text-slate-600 italic">No academic profiles updated</span>
                         )}
-                      </td>
-                      <td className="py-3.5 px-4">
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4">
                         <div className="flex flex-wrap gap-1">
                           {(() => {
                             const courseMap = new Map<string, { progress?: number; paid?: boolean; pending?: boolean }>();
@@ -1461,8 +1462,8 @@ const AdminDashboard = () => {
                             });
                           })()}
                         </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-left">
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-left">
                         <div className="space-y-0.5">
                           <div className="font-semibold text-slate-200">
                             Code: <span className="font-mono text-[11px] text-cyan-400">{u.referralCode || 'N/A'}</span>
@@ -1481,8 +1482,8 @@ const AdminDashboard = () => {
                             </span>
                           )}
                         </div>
-                      </td>
-                      <td className="py-3.5 px-4">
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4">
                         <span className={`px-2 py-0.5 rounded text-[11px] font-black uppercase ${
                           u.role === 'ADMIN'
                             ? 'bg-red-500/10 text-red-400 border border-red-500/25'
@@ -1490,15 +1491,15 @@ const AdminDashboard = () => {
                         }`}>
                           {u.role}
                         </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-500 font-mono">
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-slate-500 font-mono">
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric'
                         }) : 'N/A'}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-right">
                         <button
                           onClick={() => handleOpenEditCandidate(u)}
                           className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 rounded-lg transition active:scale-90 mr-1.5"
@@ -1515,12 +1516,11 @@ const AdminDashboard = () => {
                         >
                           <Trash2 size={14} />
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
             {/* Edit Candidate Profile Modal */}
             <Dialog
@@ -1588,16 +1588,16 @@ const AdminDashboard = () => {
                         />
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-black uppercase text-slate-400">Role</label>
-                        <select
+                      <div>
+                        <Select
+                          label="Role"
                           value={candidateForm.role}
                           onChange={(e) => setCandidateForm({ ...candidateForm, role: e.target.value })}
-                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                          className="px-3 py-2"
                         >
                           <option value="USER">USER (Student)</option>
                           <option value="ADMIN">ADMIN (Staff)</option>
-                        </select>
+                        </Select>
                       </div>
                     </div>
 

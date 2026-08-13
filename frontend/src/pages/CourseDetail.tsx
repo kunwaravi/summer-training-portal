@@ -21,6 +21,7 @@ import Spinner from '../components/atoms/Spinner';
 import CodePlayground from '../components/molecules/CodePlayground';
 import PeerSolutionsModal from '../components/molecules/PeerSolutionsModal';
 import PageContainer from '../components/layout/PageContainer';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/Tabs';
 
 // Custom static database of Anti-Patterns
 const antiPatternsData: Record<string, Record<number, { title: string; badCode: string; explanation: string; fix: string }>> = {
@@ -187,7 +188,7 @@ const CourseDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addToast } = useUI();
-  const [mobileView, setMobileView] = useState<'chapters' | 'content'>('chapters');
+  const [mobileView, setMobileView] = useState<'chapters' | 'content'>('content');
   
   const {
     course,
@@ -582,9 +583,9 @@ const CourseDetail = () => {
       )}
 
       {/* Main Split-Screen Layout */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
-        
-        <div className={`w-full lg:w-1/3 shrink-0 ${mobileView === 'content' ? 'hidden lg:block' : 'block'}`}>
+      <div className="flex flex-col md:flex-row gap-6 items-start">
+
+        <div className={`w-full md:w-1/4 lg:w-1/3 shrink-0 ${mobileView === 'content' ? 'hidden md:block' : 'block'}`}>
           <SyllabusManager 
             weeks={weeks}
             activeWeekIndex={activeWeekIndex}
@@ -604,7 +605,7 @@ const CourseDetail = () => {
         </div>
 
         {/* Right Column: Dynamic E-Learning Viewer Console */}
-        <div className={`flex-1 w-full bg-slate-900/30 border border-slate-800 rounded-2xl p-6 lg:p-8 space-y-6 overflow-hidden ${mobileView === 'chapters' ? 'hidden lg:block' : 'block'}`}>
+        <div className={`flex-1 min-w-0 w-full bg-slate-900/30 border border-slate-800 rounded-2xl p-4 sm:p-6 lg:p-8 space-y-6 overflow-hidden ${mobileView === 'chapters' ? 'hidden md:block' : 'block'}`}>
           
           {viewState === 'course-home' ? (
             <div className="space-y-6 text-left animate-fade-in">
@@ -619,7 +620,7 @@ const CourseDetail = () => {
               </div>
 
               {/* Course Meta Info Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-xl">
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Duration</span>
                   <p className="text-xs font-bold text-slate-200 mt-0.5">4-Week Immersion</p>
@@ -628,7 +629,7 @@ const CourseDetail = () => {
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Chapters</span>
                   <p className="text-xs font-bold text-slate-200 mt-0.5">{weeks.length} Interactive Modules</p>
                 </div>
-                <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-xl col-span-2 sm:col-span-1">
+                <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-xl">
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">Prerequisites</span>
                   <p className="text-xs font-bold text-slate-200 mt-0.5">Basic Logic Foundations</p>
                 </div>
@@ -656,22 +657,22 @@ const CourseDetail = () => {
                             : 'bg-slate-950/10 border-slate-900/50 opacity-40 cursor-not-allowed'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black uppercase ${
-                            isCompleted 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : isUnlocked 
-                                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black uppercase shrink-0 ${
+                            isCompleted
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              : isUnlocked
+                                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
                                 : 'bg-slate-800 text-slate-500'
                           }`}>
                             W{week.week}
                           </span>
-                          <div>
-                            <h4 className="text-xs font-bold text-slate-200 group-hover:text-white transition">{week.title}</h4>
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-bold text-slate-200 group-hover:text-white transition break-words">{week.title}</h4>
                             <p className="text-[11px] text-slate-550">Chapter {week.week} Curriculum module.</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                           <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
                             {isCompleted ? 'Completed' : isUnlocked ? 'Start Chapter' : 'Locked'}
                           </span>
@@ -698,33 +699,27 @@ const CourseDetail = () => {
           ) : (
             <>
               {/* Tab Navigation */}
-              <div className="flex gap-4 border-b border-slate-800 pb-1">
-                <button 
-                  onClick={() => setActiveTab('material')}
-                  className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
+              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+                <TabsList className="flex gap-4 border-b border-slate-800 pb-1">
+                  <TabsTrigger value="material" className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
                     activeTab === 'material' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText size={14} /> Study Material
-                  </div>
-                  {activeTab === 'material' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
-                </button>
-                <button 
-                  onClick={() => setActiveTab('project')}
-                  className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <FileText size={14} /> Study Material
+                    </div>
+                    {activeTab === 'material' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+                  </TabsTrigger>
+                  <TabsTrigger value="project" className={`pb-3 px-2 text-xs font-black uppercase tracking-widest transition-all relative ${
                     activeTab === 'project' ? 'text-purple-400' : 'text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Briefcase size={14} /> Project & Assignment
-                  </div>
-                  {activeTab === 'project' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
-                </button>
-              </div>
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <Briefcase size={14} /> Project & Assignment
+                    </div>
+                    {activeTab === 'project' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
+                  </TabsTrigger>
+                </TabsList>
 
-              {activeTab === 'material' ? (
-                <>
+                <TabsContent value="material">
                   {loadingDetails ? (
                     <div className="space-y-6 animate-pulse py-4">
                       <div className="h-6 w-32 bg-slate-800 rounded"></div>
@@ -1019,7 +1014,7 @@ const CourseDetail = () => {
 
                               <h2 className="text-xl font-extrabold tracking-tight text-white">{topic.title}</h2>
                               
-                              <div className="prose prose-invert prose-sm max-w-none text-slate-350 leading-relaxed">
+                              <div className="prose prose-invert prose-sm max-w-none text-slate-350 leading-relaxed break-words [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre]:whitespace-pre">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                   {topic.text}
                                 </ReactMarkdown>
@@ -1222,14 +1217,15 @@ const CourseDetail = () => {
                       )}
                     </AnimatePresence>
                   )}
-                </>
-              ) : (
-                /* Project & Assignment Tab Content */
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="py-4 space-y-8"
-                >
+                </TabsContent>
+
+                <TabsContent value="project">
+                  {/* Project & Assignment Tab Content */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="py-4 space-y-8"
+                  >
                   <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 border-l-4 border-l-purple-500 text-left relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent pointer-events-none"></div>
                     <h3 className="text-xl font-extrabold text-white mb-2">Industrial Project Submission</h3>
@@ -1310,7 +1306,8 @@ const CourseDetail = () => {
                     </div>
                   )}
                 </motion.div>
-              )}
+                </TabsContent>
+              </Tabs>
 
               {/* Bottom Navigation */}
               {activeTab === 'material' && viewState === 'module-home' && (

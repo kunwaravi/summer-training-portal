@@ -16,6 +16,7 @@ import Dialog from '../components/atoms/Dialog';
 import FormField from '../components/molecules/FormField';
 import Card from '../components/atoms/Card';
 import PageContainer from '../components/layout/PageContainer';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
 
 const courseDetails = [
   {
@@ -1073,31 +1074,29 @@ const Home = () => {
                   className="w-full max-w-2xl mt-4 overflow-hidden"
                 >
                   <Card className="p-4 border border-slate-850" variant="glass">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs text-slate-400">
-                        <thead>
-                          <tr className="border-b border-slate-900 text-slate-500 font-black uppercase tracking-wider text-[11px]">
-                            <th className="py-2.5 px-3">Rank</th>
-                            <th className="py-2.5 px-3">Student Name</th>
-                            <th className="py-2.5 px-3">College Name</th>
-                            <th className="py-2.5 px-3 text-right">XP Points</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-900/60">
-                          {topStudents.slice(3, 10).map((student, idx) => (
-                            <tr key={student.name} className="hover:bg-slate-900/30 transition-colors">
-                              <td className="py-3 px-3 font-mono font-bold text-slate-350">#{idx + 4}</td>
-                              <td className="py-3 px-3 font-extrabold text-white">{student.name}</td>
-                              <td className="py-3 px-3 text-slate-500 truncate max-w-[200px] uppercase text-[11px] font-semibold">{student.collegeName || 'Technology Institute'}</td>
-                              <td className="py-3 px-3 text-right font-mono font-bold text-amber-500 flex items-center justify-end gap-1">
-                                <Zap className="text-amber-500 fill-amber-500/20" size={12} />
-                                {student.points} XP
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <Table className="text-xs text-slate-400">
+                      <TableHeader>
+                        <TableRow className="border-b border-slate-900 text-slate-500 font-black uppercase tracking-wider text-[11px]">
+                          <TableHead className="py-2.5 px-3">Rank</TableHead>
+                          <TableHead className="py-2.5 px-3">Student Name</TableHead>
+                          <TableHead className="py-2.5 px-3">College Name</TableHead>
+                          <TableHead className="py-2.5 px-3 text-right">XP Points</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody className="divide-y divide-slate-900/60">
+                        {topStudents.slice(3, 10).map((student, idx) => (
+                          <TableRow key={student.name} className="hover:bg-slate-900/30 transition-colors">
+                            <TableCell className="py-3 px-3 font-mono font-bold text-slate-350">#{idx + 4}</TableCell>
+                            <TableCell className="py-3 px-3 font-extrabold text-white">{student.name}</TableCell>
+                            <TableCell className="py-3 px-3 text-slate-500 truncate max-w-[200px] uppercase text-[11px] font-semibold">{student.collegeName || 'Technology Institute'}</TableCell>
+                            <TableCell className="py-3 px-3 text-right font-mono font-bold text-amber-500 flex items-center justify-end gap-1">
+                              <Zap className="text-amber-500 fill-amber-500/20" size={12} />
+                              {student.points} XP
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </Card>
                 </motion.div>
               )}

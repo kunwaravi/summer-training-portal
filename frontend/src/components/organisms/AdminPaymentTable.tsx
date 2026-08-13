@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Users, CheckCircle, Clock, XCircle, ShieldCheck, Trash2, Inbox } from 'lucide-react';
 import api from '../../api';
 import { useUI } from '../../context/UIContext';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/Table';
 
 interface Transaction {
   id: string;
@@ -157,21 +158,20 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
           <p className="text-[11px] text-slate-600">New student enrollments will appear here for verification.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
-                <th className="py-3 px-4">Transaction ID</th>
-                <th className="py-3 px-4">Student</th>
-                <th className="py-3 px-4">Course</th>
-                <th className="py-3 px-4">Amount</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">UPI Reference</th>
-                <th className="py-3 px-4">Date</th>
-                <th className="py-3 px-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-850">
+        <Table className="text-xs">
+          <TableHeader>
+            <TableRow className="border-b border-slate-800 text-slate-450 uppercase font-black tracking-wider">
+              <TableHead className="py-3 px-4">Transaction ID</TableHead>
+              <TableHead className="py-3 px-4">Student</TableHead>
+              <TableHead className="py-3 px-4">Course</TableHead>
+              <TableHead className="py-3 px-4">Amount</TableHead>
+              <TableHead className="py-3 px-4">Status</TableHead>
+              <TableHead className="py-3 px-4">UPI Reference</TableHead>
+              <TableHead className="py-3 px-4">Date</TableHead>
+              <TableHead className="py-3 px-4 text-right">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-slate-850">
               {transactions.map((t, idx) => {
                 const cfg = statusConfig[t.status] || statusConfig['PENDING'];
                 const isAwaitingVerify = t.status === 'PENDING' || t.status === 'PENDING_VERIFICATION';
@@ -179,22 +179,22 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                 const isDeleting = deletingId === t.id;
 
                 return (
-                  <tr key={idx} className={`hover:bg-slate-900/40 text-slate-300 transition ${isAwaitingVerify ? 'bg-amber-500/3' : ''}`}>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-cyan-400 max-w-[120px] truncate">{t.id}</td>
-                    <td className="py-3.5 px-4">
+                  <TableRow key={idx} className={`hover:bg-slate-900/40 text-slate-300 transition ${isAwaitingVerify ? 'bg-amber-500/3' : ''}`}>
+                    <TableCell className="py-3.5 px-4 font-mono text-[11px] text-cyan-400 max-w-[120px] truncate">{t.id}</TableCell>
+                    <TableCell className="py-3.5 px-4">
                       <div className="font-bold text-white">{t.user?.name}</div>
                       <div className="text-[11px] text-slate-500 font-mono">{t.user?.email}</div>
-                    </td>
-                    <td className="py-3.5 px-4 font-bold uppercase">{t.courseId}</td>
-                    <td className="py-3.5 px-4 text-emerald-400 font-black">₹{t.amount}</td>
-                    <td className="py-3.5 px-4">
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 font-bold uppercase">{t.courseId}</TableCell>
+                    <TableCell className="py-3.5 px-4 text-emerald-400 font-black">₹{t.amount}</TableCell>
+                    <TableCell className="py-3.5 px-4">
                       <span className={`px-2 py-0.5 rounded text-[11px] font-black uppercase ${cfg.color}`}>
                         {cfg.icon}{cfg.label}
                       </span>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-450 text-[11px]">{t.reference || '—'}</td>
-                    <td className="py-3.5 px-4 text-slate-500 font-mono">{new Date(t.createdAt).toLocaleDateString()}</td>
-                    <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 font-mono text-slate-450 text-[11px]">{t.reference || '—'}</TableCell>
+                    <TableCell className="py-3.5 px-4 text-slate-500 font-mono">{new Date(t.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
                       {isAwaitingVerify ? (
                         <>
                           <button
@@ -261,13 +261,12 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({ transactions, loa
                           </button>
                         </>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
       )}
     </div>
   );
