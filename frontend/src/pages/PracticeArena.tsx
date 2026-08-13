@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useUI } from '../context/UIContext';
@@ -148,11 +148,23 @@ const PracticeArena = () => {
     fetchQuestions();
   }, [fetchQuestions]);
 
-  // Countdown Timer
+  // M-046 — single-shot guard so a failed timeout auto-submit can never
+  // re-fire. Previously, `submitting=false` after an error re-ran the timer
+  // effect with `timeLeft` still 0, so handleAutoSubmit fired again → toast
+  // storm + an unbounded re-submit loop. Reset per session in handleRetry.
+  const didAutoSubmit = useRef(false);
+
+  // Countdown Timer — M-046 state machine:
+  //  - Paused in coding mode (the sandbox owns its own 3s execution limit; an
+  //    MCQ auto-submit must never fire while the user is in a coding exercise).
+  //  - Timeout auto-submit fires exactly once (guarded by didAutoSubmit); a
+  //    failed submit surfaces one error toast and waits for a manual retry.
   useEffect(() => {
-    if (loading || results || timeLeft <= 0) {
-      if (timeLeft === 0 && !results && !submitting) {
-        // Auto-submit on timeout
+    if (loading || results || submitting || mode !== 'mcq') return;
+
+    if (timeLeft <= 0) {
+      if (!didAutoSubmit.current) {
+        didAutoSubmit.current = true;
         handleAutoSubmit();
       }
       return;
@@ -163,9 +175,10 @@ const PracticeArena = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [loading, results, timeLeft, submitting, handleAutoSubmit]);
+  }, [loading, results, submitting, mode, timeLeft, handleAutoSubmit]);
 
   const handleRetry = () => {
+    didAutoSubmit.current = false;
     setAnswers({});
     setResults(null);
     setCurrentIdx(0);
@@ -256,14 +269,15 @@ const PracticeArena = () => {
           </p>
         </div>
         <div className="flex items-center justify-center gap-3">
-          {fetchError && (
-            <button
-              onClick={() => fetchQuestions()}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-6 rounded-xl transition"
-            >
-              Retry
-            </button>
-          )}
+          {/* M-046 — retry-on-empty: offer a re-fetch even when the load
+              succeeded but returned no questions (they may have been seeded
+              since), not just when the fetch errored. */}
+          <button
+            onClick={() => fetchQuestions()}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-6 rounded-xl transition"
+          >
+            Retry
+          </button>
           <button
             onClick={() => navigate('/dashboard')}
             className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold py-2.5 px-6 rounded-xl transition"
@@ -425,7 +439,10 @@ const PracticeArena = () => {
                 <p className="text-[11px] text-slate-500 mt-1">Jump to any question instantly.</p>
               </div>
 
-              <div className="grid grid-cols-5 gap-3">
+              {/* M-046 — 44px touch targets (RB-18). flex-wrap (not a fixed
+                  5-col grid) so a 44px button is guaranteed at every width
+                  without overflowing the narrow lg sidebar. */}
+              <div className="flex flex-wrap gap-2">
                 {questions.map((q, idx) => {
                   const isAnswered = answers[q.id] !== undefined;
                   const isActive = idx === currentIdx;
@@ -434,7 +451,7 @@ const PracticeArena = () => {
                     <button
                       key={q.id}
                       onClick={() => setCurrentIdx(idx)}
-                      className={`w-10 h-10 rounded-xl font-bold text-xs flex items-center justify-center transition-all ${
+                      className={`w-11 h-11 rounded-xl font-bold text-xs flex items-center justify-center transition-all ${
                         isActive
                           ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 border border-emerald-400'
                           : isAnswered

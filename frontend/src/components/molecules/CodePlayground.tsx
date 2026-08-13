@@ -129,8 +129,9 @@ const CodePlayground: React.FC<CodePlaygroundProps> = ({
           />
         </div>
 
-        {/* Output Area */}
-        <div className="p-4 bg-slate-950/50 min-h-[150px] font-mono text-[11px] space-y-1">
+        {/* Output Area — overflow-x-auto + break-words so long stdout is never
+            clipped (M-046 / RB-05). */}
+        <div className="p-4 bg-slate-950/50 min-h-[150px] font-mono text-[11px] space-y-1 overflow-x-auto">
           <div className="flex items-center gap-2 mb-2 pb-1 border-b border-slate-900">
             <span className="text-slate-600 uppercase font-black tracking-tighter">Console Output</span>
             {isSuccess && (
@@ -161,7 +162,7 @@ const CodePlayground: React.FC<CodePlaygroundProps> = ({
                   key={i}
                   initial={{ opacity: 0, x: -5 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className={line === '--- stderr ---' ? 'text-yellow-500 font-bold' : 'text-slate-500'}
+                  className={`${line === '--- stderr ---' ? 'text-yellow-500 font-bold' : 'text-slate-500'} break-words whitespace-pre-wrap`}
                 >
                   {line || ' '}
                 </motion.div>
