@@ -15,6 +15,7 @@ import Button from '../components/atoms/Button';
 import Dialog from '../components/atoms/Dialog';
 import FormField from '../components/molecules/FormField';
 import Card from '../components/atoms/Card';
+import PageContainer from '../components/layout/PageContainer';
 
 const courseDetails = [
   {
@@ -697,8 +698,8 @@ const Home = () => {
   };
 
   return (
-    <div className="space-y-16 py-12 px-4 max-w-7xl mx-auto relative">
-      
+    <PageContainer maxWidth="max-w-7xl" className="space-y-16 py-12 relative">
+
       {/* Sleek Scroll Progress Bar */}
       <div 
         className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-teal-400 to-amber-500 z-50 origin-left"
@@ -1370,7 +1371,7 @@ const Home = () => {
         )}
       </Dialog>
 
-    </div>
+    </PageContainer>
   );
 };
 

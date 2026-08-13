@@ -7,6 +7,7 @@ import Skeleton from '../components/atoms/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import CodePlayground from '../components/molecules/CodePlayground';
+import PageContainer from '../components/layout/PageContainer';
 
 interface Question {
   id: number;
@@ -204,7 +205,7 @@ const PracticeArena = () => {
 
   if (loading) {
     return (
-      <div className="py-6 max-w-5xl mx-auto px-4 space-y-6" role="status" aria-label="Loading practice arena">
+      <PageContainer maxWidth="max-w-5xl" className="py-6 space-y-6" role="status" aria-label="Loading practice arena">
         <span className="sr-only">Loading questions…</span>
         {/* breadcrumb + timer pill */}
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -234,7 +235,7 @@ const PracticeArena = () => {
             <Skeleton className="h-72 rounded-3xl" />
           </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -277,10 +278,11 @@ const PracticeArena = () => {
   const currentQuestion = questions[currentIdx];
 
   return (
+    <PageContainer maxWidth="max-w-5xl">
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="py-6 max-w-5xl mx-auto px-4 space-y-6"
+      className="py-6 space-y-6"
     >
       {/* Top Breadcrumb Header */}
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -668,6 +670,7 @@ const PracticeArena = () => {
         )}
       </AnimatePresence>
     </motion.div>
+    </PageContainer>
   );
 };
 

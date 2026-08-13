@@ -20,6 +20,7 @@ import EnrollmentPanel from '../components/organisms/EnrollmentPanel';
 import Spinner from '../components/atoms/Spinner';
 import CodePlayground from '../components/molecules/CodePlayground';
 import PeerSolutionsModal from '../components/molecules/PeerSolutionsModal';
+import PageContainer from '../components/layout/PageContainer';
 
 // Custom static database of Anti-Patterns
 const antiPatternsData: Record<string, Record<number, { title: string; badCode: string; explanation: string; fix: string }>> = {
@@ -534,8 +535,8 @@ const CourseDetail = () => {
   const readingTime = Math.max(Math.ceil(wordCount / 180), 1);
 
   return (
-    <div className="py-6 max-w-6xl mx-auto px-4 space-y-6">
-      
+    <PageContainer maxWidth="max-w-6xl" className="py-6 space-y-6">
+
       <CourseHero
         courseId={id}
         courseTitle={courseTitle}
@@ -1580,7 +1581,7 @@ const CourseDetail = () => {
         myShareEnabled={peerShareEnabled}
         onToggleShare={togglePeerShare}
       />
-    </div>
+    </PageContainer>
   );
 };
 

@@ -11,6 +11,7 @@ import QuizQuestion from '../components/molecules/QuizQuestion';
 import ExamResultsModal from '../components/molecules/ExamResultsModal';
 import Button from '../components/atoms/Button';
 import Spinner from '../components/atoms/Spinner';
+import PageContainer from '../components/layout/PageContainer';
 
 const Quiz = () => {
   const { courseId, week, topicId } = useParams();
@@ -157,9 +158,9 @@ const Quiz = () => {
   if (!activeQuestion) return null;
 
   return (
-    <div className="py-6 max-w-2xl mx-auto px-4 space-y-6">
-      
-      <QuizHeader 
+    <PageContainer maxWidth="max-w-2xl" className="py-6 space-y-6">
+
+      <QuizHeader
         onCancel={() => navigate(`/course/${courseId}`)}
         timeLeft={timeLeft}
         formatTime={formatTime}
@@ -237,7 +238,7 @@ const Quiz = () => {
         onViewCertificate={() => navigate(`/certificate?courseId=${courseId}`)}
         onReturn={() => navigate(`/course/${courseId}`)}
       />
-    </div>
+    </PageContainer>
   );
 };
 

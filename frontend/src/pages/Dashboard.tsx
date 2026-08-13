@@ -10,6 +10,7 @@ import Skeleton from '../components/atoms/Skeleton';
 import SkillRadar from '../components/molecules/SkillRadar';
 import ProjectStatusCard from '../components/molecules/ProjectStatusCard';
 import LeaderboardTab from '../components/organisms/LeaderboardTab';
+import PageContainer from '../components/layout/PageContainer';
 
 const courseMetadata: Record<string, any> = {
   'C': {
@@ -106,7 +107,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="py-6 sm:py-8 space-y-8 sm:space-y-10 max-w-7xl mx-auto px-4" role="status" aria-label="Loading dashboard">
+      <PageContainer maxWidth="max-w-7xl" className="py-6 sm:py-8 space-y-8 sm:space-y-10" role="status" aria-label="Loading dashboard">
         <span className="sr-only">Loading your dashboard…</span>
         {/* welcome header */}
         <div className="space-y-4">
@@ -131,7 +132,7 @@ const Dashboard = () => {
             <Skeleton key={i} className="h-64 rounded-3xl" />
           ))}
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -215,7 +216,7 @@ const Dashboard = () => {
             : 'bg-white dark:bg-slate-900/40 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-500 dark:hover:border-blue-500/50 hover:text-indigo-600 dark:hover:text-blue-300';
 
   return (
-    <div className="py-6 sm:py-8 space-y-8 sm:space-y-10 max-w-7xl mx-auto px-4">
+    <PageContainer maxWidth="max-w-7xl" className="py-6 sm:py-8 space-y-8 sm:space-y-10">
 
       {/* ── Welcome Header (showcase §02) ─────────────────────────────── */}
       <div className="space-y-4">
@@ -670,7 +671,7 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

@@ -24,7 +24,6 @@ const Contact = React.lazy(() => import('./pages/Contact'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 import Navbar from './components/Navbar';
 import FloatingSupportWidget from './components/atoms/FloatingSupportWidget';
-import PageContainer from './components/atoms/PageContainer';
 import ErrorBoundary from './components/atoms/ErrorBoundary';
 import './App.css';
 
@@ -47,7 +46,9 @@ function AppRoutes() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-white">
       <Navbar />
       <FloatingSupportWidget />
-      <PageContainer>
+      {/* Shell wrapper — vertical rhythm only (py-8). Each page owns its own
+          PageContainer (horizontal padding + max-width) so nothing is nested. */}
+      <div className="container mx-auto py-8 flex-grow w-full">
         <ErrorBoundary>
         <Suspense fallback={
           <div className="flex justify-center items-center h-64">
@@ -78,8 +79,8 @@ function AppRoutes() {
           </Routes>
         </Suspense>
         </ErrorBoundary>
-      </PageContainer>
-      
+      </div>
+
       {/* Premium Footer */}
       <footer className="bg-slate-950/60 border-t border-slate-900/60 py-6 no-print">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-medium">

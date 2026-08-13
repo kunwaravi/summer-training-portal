@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdminPaymentTable from '../components/organisms/AdminPaymentTable';
 import Dialog from '../components/atoms/Dialog';
 import { coursesConfig } from '../config/courses';
+import PageContainer from '../components/layout/PageContainer';
 
 interface Topic {
   id?: number;
@@ -731,8 +732,8 @@ const AdminDashboard = () => {
   const reviewRejected = reviewItems.filter((s) => s.status === 'REJECTED').length;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 py-4 px-2">
-      
+    <PageContainer maxWidth="max-w-6xl" className="space-y-8 py-4">
+
       {/* Admin Title Block */}
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-5 gap-4">
         <div className="flex items-center gap-3">
@@ -2646,7 +2647,7 @@ const AdminDashboard = () => {
               </form>
       </Dialog>
 
-    </div>
+    </PageContainer>
   );
 };
 
