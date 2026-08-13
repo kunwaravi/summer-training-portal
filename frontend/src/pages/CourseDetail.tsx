@@ -5,7 +5,7 @@ import { useCourseDetail } from '../hooks/useCourseDetail';
 import { useUI } from '../context/UIContext';
 import api from '../api';
 import {
-  Lock, Play, Clipboard,
+  Lock, Play, Clipboard, AlertTriangle, Send,
   CheckCircle2, Zap, Eye, Code2, Briefcase, FileText,
   MessageSquare, Cpu, ExternalLink, ChevronRight, Users
 } from 'lucide-react';
@@ -22,6 +22,7 @@ import CodePlayground from '../components/molecules/CodePlayground';
 import PeerSolutionsModal from '../components/molecules/PeerSolutionsModal';
 import PageContainer from '../components/layout/PageContainer';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/Tabs';
+import Dialog from '../components/atoms/Dialog';
 
 // Custom static database of Anti-Patterns
 const antiPatternsData: Record<string, Record<number, { title: string; badCode: string; explanation: string; fix: string }>> = {
@@ -187,7 +188,7 @@ const CourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToast } = useUI();
+  const { addToast, confirmDialog } = useUI();
   const [mobileView, setMobileView] = useState<'chapters' | 'content'>('content');
   
   const {
@@ -201,20 +202,37 @@ const CourseDetail = () => {
     isPaid,
     checkingPayment,
     currentWeek,
-    setIsPaid
+    error,
+    refetchSyllabus,
+    refreshPaymentStatus
   } = useCourseDetail(id);
 
   const courseConf = coursesConfig.find(c => c.id === id);
   const courseTitle = course ? course.title : (courseConf ? courseConf.title : 'Specialized Course');
   const courseDescription = course ? course.description : (courseConf?.desc || 'Welcome to this specialized curriculum track. Learn low-level hardware constraints, memory mappings, and system programming paradigms.');
 
-  const [viewState, setViewState] = useState<'course-home' | 'module-home' | 'topic-reader'>('course-home');
-  const [activeTopicIndex, setActiveTopicIndex] = useState<number | null>(null);
+  // M-048: view state (view / active tab / topic index) is persisted per course
+  // so returning to the course restores exactly where the student left off.
+  const [viewState, setViewState] = useState<'course-home' | 'module-home' | 'topic-reader'>(() => {
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(`cd_view_${id}`); } catch { /* storage unavailable */ }
+    return saved === 'course-home' || saved === 'module-home' || saved === 'topic-reader' ? saved : 'course-home';
+  });
+  const [activeTopicIndex, setActiveTopicIndex] = useState<number | null>(() => {
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(`cd_topic_${id}`); } catch { /* storage unavailable */ }
+    const n = saved !== null ? parseInt(saved, 10) : NaN;
+    return Number.isInteger(n) && n >= 0 ? n : null;
+  });
 
   const [hasReadMaterial, setHasReadMaterial] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<React.ReactNode | null>(null);
-  const [activeTab, setActiveTab] = useState<'material' | 'project'>('material');
+  const [activeTab, setActiveTab] = useState<'material' | 'project'>(() => {
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(`cd_tab_${id}`); } catch { /* storage unavailable */ }
+    return saved === 'material' || saved === 'project' ? saved : 'material';
+  });
   const [activePlayground, setActivePlayground] = useState<number | null>(null);
   const [activeCodeStep, setActiveCodeStep] = useState<string | null>(null);
 
@@ -222,6 +240,20 @@ const CourseDetail = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeTopicIndex, activeWeekIndex, viewState]);
+
+  // M-048: persist each slice of view state on change.
+  useEffect(() => {
+    try { localStorage.setItem(`cd_view_${id}`, viewState); } catch { /* storage unavailable */ }
+  }, [id, viewState]);
+  useEffect(() => {
+    try {
+      if (activeTopicIndex !== null) localStorage.setItem(`cd_topic_${id}`, String(activeTopicIndex));
+      else localStorage.removeItem(`cd_topic_${id}`);
+    } catch { /* storage unavailable */ }
+  }, [id, activeTopicIndex]);
+  useEffect(() => {
+    try { localStorage.setItem(`cd_tab_${id}`, activeTab); } catch { /* storage unavailable */ }
+  }, [id, activeTab]);
 
   // Deliverables State
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -243,6 +275,14 @@ const CourseDetail = () => {
   const [peerModal, setPeerModal] = useState<{ type: 'assignment' | 'project'; week?: number } | null>(null);
   const [peerShareEnabled, setPeerShareEnabled] = useState(true);
   const [projectStatus, setProjectStatus] = useState<any>(null);
+
+  // Final-project submission form state (M-048 / BE-29)
+  const [projectTitle, setProjectTitle] = useState('');
+  const [projectDescription, setProjectDescription] = useState('');
+  const [projectSourceUrl, setProjectSourceUrl] = useState('');
+  const [projectReportUrl, setProjectReportUrl] = useState('');
+  const [submittingProject, setSubmittingProject] = useState(false);
+  const [projectFormError, setProjectFormError] = useState<string | null>(null);
 
   const fetchSubmissions = useCallback(async () => {
     if (!id) return;
@@ -276,6 +316,50 @@ const CourseDetail = () => {
   useEffect(() => {
     if (id) fetchProjectStatus();
   }, [id, fetchProjectStatus]);
+
+  // M-048 / BE-29: first FE caller of the (already-live) POST /projects/submit
+  // route. Body keys match validateBody exactly. An APPROVED row must never be
+  // silently demoted to PENDING — gate a re-submit behind an explicit confirm.
+  const handleSubmitProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id) return;
+    if (!projectTitle.trim() || !projectDescription.trim() || !projectSourceUrl.trim() || !projectReportUrl.trim()) {
+      setProjectFormError('Please fill in all fields: title, description, source code URL, and report URL.');
+      return;
+    }
+    if (projectStatus?.status === 'APPROVED') {
+      const ok = await confirmDialog({
+        title: 'Resubmit Final Project?',
+        message: 'Your project was already approved. Resubmitting will set it back to Pending and require a new admin review. Continue?',
+        confirmLabel: 'Resubmit',
+        cancelLabel: 'Cancel',
+        danger: true
+      });
+      if (!ok) return;
+    }
+    setSubmittingProject(true);
+    setProjectFormError(null);
+    try {
+      await api.post('/projects/submit', {
+        courseId: id,
+        title: projectTitle.trim(),
+        description: projectDescription.trim(),
+        sourceCodeUrl: projectSourceUrl.trim(),
+        reportUrl: projectReportUrl.trim()
+      });
+      addToast('Final project submitted for review!', 'success');
+      setProjectTitle('');
+      setProjectDescription('');
+      setProjectSourceUrl('');
+      setProjectReportUrl('');
+      fetchProjectStatus();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Failed to submit final project. Please try again.';
+      setProjectFormError(msg);
+    } finally {
+      setSubmittingProject(false);
+    }
+  };
 
   const fetchDoubts = useCallback(async () => {
     if (!id) return;
@@ -529,6 +613,32 @@ const CourseDetail = () => {
     );
   }
 
+  // M-048: a failed syllabus fetch must render a visible error (not an empty
+  // course shell) with a Retry that re-runs fetchSyllabus.
+  if (error) {
+    return (
+      <PageContainer maxWidth="max-w-6xl" className="py-16">
+        <div
+          role="status"
+          aria-label="Failed to load course"
+          className="p-6 rounded-2xl border border-red-500/30 bg-red-500/5 max-w-lg mx-auto text-center space-y-4"
+        >
+          <AlertTriangle size={28} className="mx-auto text-red-400" />
+          <div className="space-y-1.5">
+            <h1 className="text-xl font-black text-white">{courseTitle}</h1>
+            <p className="text-sm text-slate-400">{error}</p>
+          </div>
+          <button
+            onClick={() => refetchSyllabus()}
+            className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-black uppercase tracking-widest transition cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
+      </PageContainer>
+    );
+  }
+
   const completedPercentage = weeks.length > 0 ? Math.min(Math.round(((currentWeek) / weeks.length) * 100), 100) : 0;
   // `|| 0` guards the case where selectedWeek is undefined (zero-module course):
   // `undefined + n` is NaN, which rendered "⏱ NaN Min Read".
@@ -537,6 +647,9 @@ const CourseDetail = () => {
 
   return (
     <PageContainer maxWidth="max-w-6xl" className="py-6 space-y-6">
+
+      {/* M-048: single page-level heading — visually hidden, no layout impact */}
+      <h1 className="sr-only">{courseTitle}</h1>
 
       <CourseHero
         courseId={id}
@@ -1014,11 +1127,42 @@ const CourseDetail = () => {
 
                               <h2 className="text-xl font-extrabold tracking-tight text-white">{topic.title}</h2>
                               
-                              <div className="prose prose-invert prose-sm max-w-none text-slate-350 leading-relaxed break-words [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre]:whitespace-pre">
+                              <div className="prose prose-invert prose-sm max-w-none text-slate-350 leading-relaxed break-words [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre]:whitespace-pre [&_table]:block [&_table]:overflow-x-auto [&_table]:whitespace-nowrap">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                   {topic.text}
                                 </ReactMarkdown>
                               </div>
+
+                              {/* Integrated Topic Quiz Card for non-CADDED courses
+                                  (M-048: moved up so the CTA is discoverable before the
+                                  student scrolls past code-along + takeaway) */}
+                              {!id?.startsWith('CADDED_') && (
+                                <div className="p-6 rounded-2xl border border-slate-800/80 bg-slate-950/50 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-6 mt-8">
+                                  <div className="space-y-1.5 text-left flex-grow">
+                                    <div className="flex items-center gap-2">
+                                      <Clipboard size={16} className={topic.quizPassed ? 'text-emerald-400' : 'text-amber-500'} />
+                                      <h4 className="text-base font-bold text-white">Topic {topicIndex + 1} Quiz</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-400 max-w-xl">
+                                      {topic.quizPassed
+                                        ? `Congratulations! You passed this topic's quiz with a score of ${topic.quizScore}%. You have unlocked the next sections of the curriculum.`
+                                        : `To advance to the next topic in this module, you must test your understanding and pass a 5-question quiz on this topic (score >= 60%).`}
+                                    </p>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      navigate(`/quiz/${id}/${selectedWeek?.week}/${topic.id}`);
+                                    }}
+                                    className={`px-6 py-3 rounded-xl text-xs font-extrabold uppercase tracking-widest transition cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-md ${
+                                      topic.quizPassed
+                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white hover:shadow-emerald-500/10'
+                                        : 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white animate-pulse'
+                                    }`}
+                                  >
+                                    {topic.quizPassed ? 'Retake Quiz' : 'Start Topic Quiz'} <ChevronRight size={14} />
+                                  </button>
+                                </div>
+                              )}
 
                               {topic.code && (
                                 <div className="space-y-4">
@@ -1131,35 +1275,6 @@ const CourseDetail = () => {
                                 </div>
                               )}
 
-                              {/* Integrated Topic Quiz Card for non-CADDED courses */}
-                              {!id?.startsWith('CADDED_') && (
-                                <div className="p-6 rounded-2xl border border-slate-800/80 bg-slate-950/50 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-6 mt-8">
-                                  <div className="space-y-1.5 text-left flex-grow">
-                                    <div className="flex items-center gap-2">
-                                      <Clipboard size={16} className={topic.quizPassed ? 'text-emerald-400' : 'text-amber-500'} />
-                                      <h4 className="text-base font-bold text-white">Topic {topicIndex + 1} Quiz</h4>
-                                    </div>
-                                    <p className="text-xs text-slate-400 max-w-xl">
-                                      {topic.quizPassed
-                                        ? `Congratulations! You passed this topic's quiz with a score of ${topic.quizScore}%. You have unlocked the next sections of the curriculum.`
-                                        : `To advance to the next topic in this module, you must test your understanding and pass a 5-question quiz on this topic (score >= 60%).`}
-                                    </p>
-                                  </div>
-                                  <button
-                                    onClick={() => {
-                                      navigate(`/quiz/${id}/${selectedWeek?.week}/${topic.id}`);
-                                    }}
-                                    className={`px-6 py-3 rounded-xl text-xs font-extrabold uppercase tracking-widest transition cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-md ${
-                                      topic.quizPassed
-                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white hover:shadow-emerald-500/10'
-                                        : 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white animate-pulse'
-                                    }`}
-                                  >
-                                    {topic.quizPassed ? 'Retake Quiz' : 'Start Topic Quiz'} <ChevronRight size={14} />
-                                  </button>
-                                </div>
-                              )}
-
                               {/* Reader Control Row */}
                               <div className="flex justify-between items-center pt-6 border-t border-slate-800 mt-8">
                                 <button
@@ -1249,6 +1364,97 @@ const CourseDetail = () => {
                     )}
                   </div>
 
+                  {/* Final Project Submission (M-048 / BE-29) — writes the
+                      student's own ProjectSubmission row via POST /projects/submit */}
+                  <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 text-left space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div>
+                        <h3 className="text-sm font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+                          <Briefcase size={15} /> Submit Your Final Project
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          {projectStatus
+                            ? `Current status: ${projectStatus.status}`
+                            : 'No submission yet — your work will be reviewed by the admin team.'}
+                        </p>
+                      </div>
+                      {user?.role !== 'ADMIN' && currentWeek < 20 && (
+                        <span className="text-[11px] font-black uppercase px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                          {currentWeek}/20 modules — not yet eligible
+                        </span>
+                      )}
+                    </div>
+
+                    <form onSubmit={handleSubmitProject} className="space-y-3">
+                      <div>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1" htmlFor="proj-title">Project Title</label>
+                        <input
+                          id="proj-title"
+                          type="text"
+                          value={projectTitle}
+                          onChange={(e) => setProjectTitle(e.target.value)}
+                          placeholder="e.g. Bare-metal LED Blink Driver in C"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1" htmlFor="proj-desc">Description</label>
+                        <textarea
+                          id="proj-desc"
+                          rows={2}
+                          value={projectDescription}
+                          onChange={(e) => setProjectDescription(e.target.value)}
+                          placeholder="Briefly describe what you built and the concepts it demonstrates."
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 resize-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1" htmlFor="proj-src">Source Code URL</label>
+                          <input
+                            id="proj-src"
+                            type="url"
+                            value={projectSourceUrl}
+                            onChange={(e) => setProjectSourceUrl(e.target.value)}
+                            placeholder="https://github.com/you/project"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1" htmlFor="proj-report">Report URL</label>
+                          <input
+                            id="proj-report"
+                            type="url"
+                            value={projectReportUrl}
+                            onChange={(e) => setProjectReportUrl(e.target.value)}
+                            placeholder="https://drive.google.com/..."
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+
+                      {projectFormError && (
+                        <div role="alert" className="p-3 rounded-xl border border-red-500/30 bg-red-500/5 text-xs text-red-400 leading-relaxed">
+                          {projectFormError}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-end gap-3 pt-1">
+                        {projectStatus?.status === 'APPROVED' && (
+                          <span className="text-[11px] text-slate-500 font-semibold">Re-submitting will reset your status to Pending.</span>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={submittingProject}
+                          className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-extrabold uppercase rounded-lg text-[11px] tracking-wider transition-colors cursor-pointer inline-flex items-center gap-2"
+                        >
+                          {submittingProject ? <Spinner size="sm" /> : <Send size={12} />}
+                          {projectStatus ? 'Resubmit Final Project' : 'Submit Final Project'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
                   {loadingSubmissions ? (
                     <div className="flex justify-center items-center py-12">
                       <Spinner size="md" />
@@ -1326,32 +1532,21 @@ const CourseDetail = () => {
           courseId={id}
           user={user}
           isPaid={isPaid}
-          onPaymentSuccess={() => setIsPaid(true)}
+          onPaymentSuccess={() => refreshPaymentStatus()}
           navigate={navigate}
         />
       )}
 
-      {/* Contextual Doubts Side Drawer */}
-      <AnimatePresence>
-        {isDoubtOpen && (
-          <>
-            {/* Backdrop overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsDoubtOpen(false)}
-              className="fixed inset-0 z-50 bg-black no-print"
-            />
-
-            {/* Slide-over container */}
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-slate-950 border-l border-slate-850 p-6 flex flex-col justify-between shadow-2xl no-print text-left"
-            >
+      {/* Contextual Doubts Side Drawer (M-048: migrated onto M-042 Dialog primitive) */}
+      <Dialog
+        open={isDoubtOpen}
+        onClose={() => setIsDoubtOpen(false)}
+        title="Ask a Doubt"
+        placement="right"
+        backdropClassName="bg-black"
+        backdropOpacity={0.6}
+        className="bg-slate-950 border-slate-850 p-6 text-left"
+      >
               {/* Header */}
               <div className="flex justify-between items-center pb-4 border-b border-slate-900">
                 <div>
@@ -1530,42 +1725,29 @@ const CourseDetail = () => {
                   Post Doubt to Forum
                 </button>
               </form>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      </Dialog>
 
-      {/* Lightbox Modal */}
-      <AnimatePresence>
-        {lightboxImage && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setLightboxImage(null)}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
-          >
-            <motion.div 
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-slate-950/70 border border-slate-800 p-8 rounded-2xl w-full max-w-2xl relative flex flex-col items-center"
-            >
-              <button 
-                onClick={() => setLightboxImage(null)}
-                className="absolute right-4 top-4 text-xs font-bold text-slate-500 hover:text-white"
-              >
-                Close ✕
-              </button>
-              <div className="w-full flex justify-center">{lightboxImage}</div>
-              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-4">
-                Interactive Technical Blueprint - Concept Visualized
-              </p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Lightbox Modal (M-048: migrated onto M-042 Dialog primitive) */}
+      <Dialog
+        open={!!lightboxImage}
+        onClose={() => setLightboxImage(null)}
+        title="Interactive Technical Blueprint"
+        size="xl"
+        backdropClassName="bg-black/90 backdrop-blur-md"
+        className="bg-slate-950/70 border-slate-800 rounded-2xl p-8 items-center"
+      >
+        <button
+          onClick={() => setLightboxImage(null)}
+          aria-label="Close lightbox"
+          className="absolute right-4 top-4 text-xs font-bold text-slate-500 hover:text-white cursor-pointer"
+        >
+          Close ✕
+        </button>
+        <div className="w-full flex justify-center">{lightboxImage}</div>
+        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-4">
+          Interactive Technical Blueprint - Concept Visualized
+        </p>
+      </Dialog>
 
       {/* Peer Solutions Modal (issue #75) */}
       <PeerSolutionsModal

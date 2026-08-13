@@ -33,8 +33,10 @@ interface DialogProps {
   title: string;
   /** id of an element inside `children` that describes the dialog (aria-describedby). */
   descriptionId?: string;
-  /** Width variant: sm/md/lg/xl/full (max-w-sm … max-w-5xl). */
+  /** Width variant: sm/md/lg/xl/full (max-w-sm … max-w-5xl). Ignored when placement="right". */
   size?: DialogSize;
+  /** Panel position: centered modal (default) or right-edge slide-over drawer. */
+  placement?: 'center' | 'right';
   /** Panel appearance classes — background, border-color, radius, padding, height. */
   className?: string;
   /** Backdrop appearance classes (kept per-overlay for visual parity). */
@@ -70,6 +72,7 @@ const Dialog: React.FC<DialogProps> = ({
   title,
   descriptionId,
   size = 'lg',
+  placement = 'center',
   className = '',
   backdropClassName = 'bg-black/60 backdrop-blur-sm',
   backdropOpacity = 1,
@@ -171,7 +174,7 @@ const Dialog: React.FC<DialogProps> = ({
               pointer-events-none so empty-area clicks fall through to the
               backdrop below (it shares the z-index and paints on top). */}
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto no-print pointer-events-none"
+            className={`fixed inset-0 overflow-y-auto no-print pointer-events-none ${placement === 'right' ? 'flex items-stretch justify-end' : 'flex items-center justify-center p-4'}`}
             style={{ zIndex }}
           >
             <motion.div
@@ -181,11 +184,11 @@ const Dialog: React.FC<DialogProps> = ({
               aria-describedby={descriptionId}
               ref={panelRef}
               tabIndex={-1}
-              initial={{ opacity: 0, scale: 0.95, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 16 }}
-              transition={{ type: 'spring', damping: 26, stiffness: 260 }}
-              className={`relative w-full flex flex-col max-h-[88vh] overflow-hidden border shadow-2xl pointer-events-auto ${SIZES[size]} ${className}`}
+              initial={placement === 'right' ? { x: '100%' } : { opacity: 0, scale: 0.95, y: 16 }}
+              animate={placement === 'right' ? { x: 0 } : { opacity: 1, scale: 1, y: 0 }}
+              exit={placement === 'right' ? { x: '100%' } : { opacity: 0, scale: 0.95, y: 16 }}
+              transition={placement === 'right' ? { type: 'spring', damping: 25, stiffness: 200 } : { type: 'spring', damping: 26, stiffness: 260 }}
+              className={`relative w-full flex flex-col overflow-hidden border shadow-2xl pointer-events-auto ${placement === 'right' ? 'h-full max-h-full w-full max-w-md' : `max-h-[88vh] ${SIZES[size]}`} ${className}`}
             >
               {busy && (
                 <div
