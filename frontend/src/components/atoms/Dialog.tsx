@@ -167,9 +167,11 @@ const Dialog: React.FC<DialogProps> = ({
             aria-hidden="true"
             onClick={closeOnBackdrop && !busy ? onClose : undefined}
           />
-          {/* Positioning layer — scrolls when the panel exceeds the viewport */}
+          {/* Positioning layer — scrolls when the panel exceeds the viewport.
+              pointer-events-none so empty-area clicks fall through to the
+              backdrop below (it shares the z-index and paints on top). */}
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto no-print"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto no-print pointer-events-none"
             style={{ zIndex }}
           >
             <motion.div
@@ -183,7 +185,7 @@ const Dialog: React.FC<DialogProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
               transition={{ type: 'spring', damping: 26, stiffness: 260 }}
-              className={`relative w-full flex flex-col max-h-[88vh] overflow-hidden border shadow-2xl ${SIZES[size]} ${className}`}
+              className={`relative w-full flex flex-col max-h-[88vh] overflow-hidden border shadow-2xl pointer-events-auto ${SIZES[size]} ${className}`}
             >
               {busy && (
                 <div

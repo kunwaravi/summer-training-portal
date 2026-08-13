@@ -17,7 +17,7 @@ const Quiz = () => {
   const { courseId, week, topicId } = useParams();
   const navigate = useNavigate();
   const { user, login } = useAuth();
-  const { addToast } = useUI();
+  const { addToast, confirmDialog } = useUI();
   
   const { data: quizData, loading: fetchingQuiz, error: fetchError, submitQuiz } = useQuiz(courseId, week, topicId);
   
@@ -86,11 +86,43 @@ const Quiz = () => {
     }
   };
 
+  // Confirm before leaving an active quiz (M-045) — dismissible; cancel keeps
+  // the quiz running with answers intact.
+  const handleCancel = async () => {
+    const ok = await confirmDialog({
+      title: 'Exit this exam?',
+      message: 'Your progress on this exam will be lost. Are you sure you want to leave?',
+      confirmLabel: 'Exit Exam',
+      cancelLabel: 'Keep Taking Exam',
+      danger: true,
+    });
+    if (ok) navigate(`/course/${courseId}`);
+  };
+
   async function handleSubmitQuiz(forceSubmit = false) {
     const questions = quizData?.questions || [];
-    if (!forceSubmit && Object.keys(answers).length < questions.length) {
-      addToast('Please answer all questions before submitting.', 'error');
-      return;
+    // Never re-submit once results are showing (e.g. the timer auto-submit
+    // raced a confirm dialog that was left open).
+    if (results) return;
+
+    // Manual (non-auto) submits go through the shared M-042 confirm dialog,
+    // mirroring PracticeArena: a partial set is an explicit "Submit Anyway".
+    // The 0:00 auto-submit always passes forceSubmit=true and is unchanged.
+    if (!forceSubmit) {
+      const answeredCount = Object.keys(answers).length;
+      const ok = answeredCount < questions.length
+        ? await confirmDialog({
+            title: 'Submit partial quiz?',
+            message: `You have only answered ${answeredCount} of ${questions.length} questions. Unanswered questions will be marked incorrect.`,
+            confirmLabel: 'Submit Anyway',
+            danger: true,
+          })
+        : await confirmDialog({
+            title: 'Submit quiz?',
+            message: 'Are you ready to submit your exam?',
+            confirmLabel: 'Submit',
+          });
+      if (!ok || results) return;
     }
 
     setIsSubmitting(true);
@@ -133,7 +165,7 @@ const Quiz = () => {
     return (
       <div className="max-w-md mx-auto text-center py-16 space-y-4">
         <AlertTriangle className="text-red-500 mx-auto" size={48} />
-        <h2 className="text-xl font-bold text-white">Access Blocked</h2>
+        <h1 className="text-xl font-bold text-white">Access Blocked</h1>
         <p className="text-slate-400 text-sm">{fetchError}</p>
         <Button 
           variant="outline"
@@ -155,13 +187,29 @@ const Quiz = () => {
   const courseProgress = results?.updatedUser?.progresses?.find((p: any) => p.courseId === courseId);
   const courseCompleted = courseProgress?.completed || courseProgress?.progress === 100;
 
-  if (!activeQuestion) return null;
+  // Empty / out-of-range question set (M-045) — previously this returned null
+  // and rendered a blank page (audit CRITICAL). Render a friendly state instead.
+  if (!activeQuestion) {
+    return (
+      <PageContainer maxWidth="max-w-2xl" className="py-16 text-center space-y-6">
+        <AlertTriangle className="text-amber-400 mx-auto" size={40} />
+        <h1 className="text-2xl font-extrabold text-white">No Questions Available</h1>
+        <p className="text-slate-400 text-sm max-w-md mx-auto">
+          This {topicId ? 'topic' : 'chapter'} quiz has no questions yet. Please check back soon.
+        </p>
+        <Button variant="outline" onClick={() => navigate(`/course/${courseId}`)}>
+          Back to Course
+        </Button>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer maxWidth="max-w-2xl" className="py-6 space-y-6">
 
       <QuizHeader
-        onCancel={() => navigate(`/course/${courseId}`)}
+        title={topicId ? 'Topic Quiz' : 'Chapter Quiz'}
+        onCancel={handleCancel}
         timeLeft={timeLeft}
         formatTime={formatTime}
       />
@@ -202,26 +250,42 @@ const Quiz = () => {
           >
             Previous
           </Button>
-          
-          {isLastQuestion ? (
-            <Button 
-              variant="accent"
-              isLoading={isSubmitting}
-              onClick={() => handleSubmitQuiz()}
-              rightIcon={<Send size={14} />}
-              className="uppercase tracking-wider"
-            >
-              Submit Exam
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={handleNext}
-              rightIcon={<ArrowRight size={14} />}
-            >
-              Next
-            </Button>
-          )}
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Early submit (M-045): available on every question, not just the
+                last one. Goes through the shared confirm dialog for safety. */}
+            {!isLastQuestion && (
+              <Button
+                variant="ghost"
+                isLoading={isSubmitting}
+                onClick={() => handleSubmitQuiz()}
+                rightIcon={<Send size={14} />}
+                className="text-slate-400 hover:text-white"
+              >
+                Submit
+              </Button>
+            )}
+
+            {isLastQuestion ? (
+              <Button
+                variant="accent"
+                isLoading={isSubmitting}
+                onClick={() => handleSubmitQuiz()}
+                rightIcon={<Send size={14} />}
+                className="uppercase tracking-wider"
+              >
+                Submit Exam
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={handleNext}
+                rightIcon={<ArrowRight size={14} />}
+              >
+                Next
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

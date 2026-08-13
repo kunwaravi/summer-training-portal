@@ -21,9 +21,9 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({ question, selectedOption, o
       transition={{ duration: 0.25 }}
       className="space-y-6 py-4"
     >
-      <p className="font-extrabold text-slate-200 text-lg leading-snug">
+      <h2 className="font-extrabold text-slate-200 text-lg leading-snug">
         {index + 1}. {question.text}
-      </p>
+      </h2>
       
       <div className="space-y-3">
         {question.options.map((option) => {
