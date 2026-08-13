@@ -52,6 +52,12 @@
 :root {
   color-scheme: dark;
 }
+/* Task 2 — light mode renders native controls/scrollbars correctly instead of
+   inheriting the dark color-scheme. `.light` is toggled on <html> by
+   ThemeContext, so the selector never matches dark mode. */
+:root.light {
+  color-scheme: light;
+}
 
 /* #47 — Global keyboard focus visibility (a11y).
    Every interactive element gets a visible focus ring when keyboard-navigated:
@@ -59,11 +65,11 @@
    this fires purely for keyboard activation. */
 @layer base {
   :focus-visible {
-    outline: 2px solid #6366F1;
+    outline: 2px solid var(--color-primary); /* #6366F1 — declared token */
     outline-offset: 2px;
   }
   .dark :focus-visible {
-    outline-color: #22D3EE;
+    outline-color: var(--color-cyan-accent); /* #22D3EE — declared token */
   }
 }
 
@@ -331,3 +337,34 @@ body {
   color: #0f172a !important;
 }
 
+
+/* animate-fade-in — referenced across pages and toasts but never defined, so
+   it was a silent no-op. Defining it makes the intended entrance real. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+/* Task 7 — Respect prefers-reduced-motion.
+   Duration/iteration collapse to near-zero so functional state changes
+   (hover/focus/loading) still happen, while decorative/sensory animations
+   effectively stop for users who opt out of motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

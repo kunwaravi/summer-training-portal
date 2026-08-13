@@ -87,12 +87,21 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
         onConfirm={handleConfirm}
         onCancel={() => settleConfirm(false)}
       />
-      {/* Toast Container */}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      {/* Toast Container — Task 6: live region + layering above the support FAB.
+          `pointer-events-none` on the container (auto on each toast) so the gap
+          between toasts never blocks clicks on what sits underneath. */}
+      <div
+        role="region"
+        aria-live="polite"
+        aria-atomic="false"
+        aria-label="Notifications"
+        className="fixed bottom-4 right-4 z-[10001] flex flex-col gap-2 pointer-events-none"
+      >
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`px-4 py-2 rounded shadow-lg text-white transition-all transform animate-fade-in ${
+            role={toast.type === 'error' ? 'alert' : 'status'}
+            className={`pointer-events-auto px-4 py-2 rounded shadow-lg text-white transition-all transform animate-fade-in ${
               toast.type === 'success' ? 'bg-green-600' :
               toast.type === 'error' ? 'bg-red-600' :
               toast.type === 'warning' ? 'bg-yellow-600' :
@@ -100,7 +109,13 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
             }`}
           >
             {toast.message}
-            <button onClick={() => removeToast(toast.id)} className="ml-2 font-bold">&times;</button>
+            <button
+              onClick={() => removeToast(toast.id)}
+              aria-label="Dismiss notification"
+              className="ml-2 font-bold hover:text-slate-200 focus:outline-none"
+            >
+              &times;
+            </button>
           </div>
         ))}
       </div>

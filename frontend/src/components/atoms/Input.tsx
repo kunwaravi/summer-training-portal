@@ -17,13 +17,20 @@ const Input: React.FC<InputProps> = ({
   rightIcon,
   containerClassName = '',
   className = '',
+  id,
   ...props
 }) => {
   const displayIcon = leftIcon || icon;
+  // Task 5: stable id for label/input association + error messaging. `useId` is
+  // unique per instance, so callers can omit `id` without risking duplicates;
+  // an explicit `id` prop always wins.
+  const generatedId = React.useId();
+  const inputId = id ?? `input-${generatedId}`;
+  const errorId = error ? `${inputId}-error` : undefined;
   return (
     <div className={`space-y-1.5 ${containerClassName}`}>
       {label && (
-        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
+        <label htmlFor={inputId} className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
           {label}
         </label>
       )}
@@ -34,11 +41,14 @@ const Input: React.FC<InputProps> = ({
           </div>
         )}
         <input
+          id={inputId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId}
           className={`
-            w-full bg-slate-800/80 rounded-xl border border-slate-700/60 text-white placeholder-slate-450 
-            focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 
+            w-full bg-slate-800/80 rounded-xl border border-slate-700/60 text-white placeholder-slate-450
+            focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500
             transition-all text-sm py-2.5
-            ${displayIcon ? 'pl-10' : 'pl-4'} 
+            ${displayIcon ? 'pl-10' : 'pl-4'}
             ${rightIcon ? 'pr-10' : 'pr-4'}
             ${error ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500' : ''}
             ${className}
@@ -52,7 +62,7 @@ const Input: React.FC<InputProps> = ({
         )}
       </div>
       {error && (
-        <p className="text-red-400 text-[11px] font-semibold pl-1 uppercase tracking-tight">
+        <p id={errorId} role="alert" className="text-red-400 text-[11px] font-semibold pl-1 uppercase tracking-tight">
           ⚠ {error}
         </p>
       )}

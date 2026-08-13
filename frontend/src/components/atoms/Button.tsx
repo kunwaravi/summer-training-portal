@@ -19,9 +19,13 @@ const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
   className = '',
   disabled,
+  // Task 4: default to `type="button"` so a bare button never submits the
+  // surrounding form; explicit `type="submit"` / `type="reset"` still win.
+  type = 'button',
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center rounded-xl font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider transition-all';
+  // Single `transition-all` (previously duplicated in this string).
+  const baseStyles = 'inline-flex items-center justify-center rounded-xl font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider';
   
   const variants = {
     primary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/10',
@@ -42,6 +46,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      type={type}
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${widthStyle} ${className}`}
       disabled={disabled || isLoading}
       {...props}
