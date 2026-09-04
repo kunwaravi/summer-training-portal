@@ -122,7 +122,7 @@ model CertificateRecord {
   id                 String    @id @default(uuid())
   userId             Int
   courseId           String?             // nullable now — null for INTERNSHIP
-  internshipId       String?             // set for INTERNSHIP
+  internshipId       String?   @unique   // set for INTERNSHIP; @unique = 1:1 with Internship
   certificateType    String    @default("TRAINING") // "TRAINING" | "INTERNSHIP"
   verificationCode   String    @unique
   verificationStatus String    @default("PENDING")  // PENDING | VERIFIED
@@ -133,7 +133,6 @@ model CertificateRecord {
   internship Internship? @relation(fields: [internshipId], references: [id], onDelete: Restrict)
 
   @@index([userId])
-  @@index([internshipId])
 }
 ```
 

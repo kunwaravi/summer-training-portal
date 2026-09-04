@@ -42,7 +42,7 @@ model CertificateRecord {
   id                 String    @id @default(uuid())
   userId             Int
   courseId           String? // null when certificateType = INTERNSHIP
-  internshipId       String? // set when certificateType = INTERNSHIP
+  internshipId       String? @unique // set when certificateType = INTERNSHIP (1:1 with Internship)
   certificateType    String    @default("TRAINING") // TRAINING | INTERNSHIP (issue #102)
   verificationCode   String    @unique
   verificationStatus String    @default("PENDING") // PENDING | VERIFIED — admin-controlled (issue #101)
@@ -52,7 +52,6 @@ model CertificateRecord {
   internship         Internship? @relation(fields: [internshipId], references: [id], onDelete: Restrict)
 
   @@index([userId])
-  @@index([internshipId])
 }
 ```
 
@@ -161,7 +160,9 @@ ALTER TABLE "CertificateRecord" ADD COLUMN "internshipId" TEXT;
 ALTER TABLE "CertificateRecord" ADD CONSTRAINT "CertificateRecord_internshipId_fkey"
     FOREIGN KEY ("internshipId") REFERENCES "Internship"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
-CREATE INDEX "CertificateRecord_internshipId_idx" ON "CertificateRecord"("internshipId");
+-- 1:1 with Internship: internshipId is @unique in the schema, so this is a UNIQUE
+-- index (Prisma's _key naming), not a plain index.
+CREATE UNIQUE INDEX "CertificateRecord_internshipId_key" ON "CertificateRecord"("internshipId");
 ```
 
 - [ ] **Step 2: Sanity-check the SQL is syntactically valid** (optional if no DB is reachable — do not create/alter anything on a real data DB):
