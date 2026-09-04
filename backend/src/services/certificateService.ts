@@ -25,6 +25,11 @@ export class CertificateService {
     return `NEX-${cleanCourseKey}-${cleanFirstName}${1000 + userId}-VERIFIED`;
   }
 
+  private static generateInternshipCredentialId() {
+    const randomPart = crypto.randomBytes(8).toString('hex').toUpperCase();
+    return `NEX-INT-${randomPart}`;
+  }
+
   private static getDisplayCourseName(courseId: string) {
     switch (courseId) {
       case "C": return "C & Systems Programming for Hardware";
@@ -208,7 +213,13 @@ export class CertificateService {
    * may legitimately lack either).
    */
   private static async verifyIssuedCredential(record: any) {
+    if (record.certificateType === 'INTERNSHIP') {
+      return this.verifyInternshipCredential(record);
+    }
     if (record.verificationStatus !== 'VERIFIED') {
+      // NOTE: do NOT add fields here — TRAINING responses stay byte-for-byte
+      // identical (global constraint). Internship is distinguished by the
+      // presence of certificateType === 'INTERNSHIP'.
       return {
         verified: false,
         auditStatus: 'PENDING / AWAITING ADMIN VERIFICATION',
@@ -220,6 +231,45 @@ export class CertificateService {
     }
 
     return this.verifyUserAndCourse(record.userId, record.courseId, true, false);
+  }
+
+  private static async verifyInternshipCredential(record: any) {
+    if (record.verificationStatus !== 'VERIFIED') {
+      return {
+        verified: false,
+        auditStatus: 'PENDING / AWAITING ADMIN VERIFICATION',
+        certificateType: 'INTERNSHIP',
+        credentialTitle: 'Internship Completion Certificate',
+        accreditationRegistry: 'EduNexus Pro Credential Registry',
+        message: 'This credential has been issued but is awaiting official verification.'
+      };
+    }
+
+    const internship = await prisma.internship.findUnique({
+      where: { id: record.internshipId },
+      include: { user: { select: { name: true } } },
+    });
+    if (!internship) throw new AppError('No internship matches this credential.', 404);
+
+    const fmt = (d?: Date | null) =>
+      d ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+
+    return {
+      verified: true,
+      auditStatus: 'ACTIVE / VERIFIED',
+      certificateType: 'INTERNSHIP',
+      credentialTitle: 'Internship Completion Certificate',
+      candidateName: internship.user.name,
+      programTitle: internship.programTitle,
+      domain: internship.domain,
+      role: internship.role,
+      duration: internship.duration || null,
+      startDate: fmt(internship.startDate),
+      endDate: fmt(internship.endDate),
+      performanceGrade: internship.performanceGrade || null,
+      issuedBy: 'EduNexus Pro',
+      accreditationRegistry: 'EduNexus Pro Credential Registry',
+    };
   }
 
   private static async verifyUserAndCourse(userId: number, courseId: string, includePii = true, requireActive = true) {
@@ -380,5 +430,86 @@ export class CertificateService {
     });
 
     return { success: true, record: updatedRecord };
+  }
+
+  /**
+   * issue #102: admin-only issuance of an Internship Completion Certificate.
+   * Gate: internship.status === COMPLETED AND certificateEligible === true.
+   * Idempotent: reuses the existing CertificateRecord so the printed credential
+   * ID stays stable across regenerations (mirrors training issue #66).
+   */
+  static async generateInternshipCertificate(internshipId: string) {
+    const internship = await prisma.internship.findUnique({
+      where: { id: internshipId },
+      include: { user: true, certificate: true },
+    });
+    if (!internship) throw new AppError('Internship record not found.', 404);
+    if (internship.status !== 'COMPLETED' || !internship.certificateEligible) {
+      throw new AppError('Certificate can be issued only after the internship is COMPLETED and marked eligible.', 409);
+    }
+
+    let record = internship.certificate;
+    if (!record) {
+      const credentialId = this.generateInternshipCredentialId();
+      record = await prisma.certificateRecord.create({
+        data: {
+          userId: internship.userId,
+          courseId: null,
+          internshipId: internship.id,
+          certificateType: 'INTERNSHIP',
+          verificationCode: credentialId,
+          verificationStatus: 'PENDING',
+        },
+      });
+    }
+
+    return this.formatInternshipPayload(internship, record);
+  }
+
+  /** Issue #102: payload for the InternshipCertificate page. Owner-or-admin. */
+  static async getInternshipCertificateDisplay(
+    internshipId: string,
+    viewerUserId: number,
+    viewerRole: string
+  ) {
+    const internship = await prisma.internship.findUnique({
+      where: { id: internshipId },
+      include: { user: true, certificate: true },
+    });
+    if (!internship) throw new AppError('Internship record not found.', 404);
+    if (viewerRole !== 'ADMIN' && internship.userId !== viewerUserId) {
+      throw new AppError('Access denied: you can only view your own internship certificates.', 403);
+    }
+    if (!internship.certificate) {
+      throw new AppError('No certificate issued for this internship yet.', 404);
+    }
+    return this.formatInternshipPayload(internship, internship.certificate);
+  }
+
+  private static formatInternshipPayload(internship: any, record: any) {
+    const fmt = (d?: Date | null) =>
+      d ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+    return {
+      certificateType: 'INTERNSHIP',
+      name: internship.user.name,
+      fatherName: internship.user.fatherName,
+      collegeName: internship.user.collegeName,
+      branchName: internship.user.branchName,
+      programTitle: internship.programTitle,
+      domain: internship.domain,
+      role: internship.role,
+      duration: internship.duration,
+      performanceGrade: internship.performanceGrade,
+      startDate: fmt(internship.startDate),
+      endDate: fmt(internship.endDate),
+      credentialId: record.verificationCode,
+      verificationStatus: record.verificationStatus,
+      verifiedAt: record.verifiedAt,
+      internshipId: internship.id,
+      signatures: {
+        chiefAcademicOfficer: 'Prof. Vinayak Singh',
+        technicalDirector: 'Er. Gaurav Singh'
+      }
+    };
   }
 }
