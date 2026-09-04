@@ -70,9 +70,9 @@ export class InternshipService {
       } else if (certificate === CERT_FILTERS.NONE) {
         where.certificate = { is: null };
       } else if (certificate === CERT_FILTERS.PENDING) {
-        where.certificate = { isNot: null, verificationStatus: { not: 'VERIFIED' } };
+        where.certificate = { is: { verificationStatus: { not: 'VERIFIED' } } };
       }
-      // Any other value is left as no filter; the route validates the value up front.
+      // Any other value is treated as no filter (unknown values are ignored).
     }
 
     // Admin console summary cards (Task 9 / #102). Global counts across all

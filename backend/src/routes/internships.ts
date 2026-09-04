@@ -1,8 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { authenticateToken, isAdmin } from '../middleware/auth';
-import { InternshipService, CERT_FILTERS } from '../services/internshipService';
+import { InternshipService } from '../services/internshipService';
 import { CertificateService } from '../services/certificateService';
-import { AppError } from '../middleware/errorHandler';
 
 const router = Router();
 
