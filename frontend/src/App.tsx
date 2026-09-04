@@ -13,6 +13,7 @@ const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const CourseDetail = React.lazy(() => import('./pages/CourseDetail'));
 const Quiz = React.lazy(() => import('./pages/Quiz'));
 const Certificate = React.lazy(() => import('./pages/Certificate'));
+const InternshipCertificate = React.lazy(() => import('./pages/InternshipCertificate'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 const PracticeArena = React.lazy(() => import('./pages/PracticeArena'));
 const PayPage = React.lazy(() => import('./pages/PayPage'));
@@ -67,6 +68,7 @@ function AppRoutes() {
             <Route path="/practice/arena" element={<ProtectedRoute><PracticeArena /></ProtectedRoute>} />
             <Route path="/pay/:courseId" element={<ProtectedRoute><PayPage /></ProtectedRoute>} />
             <Route path="/certificate" element={<ProtectedRoute><Certificate /></ProtectedRoute>} />
+            <Route path="/internship-certificate" element={<ProtectedRoute><InternshipCertificate /></ProtectedRoute>} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

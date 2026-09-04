@@ -38,6 +38,7 @@ model User {
   referredBy        String?
   assignments       AssignmentSubmission[]
   certificates      CertificateRecord[]
+  internships       Internship[]
   challengeProgresses ChallengeProgress[]
   progresses        CourseProgress[]
   discussions       Discussion[]
@@ -234,14 +235,45 @@ model PracticeAttempt {
 model CertificateRecord {
   id                 String    @id @default(uuid())
   userId             Int
-  courseId           String
+  courseId           String? // null when certificateType = INTERNSHIP
+  internshipId       String? @unique // set when certificateType = INTERNSHIP (1:1 with Internship)
+  certificateType    String    @default("TRAINING") // TRAINING | INTERNSHIP (issue #102)
   verificationCode   String    @unique
   verificationStatus String    @default("PENDING") // PENDING | VERIFIED — admin-controlled (issue #101)
   verifiedAt         DateTime?
   createdAt          DateTime  @default(now())
   user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  internship         Internship? @relation(fields: [internshipId], references: [id], onDelete: Restrict)
 
   @@index([userId])
+}
+
+model Internship {
+  id                  String    @id @default(cuid())
+  userId              Int
+  programTitle        String
+  domain              String
+  role                String
+  startDate           DateTime?
+  endDate             DateTime?
+  duration            String?
+  institution         String?
+  branch              String?
+  session             String?
+  mentorName          String?
+  projectTitle        String?
+  performanceGrade    String?
+  completionNotes     String?
+  remarks             String?
+  status              String    @default("APPLIED") // APPLIED | SELECTED | ACTIVE | COMPLETED
+  certificateEligible Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  certificate         CertificateRecord?
+
+  @@index([userId])
+  @@index([status])
 }
 
 model AssignmentSubmission {

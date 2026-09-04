@@ -82,6 +82,20 @@ router.get('/:courseId', authenticateToken, async (req: any, res: Response, next
   }
 });
 
+// GET /api/certificate/internship/:internshipId - Internship certificate page data.
+// Owner-or-admin. Declared before /:userId/:courseId so "internship" is not
+// treated as a userId.
+router.get('/internship/:internshipId', authenticateToken, async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const payload = await CertificateService.getInternshipCertificateDisplay(
+      req.params.internshipId,
+      req.user.id,
+      req.user.role
+    );
+    res.json(payload);
+  } catch (error) { next(error); }
+});
+
 // GET /api/certificate/:userId/:courseId - Generate certificate data for a specific user (restricted to ADMIN or self)
 router.get('/:userId/:courseId', authenticateToken, async (req: any, res: Response, next: NextFunction) => {
   try {
