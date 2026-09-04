@@ -279,9 +279,12 @@ training cert when present.
   - Actions (clearly separated): Edit, Mark Completed, Generate/Regenerate Certificate,
     View (opens cert page), Verify, Unverify, Print, Copy verification link — dangerous
     actions use the existing confirmation-dialog util.
-- Admin certificate console (#101) already lists every record; internship records appear
-  there too with a certificate-type filter added carefully (issue §15: All / Training /
-  Internship) without changing training behavior.
+- Admin certificate console (#101) already lists every record. **Scope decision (final
+  review, 2026-09-04):** internship credentials are managed exclusively in the dedicated
+  Internship Mgmt console above. The #101 course-linked console is intentionally left
+  training-only — internship rows never match its courseId-linked selection (internship
+  courseId is null), so the issue §15 "All / Training / Internship" type filter is
+  superseded and NOT added there, keeping the training system's surface untouched.
 
 ### 4. Student dashboard — "My Internship"
 
