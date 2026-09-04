@@ -70,8 +70,9 @@ const Verify = () => {
       const res = await api.get(`/certificate/verify/${targetId.trim()}`);
       setResult(res.data);
 
-      // Fetch course curriculum details
-      if (res.data.courseId) {
+      // Fetch course curriculum details — training credentials only. Internship
+      // credentials have no course curriculum to enrich with (issue #102).
+      if (res.data?.verified && (!res.data.certificateType || res.data.certificateType === 'TRAINING') && res.data.courseId) {
         try {
           const courseRes = await api.get(`/courses/${res.data.courseId}/public`);
           setCourseDetails(courseRes.data);
@@ -213,8 +214,8 @@ const Verify = () => {
         </form>
 
         <AnimatePresence mode="wait">
-          {/* Success panel — only when the credential is verified */}
-          {result?.verified === true && (
+          {/* Success panel — only when the credential is verified (training credentials) */}
+          {result?.verified === true && result.certificateType !== 'INTERNSHIP' && (
             <motion.div
               key="success"
               initial={{ opacity: 0, y: 10 }}
@@ -299,6 +300,83 @@ const Verify = () => {
             </motion.div>
           )}
 
+          {/* Internship success panel — verified internship credential (issue #102) */}
+          {result?.verified === true && result.certificateType === 'INTERNSHIP' && (
+            <motion.div
+              key="internship-success"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6 mt-6"
+            >
+              <div className="p-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                <div className="flex items-center gap-3 pb-4 border-b border-emerald-500/20">
+                  <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 shrink-0">
+                    <ShieldCheck size={28} />
+                  </div>
+                  <div>
+                    <h4 className="text-emerald-400 font-extrabold text-sm uppercase tracking-wider">
+                      Credential Verified
+                    </h4>
+                    <p className="text-slate-400 text-[11px] font-mono tracking-tight mt-0.5 break-all">
+                      {credentialId.trim().toUpperCase()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-xs">
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Certificate Type</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.credentialTitle || 'Internship Completion Certificate'}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Status</span>
+                    <span className="font-bold text-emerald-400 text-sm mt-0.5 block">VERIFIED</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Candidate Name</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.candidateName}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Internship</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.programTitle}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Domain</span>
+                    <span className="font-bold text-amber-400 text-sm mt-0.5 block">{result.domain}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Role</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.role}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Duration</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.duration || '—'}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Internship Period</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block">{result.startDate} – {result.endDate}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Issued By</span>
+                    <span className="font-bold text-amber-400 text-sm mt-0.5 block">{result.issuedBy || 'EduNexus Pro'}</span>
+                  </div>
+                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Credential ID</span>
+                    <span className="font-bold text-white text-sm mt-0.5 block break-all font-mono">{credentialId.trim().toUpperCase()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => { setResult(null); setCredentialId(''); inputRef.current?.focus(); }}
+                className="text-xs text-slate-500 hover:text-slate-300 transition font-semibold"
+              >
+                Verify another credential
+              </button>
+            </motion.div>
+          )}
+
           {/* Pending panel — credential issued but not yet verified by admin (issue #101) */}
           {result && result.verified === false && (
             <motion.div
@@ -328,10 +406,18 @@ const Verify = () => {
                     <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Status</span>
                     <span className="font-bold text-amber-400 text-sm mt-0.5 block">{result.auditStatus}</span>
                   </div>
-                  <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
-                    <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Course</span>
-                    <span className="font-bold text-white text-sm mt-0.5 block">{result.courseName}</span>
-                  </div>
+                  {/* Internship PENDING has no courseName and no PII (issue #102) */}
+                  {result.certificateType === 'INTERNSHIP' ? (
+                    <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                      <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Certificate Type</span>
+                      <span className="font-bold text-white text-sm mt-0.5 block">{result.credentialTitle || 'Internship Completion Certificate'}</span>
+                    </div>
+                  ) : (
+                    <div className="p-3.5 rounded-lg bg-slate-950/50 border border-slate-900">
+                      <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-semibold">Course</span>
+                      <span className="font-bold text-white text-sm mt-0.5 block">{result.courseName}</span>
+                    </div>
+                  )}
                   <p className="text-slate-400 leading-relaxed pt-1">
                     {result.message || 'This credential has been issued but is awaiting official verification by the EduNexus Pro administration. Please check back later.'}
                   </p>
