@@ -188,7 +188,7 @@ const Dialog: React.FC<DialogProps> = ({
               animate={placement === 'right' ? { x: 0 } : { opacity: 1, scale: 1, y: 0 }}
               exit={placement === 'right' ? { x: '100%' } : { opacity: 0, scale: 0.95, y: 16 }}
               transition={placement === 'right' ? { type: 'spring', damping: 25, stiffness: 200 } : { type: 'spring', damping: 26, stiffness: 260 }}
-              className={`relative w-full flex flex-col overflow-hidden border shadow-2xl pointer-events-auto ${placement === 'right' ? 'h-full max-h-full w-full max-w-md' : `max-h-[88vh] ${SIZES[size]}`} ${className}`}
+              className={`relative w-full flex flex-col overflow-y-auto overflow-x-hidden border shadow-2xl pointer-events-auto ${placement === 'right' ? 'h-full max-h-full w-full max-w-md' : `max-h-[88vh] ${SIZES[size]}`} ${className}`}
             >
               {busy && (
                 <div
