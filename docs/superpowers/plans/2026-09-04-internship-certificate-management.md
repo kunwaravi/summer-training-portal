@@ -461,10 +461,12 @@ git commit -m "feat(internships): add InternshipService CRUD and completion (#10
       return this.verifyInternshipCredential(record);
     }
     if (record.verificationStatus !== 'VERIFIED') {
+      // NOTE: do NOT add fields here — TRAINING responses stay byte-for-byte
+      // identical (global constraint). Internship is distinguished by the
+      // presence of certificateType === 'INTERNSHIP'.
       return {
         verified: false,
         auditStatus: 'PENDING / AWAITING ADMIN VERIFICATION',
-        certificateType: 'TRAINING',
         courseId: record.courseId,
         courseName: this.getDisplayCourseName(record.courseId),
         accreditationRegistry: 'EduNexus Pro Credential Registry',
