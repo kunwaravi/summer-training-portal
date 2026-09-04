@@ -266,7 +266,20 @@ export class InternshipService {
     }
 
     const certificate = opts.certificate;
-    const [rows, total] = await Promise.all([
+    if (certificate) {
+      // Certificate predicate lives in the SQL `where` (not a JS post-filter) so
+      // pagination and `total` stay correct when ?certificate= is used.
+      if (certificate === CERT_FILTERS.ISSUED) {
+        where.certificate = { isNot: null };
+      } else if (certificate === CERT_FILTERS.NONE) {
+        where.certificate = { is: null };
+      } else if (certificate === CERT_FILTERS.PENDING) {
+        where.certificate = { isNot: null, verificationStatus: { not: 'VERIFIED' } };
+      }
+      // Any other value is left as no filter; the route validates the value up front.
+    }
+
+    const [internships, total] = await Promise.all([
       prisma.internship.findMany({
         where,
         include: {
@@ -279,17 +292,6 @@ export class InternshipService {
       }),
       prisma.internship.count({ where }),
     ]);
-
-    let internships = rows;
-    if (certificate) {
-      internships = rows.filter((r) => {
-        const has = Boolean(r.certificate);
-        if (certificate === CERT_FILTERS.ISSUED) return has;
-        if (certificate === CERT_FILTERS.NONE) return !has;
-        if (certificate === CERT_FILTERS.PENDING) return has && r.certificate!.verificationStatus !== 'VERIFIED';
-        return true;
-      });
-    }
 
     return { internships, total, page, limit };
   }
@@ -323,16 +325,19 @@ export class InternshipService {
     }
     if (!userId) throw new AppError('userId or email is required.', 400);
 
+    // Spec: duplicate guard on (userId, programTitle, startDate, endDate) — a candidate may
+    // re-sit the same program/domain in a later session, so dates disambiguate. Null date
+    // fields match null-date rows (an explicit admin edge case can be created by tweaking a date).
     const dup = await prisma.internship.findFirst({
       where: {
         userId,
         programTitle: data.programTitle,
-        domain: data.domain,
-        role: data.role,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
       },
     });
     if (dup) {
-      throw new AppError('Duplicate internship record: this candidate already has the same program/domain/role.', 409);
+      throw new AppError('Duplicate internship record: this candidate already has the same program in the same period.', 409);
     }
 
     return prisma.internship.create({
