@@ -6,10 +6,11 @@ import {
   ArrowUp, ArrowDown, Eye, DollarSign,
   Save, FileText, Image, RefreshCw, ChevronDown, ChevronRight,
   TrendingUp, Share2, Mail, Settings, ClipboardCheck,
-  Clock, CheckCircle2, XCircle, Check, X, FileCode2, ShieldCheck, ShieldAlert
+  Clock, CheckCircle2, XCircle, Check, X, FileCode2, ShieldCheck, ShieldAlert, Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminPaymentTable from '../components/organisms/AdminPaymentTable';
+import InternshipAdmin from '../components/admin/InternshipAdmin';
 import Dialog from '../components/atoms/Dialog';
 import { coursesConfig } from '../config/courses';
 import PageContainer from '../components/layout/PageContainer';
@@ -55,7 +56,7 @@ const initialsOf = (name?: string) =>
 
 // M-049: the eight admin dashboard tabs. Data is fetched per tab (lazy) — a tab
 // only loads the sources its render reads, on first open + refetch on switch.
-type AdminTab = 'transactions' | 'cms' | 'users' | 'analytics' | 'referrals' | 'messages' | 'settings' | 'review';
+type AdminTab = 'transactions' | 'cms' | 'users' | 'analytics' | 'referrals' | 'messages' | 'settings' | 'review' | 'internships';
 
 const AdminDashboard = () => {
   const { confirmDialog, addToast } = useUI();
@@ -548,6 +549,8 @@ const AdminDashboard = () => {
     messages: [{ key: 'messages', run: fetchMessages }],
     settings: [{ key: 'settings', run: fetchContactSettings }],
     review: [{ key: 'review', run: fetchReview }],
+    // Internship console self-fetches on mount (InternshipAdmin) — no shared source needed.
+    internships: [],
     referrals: [{ key: 'users', run: fetchUsers }],
     analytics: [
       { key: 'users', run: fetchUsers },
@@ -828,6 +831,7 @@ const AdminDashboard = () => {
             { id: 'messages' as const, label: 'Contact Messages', icon: <Mail size={20} className="shrink-0" /> },
             { id: 'settings' as const, label: 'Contact Settings', icon: <Settings size={20} className="shrink-0" /> },
             { id: 'review' as const, label: 'Review Queue', icon: <ClipboardCheck size={20} className="shrink-0" /> },
+            { id: 'internships' as const, label: 'Internship Mgmt', icon: <Briefcase size={20} className="shrink-0" /> },
           ].map((tab) => {
             const pendingTotal = tab.id === 'review'
               ? assignments.filter((s) => s.status === 'PENDING').length + projects.filter((s) => s.status === 'PENDING').length
@@ -1027,6 +1031,8 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+
+        {activeTab === 'internships' && <InternshipAdmin />}
 
         {activeTab === 'transactions' && (
           <div className="space-y-6 animate-fade-in">

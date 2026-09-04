@@ -75,21 +75,42 @@ export class InternshipService {
       // Any other value is left as no filter; the route validates the value up front.
     }
 
-    const [internships, total] = await Promise.all([
-      prisma.internship.findMany({
-        where,
-        include: {
-          user: { select: { id: true, name: true, email: true } },
-          certificate: { select: { id: true, verificationCode: true, verificationStatus: true, createdAt: true } },
-        },
-        orderBy: { createdAt: sort },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.internship.count({ where }),
-    ]);
+    // Admin console summary cards (Task 9 / #102). Global counts across all
+    // internships — deliberately NOT scoped to the active filters so the cards
+    // describe the whole pipeline while `total` stays the filtered row count.
+    const [internships, total, statsTotal, statsActive, statsCompleted, statsIssued, statsPending] =
+      await Promise.all([
+        prisma.internship.findMany({
+          where,
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+            certificate: { select: { id: true, verificationCode: true, verificationStatus: true, createdAt: true } },
+          },
+          orderBy: { createdAt: sort },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.internship.count({ where }),
+        prisma.internship.count(),
+        prisma.internship.count({ where: { status: 'ACTIVE' } }),
+        prisma.internship.count({ where: { status: 'COMPLETED' } }),
+        prisma.internship.count({ where: { certificate: { isNot: null } } }),
+        prisma.internship.count({ where: { certificate: { is: { verificationStatus: { not: 'VERIFIED' } } } } }),
+      ]);
 
-    return { internships, total, page, limit };
+    return {
+      internships,
+      total,
+      page,
+      limit,
+      stats: {
+        total: statsTotal,
+        active: statsActive,
+        completed: statsCompleted,
+        issued: statsIssued,
+        pending: statsPending,
+      },
+    };
   }
 
   static async getById(id: string) {
