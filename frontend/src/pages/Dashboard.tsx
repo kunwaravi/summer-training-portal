@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import api from '../api';
 import { useCourses } from '../hooks/useCourses';
-import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database, Wrench, Building2, Flame, RefreshCw } from 'lucide-react';
+import { Cpu, Code, Wifi, Box, BookOpen, Award, CheckCircle2, TrendingUp, Zap, Target, Globe, Terminal, Database, Wrench, Building2, Flame, RefreshCw, Briefcase, Clock, CalendarDays } from 'lucide-react';
 import CourseCard from '../components/molecules/CourseCard';
 import Skeleton from '../components/atoms/Skeleton';
 import SkillRadar from '../components/molecules/SkillRadar';
@@ -61,6 +61,15 @@ const courseMetadata: Record<string, any> = {
   },
 };
 
+// #102 — status chip palette for the My Internship panel (mirrors the admin
+// InternshipAdmin console styles so a given status reads the same on both sides).
+const INTERN_STATUS_STYLES: Record<string, string> = {
+  APPLIED: 'bg-slate-100 dark:bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-500/25',
+  SELECTED: 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/25',
+  ACTIVE: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/25',
+  COMPLETED: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/25',
+};
+
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard' | 'referrals'>('overview');
   const { user } = useAuth();
@@ -84,6 +93,16 @@ const Dashboard = () => {
         addToast(msg, 'error');
       });
   }, [addToast]);
+
+  // #102 — the student's own internship records (GET /api/internships/mine →
+  // bare array). Fetch failure degrades to the empty state, never a crash.
+  const [myInternships, setMyInternships] = useState<any[]>([]);
+  useEffect(() => {
+    api
+      .get('/internships/mine')
+      .then((r) => setMyInternships(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setMyInternships([]));
+  }, []);
 
   const submitDailyAnswer = async (answer: string) => {
     try {
@@ -138,6 +157,11 @@ const Dashboard = () => {
   }
 
   const courses = coursesData || [];
+
+  // #102 — internship dates arrive as raw ISO from listMine; format for display
+  // (same idiom as the admin InternshipAdmin console).
+  const fmtInternDate = (d: any) =>
+    d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
 
   // Helper to extract course specific stats
   const getCourseProgress = (courseId: string) => {
@@ -523,6 +547,69 @@ const Dashboard = () => {
                   );
                 })}
               </div>
+            )}
+          </div>
+
+          {/* ── My Internship (#102) — distinct panel, separate from the training tracks ── */}
+          <div className="rounded-2xl bg-white dark:bg-slate-900/50 dark:backdrop-blur-sm border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-6">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="p-2 bg-cyan-50 dark:bg-cyan-500/10 rounded-lg text-cyan-600 dark:text-cyan-400">
+                <Briefcase size={18} />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">My Internship</h2>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-1">Industrial placements & certificate access</p>
+              </div>
+            </div>
+
+            {myInternships.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/30 py-10 px-6 text-center space-y-2">
+                <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500">
+                  <Briefcase size={22} />
+                </span>
+                <p className="text-sm font-black text-slate-600 dark:text-slate-300">No internships yet.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">Your internship applications and issued certificates will show up here.</p>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {myInternships.map((it: any) => (
+                  <li key={it.id} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 p-4 sm:p-5 space-y-2.5">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="min-w-0">
+                        <p className="text-sm font-extrabold text-slate-900 dark:text-white truncate">{it.programTitle || 'Internship Program'}</p>
+                        <p className="text-[11px] uppercase font-bold tracking-wide text-slate-500 dark:text-slate-400 mt-0.5">
+                          {[it.domain, it.role].filter(Boolean).join(' · ') || '—'}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${INTERN_STATUS_STYLES[it.status] || INTERN_STATUS_STYLES.APPLIED}`}>
+                        {it.status || 'APPLIED'}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      {it.duration ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock size={13} className="text-slate-400 dark:text-slate-500" /> {it.duration}
+                        </span>
+                      ) : null}
+                      <span className="inline-flex items-center gap-1.5">
+                        <CalendarDays size={13} className="text-slate-400 dark:text-slate-500" />
+                        {fmtInternDate(it.startDate)} — {fmtInternDate(it.endDate)}
+                      </span>
+                    </div>
+                    {it.certificate && (
+                      <div className="pt-1">
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/internship-certificate?internshipId=${it.id}`, '_blank')}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 dark:bg-cyan-500 hover:bg-cyan-700 dark:hover:bg-cyan-600 text-white text-[11px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm active:scale-95"
+                        >
+                          View Internship Certificate
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </TabsContent>
